@@ -1,9 +1,8 @@
-web:
-  build: .
+jekyll:
+  image: kallin/jekyll_docker
   command: jekyll serve --host=0.0.0.0 --force_polling
+  working_dir: /opt/site
   volumes:
-    - .:/opt/jekyll
+    - .:/opt/site
   ports:
     - 4000:4000
-
-
