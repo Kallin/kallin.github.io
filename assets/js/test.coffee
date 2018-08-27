@@ -12,5 +12,7 @@ orz_quotes = [
 
 $ ->
   random_quote = _.sample(orz_quotes)
-  $(".project-tagline").html(random_quote);
-
+  $("#project-tagline")
+    .html(random_quote)
+    .removeClass('invisible')
+    .fadeTo(2000, 1)
