@@ -43,5 +43,3 @@ exclude:
  - Dockerfile
  - .idea/
  - CNAME
-
-theme: jekyll-theme-merlot
