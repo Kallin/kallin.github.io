@@ -1,8 +1,12 @@
-jekyll:
-  image: kallin/jekyll_docker
-  command: jekyll serve --host=0.0.0.0 --force_polling
-  working_dir: /opt/site
-  volumes:
-    - .:/opt/site
-  ports:
-    - 4000:4000
+version: "3.9"
+
+services:
+  jekyll:
+    command: jekyll serve --host=0.0.0.0 --force_polling --livereload
+    build: .
+    ports:
+      - "4000:4000"
+      - "35729:35729"
+
+    volumes:
+      - .:/usr/src/app

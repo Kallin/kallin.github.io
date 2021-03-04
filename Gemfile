@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
-# 'github-pages' includes 'jekyll' gem
-gem 'github-pages'
-gem 'bourbon'
+gem "github-pages", "~> 212", group: :jekyll_plugins
+
+# javascript runtime is required for Jekyll Coffeescript plugin
+gem "therubyracer"
