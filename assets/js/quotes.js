@@ -9,7 +9,6 @@ let orz_quotes = [
 
 document.addEventListener("DOMContentLoaded", function(event) {
     let random_quote = orz_quotes[Math.floor(Math.random() * orz_quotes.length)];
-    console.log(random_quote)
     let tagline = document.getElementById("project-tagline")
     tagline.innerHTML = random_quote
     tagline.classList.remove('invisible')
