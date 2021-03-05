@@ -15,10 +15,3 @@ document.addEventListener("DOMContentLoaded", function(event) {
     tagline.classList.remove('invisible')
     tagline.classList.remove('opacity-0')
 });
-//
-// $ ->
-//     random_quote = _.sample(orz_quotes)
-// $("#project-tagline")
-//     .html(random_quote)
-//     .removeClass('invisible')
-//     .fadeTo(2000, 1)
