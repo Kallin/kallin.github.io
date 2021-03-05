@@ -11,17 +11,37 @@
     <link rel="stylesheet" href="/assets/css/tailwind.css">
 </head>
 
-<body class="bg-blue-100">
+<body class="bg-gradient-to-b from-gray-200 to-white">
 <script src="/assets/js/quotes.js"></script>
 
-<section class="bg-gray-300">
-    <h1 id="project-name" class="text-3xl">{{ site.title | default: site.github.repository_name }}</h1>
-    <h2 id="project-tagline" class="invisible opacity-0 text-lg">placeholder</h2>
-</section>
 
-<section class="bg-green-100">
-    {{ content }}
-</section>
+
+<div id="header" class="sticky top-0 z-40 lg:z-50 w-full max-w-6xl mx-auto bg-white flex-none flex">
+
+    <div class="flex-none pl-4 sm:pl-6 xl:pl-8 flex items-center border-b border-gray-200 lg:border-b-0 lg:w-60 xl:w-72">
+        LOGO
+    </div>
+
+    <div class="flex-auto border-b border-gray-200 h-18 flex items-center justify-between px-4 sm:px-6 lg:mx-6 lg:px-0 xl:mx-8">
+        The Rest
+    </div>
+
+    <section class="bg-gray-300">
+        <a href="{{ site.url }}">
+            <h1 id="project-name" class="text-3xl">{{ site.title | default: site.github.repository_name }}</h1>
+        </a>
+        <h2 id="project-tagline" class="invisible opacity-0 text-lg">placeholder</h2>
+    </section>
+
+</div>
+
+<div class="w-full max-w-6xl mx-auto">
+    <section class="bg-green-100">
+        {{ content }}
+    </section>
+</div>
+
+
 
 </body>
 
