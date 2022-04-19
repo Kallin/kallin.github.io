@@ -694,6 +694,7 @@ tags: mgmt tech agile kals_notes
                 - your standards improve the readability and maintainability of code 
                 - your standards allow team members to more easily understand familiar parts of the system
 
+
     # Energized Work
         - professionals do their best, most productive work, when they're energized and motivated
         ## How to be energized
@@ -715,23 +716,117 @@ tags: mgmt tech agile kals_notes
                 - value health over short-term progress and feel productive and successful
 
 
+    # Chapter 8 - Planning
+        - Agile is adaptive, not predictive
+        # Stories
+            - Stories are reminders for things to about
+            - Stories don't need to be detailed, not a requirements document
+            ## How to create a story
+                - stories represent customer value and are described in customer's terminology
+                - stories have clear completion criteria
+            ## Customer value
+                - no stories for technical issues; customers wouldn't know how to prioritize it
+                - spread technical considerations across all stories; aka evolutionary design
+            ## Splitting and Combining Stories
+                - split stories should remain customer-centric
+                - some splitting options:
+                    - according to priorities
+                    - according to data 
+                    - according to operations
+                    - according to CRUD operations
+                    - according to cross-cutting concerns (logging/security/etc)
+                    - according ton non-functional concerns (performance, stability, etc.)
+                ### Tiny Stories
+                    - at least describe technical work in business terms
+            ## Special stories
+                ### Bug Stories
+                    - schedule them as soon as possible
+                ### Nonfunctional stories
+                    - describe exactly how fast, stable etc. things should be
+                    - classify both 'acceptable' and 'best possible' performance
+                ### Operation/Security stories
+                    - customers often have trouble thinking of these sorts of stories
+                ### Spike stories
+                    - purpose is to size the other story, not design the solution
+                ### Clean-up stories
+                    - parts of code you work on most often will automatically get better over time
+                    - you shouldn't need clean-up stories to keep your code clean
+                    - if necessary, phrase in terms of business benefit
+                    - timebox to make sure you can stop at some point
+            ## Prerequisites
+                - stories don't replace requirements; need another way to get those (on-site customers, incremental requirements)
+            ## Indicators
+                - when you use stories well
+                    - customers understand all the work they approve and schedule
+                    - easy to explain to stakeholders what the team is wroking on and why it matters
+                    - team works on small, manageable pieces, makes customer-valued progress multiple times per week
+                    - stories are cheap to create and easy to discard
 
-                    
+        # Adaptive Planning
+            ## Valuable Increments
+                - valuable increments are
+                    - releaseable
+                    - valuable
+                    - incremental
+                - valuable incremenets fall into these categories
+                    - direct value - build/change/fix something
+                    - learning value - released when experiment is ready to run
+                    - option value - create the ability to postpone or change decisions
+            ## Focus on one increments at a time
+                - working on multiple ideas simultaneously feels good, but very wasteful
+                - focusing on one increment at a time wil improve delivery speed and increase value
+                - focus on small, valuable increments, on releasing one at a time.
+                - cool charts to look at!
+            ## Slice your Increments
+                - once an increment is done, you can change direction without wasting any work
+                - minimize WIP
+            ## Your first increment
+                - use an MVP to validate product ideas
+            ## Adapt your plans
+                - plans should be as much a plan for learning as they are a plan for building
+                - to increase the value of your software, create opportunites to learn
+                - delay decisions until the last responsible moment, maximize your information
+                - the earlier you make a decision, the more likely you are to miss something important
+            ## How to create your plan
+                - use rolling-wave planning, add detail just as it is needed
+                - distance each LOD looks into the future is called 'planning horizon'; horizons include:
+                    - Purpose of the team - w/ mission
+                    - Visual Planning - map of possible valuable increments to achieve mission
+                    - break increments into smallest valuable increments
+                    - use planning agme to break increments into 'just right' sized stories
+                    - use task planning ot break stories into dev tasks
+                    - use incremental requirements just befire starting dev
+                - use a pull system to maintain progress
+                    - pull stories out of the visual plan when you need more tasks
+                    - pull stories out of the next small valuable increment when needed
+                    - when you need more ideas for possible increments, pull them out of purpose/mission
+                    - when close to completing your mission, you'll go back to sponsor and pull a new mission from vision/purpose
+                - lots of great charts!
+            ## Balancing Adaptability and Predictability
+                - the longer your planning horizons, the more work you'll throw away when plans change, the more people will resist change
+                - longer horizons are often needed for good roadmaps
+                - planning horizons are a trade-off between less waste and greater agility vs. more certainty and predictability
+            ## Adaptive Planning and Organizational Culture
+                - adaptive teams will achieve their purpose, but won't be able to say exactly what it will deliver
+                - use rolling-wave planning with longer horizons to match the organization's expectations
+            ## Indicators
+                - when you create, maintain, and communicate a good plan:
+                    - the plan shows how the team will achieve it's purpose or learn how to achieve it 
+                    - team members are confident the plan is achievable
+                    - you release value regularly and consistently
+                - when you adapt your plan well
+                    - you consistently seek out new opportunitites to learn new things abotu your plan, your product and stakeholders
+                    - as you learn, you modify your plan
+
+        # Visual Planning
+            - rather than saying 'do this then do that', use a visual plan that allows you to adapt
+            ## Who plans?
+                - led by team members with product management skills, along with other customers and stakeholders
+                - developers may or may not be involved
+            ## Cluster Mapping
+                - simplest and more flexible way to visualize plans
+                ### 1. Brainstorm Techniques
+                    - 
 
 
 
-
-            
-
-
-            
-            
-
-    
-
-    
-
-
-
-
-    
