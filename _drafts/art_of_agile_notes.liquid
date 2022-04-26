@@ -1100,7 +1100,193 @@ tags: mgmt tech agile kals_notes
         ## Capacity
             - prediction of how much the team can accomplish in an iteration
             ### Yesterday's Weather
-                - 
+                - capacity is number of stories completed in previous iteration
+                - combined w/ slack, allows you to reliably predit how much you can finish in every iteration
+            ### Capacity and the iteration timebox
+                - never count stories that aren't done-done, and never allow deadline to slip
+                - capacity is unstable at first, give 3 or 4 iterations .
+            ### Stabilizing Capacity
+                - be quick to decrease capacity, slow to increase
+                - only increase when you had time to clean up code, work on other non-urgent work
+                - nice 'slack' chart
+                - excessive schedule pressure reduces performance
+                - estimation accuracy doesn't matter, only meant for feedback into next iteration
+            ### Estimating Stories
+                - if you dont have consistently sized stories, you can estimate
+                - to estimate, dont worry about accuracy, just focus on consistency
+                    - estimate only the constraint, ie. the bottleneck
+                    - let experts estimate
+                    - estimate in 'ideal' hours or days. most qualified team member, no interruptions, etc.
+                    - think of tasks
+                    - round into 3 buckets, split larger and combine smaller. 
+                - call the estimates 'points', not hours or days
+                #### Conversational Estimating
+                    - one story at a time, can be tedious
+                    - should take less than a minute to estimate the story
+                    - take the lowest estimate
+                #### Affinity estimating
+                    - great for estimating lots of stories quickly, and when you have long planning horizons
+                    - put cards on table, estimators lay them out from smallest to biggest, piles for spikes and clarification needed
+                    - its done silently
+                    - bucket them into estimate clusters
+            ### When Estimating is Difficult
+                - one cause of slow estimation is lack of prep by customers
+                - another is developer inexperience
+                - only ask for details that would change the estimate
+                - to help address issues:
+                    - customers having trouble: they can huddle or put a question and come back later.
+                    - estimators uncertain about tech: make a spike story
+                    - estimators asking lots of questions: do we have enough info to estimate?
+                    - story taking more than 5 minutes: should we come back to it later?
+            ### Defending estimates
+                - ignore people's tone, and treat comments as requests for information
+                - change your estimate only if you learn something new
+                - these sorts of questions should dissipate as stakeholders gain trust
+            ### Your initial capacity
+                - start with one-week iterations, should stabilize after about 4 weeks
+            ### How to Improve Capacity
+                #### Improve internal quality
+                    - ie. tech-debt. 
+                    - has a greater impact on capacity than any other factor. 
+                    - make it a priority and capacity will improve dramatically
+                    - rather than stopping, improve incrementally using slack
+                    - be patient, should see an improvment after several months
+                #### Improve customer skills
+                    - improving developers' customer skills can reduce their reliance on on-site customers
+                #### Support energized work
+                    - shield the team from organizational pressure
+                #### Offload duties
+                    - find ways to excuse people from unnecessary meetings, perhaps add an assistant to the team
+                #### Support the constraint
+                    - don't worry too far ahead, ie. programmers helping w/ testing automation
+                #### provide needed resources
+                    - get people whatever equipment they need
+                #### add people (carefully)
+                    - expect new members to take a month or two to be productive
+            ### Capacity is not productivity
+                - cannot be used to compare teams
+                - teams dont have control over most things that affect capacity, they can only:
+                    - take shortcuts
+                    - work overtime
+                    - cutting slack
+            ### Indicators
+                - when you use capacity well:
+                    - your capacity is consistent and predictable each iteration
+                    - you make iteration commitments and meet them reliably
+                    - estimation is fast and easy, or not required at all
+                    - you can size most stories in a minute or two
+                
+        ## Slack
+            ### How much slack?
+                - depends on the randomness of problems
+                - if capacity jumps around a lot, stop signing up for more stories
+                - if you finish everything early, take on an extra story
+            ### How to use slack
+                - use it to increase your ability to deliver; probably by incresing internal quality.
+                ## Improving internal quality
+                    - team's performance tied to quality of code, tests, automation, and infra.
+                    - dont batch up improvements; make them every day throughout the iteration
+                    - focus improvements on the code, tests and other systems that you're actually working on.
+                ## Develop Customer Skills
+                    - join product manager to meet with stakeholders, interview users, etc.
+                ## Dedicate time to exploration and experimentation
+                    - given time, devs will learn things that enhance their work on the team
+                    - set aside r&d time at end of iteration
+                    - dont work on any stories or commit any production code
+                    - think about what's puzzled you recently
+                    - create spike solutions, small standalone programs
+                ## The role of overtime
+                    - never use overtime as an excuse to lower your team's standards
+            ## Indicators
+                - when you incorporate slack into your iterations
+                    - team consistently meets iteration commitments
+                    - team members raerely, if ever, need overtime
+                    - teams' internal quality steadily improves, making work easier and faster
+                  
+        ## Stand-up Meetings
+            ### How to hold the daily stand-up 
+                - coordination meetings, not status meetings
+                - ownership of all tasks is shared, so this is the chance to sync up on shared work
+                #### 1. Walk the board
+                    - for each story, describe what's changed, what's left ot be done, and any new info 
+                    - may need a facilitator, rotate it
+                #### 2. Focus on Completion
+                    - focus the team on anything that hasn't been moving
+                    - check in on iteration commitment
+                #### 3. Choose tasks
+                    - everyone decides what they're going to work on next
+                #### 4. Take detailed conversations offline
+                    - if any more indepth discussion needed, take it offline
+            ### Be Brief
+                - primary virtue of the meeting is brevity
+                - should only take 5-10 minutes
+                - if slow it may be because:
+                    - using an issue-tracking tool rather than board
+                    - updating the task board during the stand-up rather than throughout the day
+                    - holding detailed diiscussions during stand
+                    - holding the stand in a meeting room other than your team room
+                    - waiting for people to arrive rather than start on time
+            ### Indicators
+                - when you conduct daily stand up meetings:
+                    - team coordinates its work and makes steady progress toward completing its task plan
+                    - team is aware of when a task or story is stalled and takes action to unblock it
+                    - team members are aware of what others are working on and how it influences their work
+
+        ## Informative Workspace
+            - allows people to sense progress without interrupting team members and helps improve stakeholder trust
+            ### Subtle cues
+                - a healthy team is energized; lots of communication
+                - unhealthy team is quiet and tense
+                - in remote, need working agreements around sharing information 
+                - perhaps keep plan visible on an always-on tablet or monitor
+            ### Big Visible Charts
+                - task planning board 
+                - calendar
+                - purpose (vision, mission, mission tests
+                - virtual whiteboard is best
+            ### Improvement Charts
+                - only up for a few weeks, often the result of a retro
+                - consider tracking:
+                    - amount of pairing
+                    - pair switching
+                    - build performance
+                    - support responsiveness
+                    - needless interruptions
+                - perhaps add some fun stuff to personalize the board
+            ### Gaming
+                - take down improvement charts once behavior has been established
+            ### Indications
+                - when your team has an informative workspace 
+                    - you have up-to-the-minute information about all the important issues the team is facing
+                    - you know exactly how far you've come and how far you have to go in your current plan
+                    - you know whether the team is progressing well or having difficulty
+                    - you know how well the team is solving problems
+
+        ## Customer Examples
+            - concrete examples illustrating domain rules
+            ### describe
+                - during task planning, create tasks for necessary Examples
+                - err on the side of too many examples; domain experts and develoeprs both groups are surprised by misunderstandings
+            ### Demonstrate
+                - make rules concrete by asking domain expert for examples, not just rules 
+            ### Develop
+                - examples are some of the most important logic, be sure to document them
+                - automated tests can be great documentation
+                - creating examples can usually be the first development task
+            ### Indicators
+                - When your team uses customer examples well
+                    - your software has few, if any domain logic bugs
+                    - your team discusses domain rules in concrete, unambiguous terms
+                    - your team often discovers and accounts for special-case domain rules that no-body had considered
+                    
+
+
+
+
+
+                
+
+            
         
 
 
