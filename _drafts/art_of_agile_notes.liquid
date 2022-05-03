@@ -1297,6 +1297,181 @@ tags: mgmt tech agile kals_notes
                     - on-site customers and testers have a steady workload
                     - customer acceptance takes only a few minutes
                     
+    # Accountability
+        ## Stakeholder Trust
+            - the more successful agile is, the more worries grow (organizational antibodies)
+            - unfair, illogical, but also the way people think.
+            ### show Some hustle
+                - energetic, productive work.
+                - energized work, informative workspace, stakeholders demos, appropriate roadmaps.
+            ### show some empathy
+                - stakeholders in a scary situation:
+                    - sponsors, product managers, key stakeholders' careers on the line, often devs aren't.
+                    - devs often earn more than stakeholders, apparently w/o hard work and toeing of lines stakeholders have to
+                    - devs often come to work later (though probably leave later too)
+                    - to outsiders, devs often dont seem particularly invested in success
+                    - experienced stakeholders have a long history of devs failing to deliver
+                    - stakeholders used to devs responding to questions about progress/estimates/commitments w/ arrogance or technobable
+                    - many stakeholders see big tech companies deliver software well, but theirs rarely does
+                - not necessarily true, but think about what success and failure mean from the outside
+            ### deliver on commitments
+                - stakeholders can evaluate two results: working software and delivering on commitments
+                - commitments make it possible for stakeholders to make commitments to their stakeholders
+                - agile can make reliable commitments: make a plan you can achieve, then repeat, again and again
+            ### Manage Problems
+                - work on the hardest, most uncertain problems first
+                - when you encounter a problem, let the whole team know about it. bring it up at next stand at the latest.
+                - bring problem to stakeholders attention, larger problems right away.
+                - stakeholders not upset by problems, but by being blindsided by them
+                - bring mitigation strategies to stakeholders when bringing up problems
+            ### Respect customer goals
+                - resist cynical developer goals about scheudles and suits
+                - propose creative solutions to goals
+                - build trust directly with stakeholders by listening/engaging with them regularly
+            ### Make Stakeholders look Good
+                - keep track of the value you've brought 
+            ### Be Honest
+                - avoid covering up any lack of progress, defects, etc.
+            ### Indicators
+                - When your team establishes trust with your org. and stakeholders:
+                    - stakeholders believe in your team's ability to meet their needs
+                    - You acknowledge mistakes, challenges, and problems rather than hiding them until they blow up
+                    - everyone involved seeks solutions rather than blame
+
+        ## Stakholder Demos
+            ### Feedback Loops
+                - most important aspect of feedback is how surprising it is. if surprised, you need to work harder to understand them.
+                - reactions of everyone involved is important too. happy/energized vs. burned/checked out.
+                - who attends and who chooses not to is important.
+            ### The Demo Cadence
+                - start with weekly demos, or every iteration
+                - invite everyone who might be interested
+                - schedule right after end of an iteration
+                - typically 30 minutes
+            ### How to conduct a stakeholder demo
+                - Anyone can host, but ideally whoever works most closely with stakeholders
+                - begin by reminding attendees of the valuable increment the team is currently working on
+                - provide an overview of stories worked on since last demo
+                - explain any changes in plans that have been made
+                - at the end, let everyone know how they can try the software themselves
+            ### Be Prepared
+                - before demo make sure all stories are 'done done'
+                - review stories that have been finished since last demo and organize them into a narrative.
+                - connect stories to team's increments and purpose and visual plan
+            ### When things go wrong
+                - dont fake progress, you're setting up unrealistic expectations
+            ### Indicators
+                - when your team conducts stakeholder demos well:
+                    - you generate trust with stakeholders
+                    - you learn what stakeholders are most passionate about
+                    - the team is confident in its ability to deliver
+                    - your'e forthright about problems, which allows your team to preven them from ballooning out of control
+
+        ## Forecasting
+            - the real secret to predicting well is to understand uncertainty and risk
+            ### Predefined Release Dates
+                - best way to forecast is to define when you'll release, but not what you'll release
+                - you can adjust your plans when you encounter surprises
+                - telling people exactly what you're going to do, you'll have to re-forecast a lot, or worse they're treated as commitments
+                #### How to steer your plans
+                    - secret to being ready on a given date is to slice work into smallest valuable increments
+                    - increments need to be small enough that you can easily finish one before release date
+            ### Feasability Forecasts
+                - people with a lot of experience can make good gut decisions
+                - gather team's sponsor, seasoned PM or two, and a senior dev or two, all with lots of experience.
+                - ask when work starts, who is on the team, and the latest release date that could work
+                - if answer is clearly 'yes', maybe worth investing in development. otherwise, there's risk.
+            ### Date and Scope Forecasts
+                - sometimes you need to predict 'when' and 'what'
+                - to do so, requires accounting for schedule risks by adding some padding aka 'risk adjustment'
+                - num weeks remaining = num stories remaining / weekly throughput x risk adjustment
+                - num stories done by date = num weeks remaining * weekly throughput / risk adjustemnt
+                - definitions:
+                    - num weeks remaining: amount of time between now and your release date
+                    - num stories: number of 'just right' stories that need to be completed before release date
+                    - weekly throughoput: num stories finished last iteration
+                    - risk adjustment: use 'high risk' team column unless your team has focusing and delivering fluency.
+                - dependent on 'just right' sized stories. if you haven't broken them down as such, you can't forecast the release. use planning game.
+                - all spike stories must be resolved before making forecasts
+                - update forecast as the end of every iteration
+            ### Reducing Risk
+                - easiest way to reduce risk is making increments smaller
+                - if you can answer these questions affirmatively, you can use 'low risk' metric
+                    - did you have the same throughput in each of your last 4 iterations?
+                    - were all of your stories 'done done' in last 4 iterations?
+                    - did you add no new bug-fix stories in the last four iterations?
+                    - for your most recent release, when your stories were done, were you able to release immediately?
+            ### Custom Risk Adjustments
+                - with a lot of data collection, you can create your own risk adjustment table
+            ### Indicators
+                - when your team forecasts well:
+                    - how can coordinate with external events, such as marketing campaigns, that have long lead times
+                    - you're able to coordinate with business stakeholders about upcoming delivery dates
+                    - you understand when your team's costs will exceed its value
+                    - you have data to counter unrealistic expectations and deadlines
+
+        ## Roadmaps
+            - takes a year or two of delivering reliably to generate trust
+            ### Agile Governance
+                - classic approach is 'project based' governance. project is funded if value exceeds costs.
+                - this is predictive, not agile, assumes plans should be defined in advance
+                - agile approach is 'product based governance'
+                - allocate an ongoing 'business as usual' budget and estimate value the team will provide over time.
+                - success is in terms of business results, such as ROI. 
+                - 4 options, choose the least predictive allowed
+            ### Option 1: Just the Facts
+                - a description of what the team has done so far, with no speculation about the future
+                - includes:
+                    - your team's purpose
+                    - what's complete and ready for next release
+                    - your next release date
+                    - current business value metrics
+                    - current costs
+                    - business model
+                - can work well for sales and marketing
+            ### Option 2: General Direction
+                - speculation is kept to a minimum so team can adapt its plans
+                - roadmap includes everything in 'just the facts' plus:
+                    - valuable increment the team is currently working on and why it's the top priority
+                    - valuable increment(s) to be worked on next
+                - increments are presented without dates
+                - optimizing teams may include hypotheses about business results of upcoming releases
+            ### Option 3: Date and Approximate Scope
+                - adds forecasted release dates ot the 'general direction' roadmap
+                - reduces agility and increases risk as people take these as commitments
+                - optimzing teams tend not to use this sort of roadmap as the business cost isn't worth the benefit
+                - can be useful to coordinate with third parties
+            ### Option 4: Detailed Plans and Predictions
+                - least agile and greatest risk
+                - more conservative forecasts, meaing more wasted time and less willingness to change
+                - organizations prefer it as it feels safer, even though its the least safe
+                - uncertainty makes people uncomfortable, and this lets them speak with certainty
+                - certainty is an illusion; software development is inherently uncertain
+                - if you have to do this, forecasts must include every story
+                - optimizing teams dont use this sort of roadmap
+            ### Corporate Tracking tools
+                - agile planning tools are built for tracking and controlling teams, not enabling them, don't use them
+                - mgmt keeps its hands on the wheel by iterating a team's purpose, demos, and using most adaptive roadmaps possible
+                - if you are forced to use a tool, enter only minimal information and use other planning practices for day-to-day
+            ### When your roadmap isn't good enough
+                - the only way to deliver sooner is to cut scope
+                - what happens when dates are missed? are they used as a bludgeon? no real consequences, just sacred commitments?
+                - remember, best approach to forecasting is to choose a predefined release date and steer your plans accordingly.
+            ### Indicators
+                - when you use roadmaps well:
+                    - managers and stakeholders understand what the team is working on and why.
+                    - the team isn't prevented from adapting it's plans
+
+
+
+
+
+
+
+            
+                
+                
+
 
 
 
