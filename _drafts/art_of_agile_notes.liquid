@@ -1685,7 +1685,252 @@ tags: mgmt tech agile kals_notes
                         - team addresses impediments as they come up
                         - team spends less time on removing impediments
                 
+# Section 3 - Delivering Reliabliy
+    - Teams that are fluent at delivering
+        - release their latest work, at minimal risk and cost, whenver their business stakeholders desire
+        - discover and fix flaws in the production lifecycle early, before they can do damage
+        - are about to provide useful forecasts
+        - have low defect rates, so they spend less time fixing bugs and more time building features
+        - create software with good internal quality, which makes changes cheaper and faster
+        - have high job satisfaction and morale, which improves retention and performance
 
+    - the team responds to business needs
+        - the team's code is production-grade and the latest work is deployed to a production-equivalent environment at least daily
+        - the team's business reps may release the team's latest work at will
+        - the team provides usefuli release forecasts to its business reps upon request
+        - the team coordinates with business stakeholders to develop in a way that allows its software to be 
+            maintained, inexpensively, and indefinitely.
+
+    - the team works effectively as a team
+        - developers consider code and similar artifacts to belong to the team, not individuals, and they share 
+            responsibility for changing and improving it
+        - all day to day skills needed to design, develop, test, deploy, monitor, maintain, etc., the team's work are 
+            immediately accessible to the team.
+        
+    - The team pursues technical excellence
+        - when making changes, team members leave their software's internal quality a little better than they found it
+        - the team actively responds to errors by improving the underlying system that made the error likely, reducing the probabilty of future errors
+        - deploying and releasing is automated and takes no more than 10 minutes of manual effort
+        - no manual testing is required prior to deployment
+        - team members are aware of how their skills affect their ability to accomplish the team's goals and improve internal quality
+            and they proactively seek to improve those skills.
+        
+    ## Achieving Delivering Fluency
+        - XP's coding, testing, design practices remain state-of-the-art.
+        - yield the highest-quality, most productive code.
+        - combined with incremental planninga nd requirements analysis, allows teams to deliver high-quality software regularly and reliabily.
+
+# Chapter Twelve 
+    ## Collective Code Ownership
+        - everyone is expected to fix the problems they find. 
+        - it doesn't matter who wrote it; it's your code, fix it!
+        ### Making Collective Code Ownership Work
+            - task planning is a good time to start discussions about code design
+            - ideally, teams will swarm each story and everyone will choose tasks for the same story
+            - don't jump ahead just because you don't know how to coordinate
+            - if not pairing, you may need a daily design review
+        ### Egoless Programming
+            - rather than taking pride in your code, take pride in your team's code. 
+        ### Collaborating without Conflict
+            - decide on important coding, design, arch. standards as part of alignment chartering
+            - pairing/mobbing can help reduce conflict
+        ### Working with Unfamiliar Code
+            - volunteer to work on tasks you don't understand; then drive the keyboard w/ pairing.
+        ### Benefits to Programmers
+            - requires the organization values team contributions more than individual heroics
+        ### Indicators
+            - When your team practices collective code ownership well
+                - everyone on the team constantly makes minor improvements to all parts of the code 
+                - nobody complains about team members changing code without asking permission first
+                - when you come back to code you originaly worte, you find that it improved without your involvement
+                - when a team member leaves or takes a vacation, the rest of the team handles their work without interruption
+
+    ## Pair Programming
+        ### Why Pair?
+            - one person acts as the driver, coding, the other the navigator, thinking
+            - pairing reinforces good skills; less likely to take shortcuts
+            - more time in flow with less distractions
+        ### How to Pair
+            - when you start working on a task, ask another programmer to work with you
+            - try to rotate through working with all members of the team
+            - when you get stuck, switch partners
+            - good idea to switch several times per day
+            - make sure both people align on how they want to pair before beginning
+            - think out loud, pairs produce code through conversation
+            - as you pair switch the driver and navigator roles frequently
+            - expect to feel tired; pairs typically feel that they have worked harder and accomplished more
+        ### Effective Navigating
+            - be patient, let driver correct themselves, focus on the bigger picture
+            - think about what's going to happen next and come prepared with suggestions
+            - sometimes when questions arise, split up then regroup and share your learnings
+        ### Teaching through Pairing
+            - treat inexperience as a lack of knowledge that's easily rectified
+            - good developer works quickly and well, the best help everyone do so
+            - don't rush it, either as navigator or driver. let the student set the pace.
+        ### Challenges
+            - Pairing can feel awkward, feelings are natural and generally go away after a month or two
+            #### Comfort
+                a comfortable workspace is key
+            #### Introversion / Social Anxiety
+                - very focused on ideas and results, no need to engage in small-talk
+                - if pairing might be dificult for someone on the team, talk about ways of making it more comfortable
+            #### Communication Style
+                - new drivers sometimes have difficulty involving their partner
+                - consider 'ping-ponging', one person writes a test, the other person makes it pass and writes a new test
+                - consider 'strong-style pairing', all ideas must pass through the other person's fingers
+                - adopt an attitude of collaborative problem solving rather than blunt criticism
+            #### Tools and keybindings
+                - try to standardize on a particular toolset
+        ### Indicators
+            - when your team pairs well
+                - you're focused and engaged throughout the day
+                - you enjoy the camaraderie of working with your teammates
+                - at the end of the day, you feel tired and satisfied
+                - for small interruptions, one person can deal
+                - internal quality imrpoves
+                - knowledge and coding tips dispurse through the team
+                - new team members integrate into the team quickly and easily
+    ## Mob Programming
+        ### How to Mob
+            - one driver, many navigators
+            - rotate driver quickly, maybe 7 minutes
+            - many agile principles become automated: stand-ups, code ownership, team room, task planning..
+        ### The Mobbing Station
+            - when switching, driver pushes to a temp. branch and next pulls it down
+        ### Making Mobbing Work
+            - fun and easy, but tiring for the whole team every day
+            #### Team Dynamics
+                - Pay attention te team members and make sure everyone is being heard 
+                - could be helpful to hold a retro at end of each day
+            #### Energized Work
+                - not dependent on any one person
+            #### Research
+                - When not driving, you can look things up, whiteboard, spike solutions
+            #### Strict Navigator Role
+                - maybe good to rotate one single navigator vs. everyone sharing
+            #### Non-Programmers
+                - Everyone can contribute
+                - non-programmers may require direction at level of specific key-board shortcuts etc.
+                - nobody is required to be a driver
+                - try for more involvement rather than less
+                - conversations about customer examples, stakeholder interview etc. can be beneficial for everyone
+            #### Mini-mobs and part-time mobs
+                - maybe have a few people mob while everyone else pairs
+            #### Indicators
+                - When your team mobs well
+                    - the whole team directs its entire effort towards one story at a time, fishing with minial delays/wait time
+                    - the team collaborates well and enjoys working together
+                    - internal quality improves
+                    - when a tough problem arises, the mob solves it while driver continues
+                    - decisions are made quickly and effectively
+
+    ## Ubiquitous Language
+        - a way of unifiying the terms your team uses in conversation and code so everyone can effectively collaborate
+        ### The domain expertise conundrum
+            - people who understand the problem domain rarely can write software, and developers rarely understand the domain
+            - overcoming this is an issue of communication
+        ### Speak the same language
+            - programmers should use the lagnuage of domain experts
+        ### How to create a ubiquitous language
+            - doesn't come free; ask experts for terms they use, sketch diagrams that model what you hear and get feedback
+            - ask for examples when getting into tricky details
+            - reflecting in code how users think and speak about their work, you expose gaps that result in bugs
+        ### indicators
+            - when you have a ubiquitous language that works:
+                - you reduce miscommunication between customers and programmers
+                - you produce code that's easier to understand, discuss, and modify
+                - when sharing a room, experts overheard domain and implementation discussions
+
+# Chapter Thirteen 
+    ## Development
+    ## Zero Friction
+        ### One-Second Feedback
+            - development speed is the most important area for eliminating friction; you need feedback in less than 5 seconds
+            - less than 1 second feels instantaneous, less than 5 is acceptable, 5-10 it feels slow, more than 10 you can't take small steps
+            - setup a watch script that automatically checks for changes and checks for errors
+            - as things slow down, you'll need two builds, one for fast feedback and one for prod deploy
+            - focus on what your team needs
+        ### Know your editor
+            - take the time to get to know your editor, really, really well.
+        ### Reproducible Builds
+            - a build that continues to work and pass its tests no matter which dev machine and how old the code is
+            - require 2 things:
+            #### Dependency Management
+                - program your build to ensure that you have correct version of every dependency
+            #### Local Builds
+                - everything the code depends on needs to be installed locally
+        ### Five-Minute Integration
+            - your script should report success or failure within 5 minutes, ten at most.
+            - doesn't need to complete, but at least pass some sanity checks quickly
+        ### Control Complexity
+            - teams pull in popular tools, libraries, frameworks to solve common dev problems
+            - optimize for maintainance than for initial development
+        ### Automate Everyhing
+            - automate everything your team performs repeatedly
+                - Build: compile, lint, tests
+                - watch: auto-run build when files change
+                - integrate: run build in prod-like environment
+                - deploy: run integrate then deploy the branch
+                - rundev: run software locally for manual review and testing
+            - use real programming language for scripts
+            - treat scripts with same respect as prod code
+        ### Automate Incrementally
+            - in a new codebase, your first dev tasks are to set up your scripts
+            - create bare-bones 'build' and 'watch' scripts first with no real code behind them
+            - next create a simple integrate script, does basic CI 
+            - next flesh out build with dep-management and simple entry point
+            - next add unit testing and failing test
+            - now add rundev
+            - finally create deploy, posting to a staging server
+            - from this point on, update automation with every story
+        ### Automating Legacy Code
+            - start with simple scripts that just document what to do for ecah one
+            - use your slack to gradually automate each step
+            - provide targets that allow you to build and test each chunk of code in isolation
+            - once you have a build target below 10 seconds, it's worth creating a 'watch' script
+        ### Indicators
+            - when your team has zero-friction development
+                - you spend your time developing, not struggling with tools, checklists and dependency documentation
+                - you're able to work in very small steps, wihch allows you to catch errors earlier and spend less time debugging
+                - setting up a new development workstation is a simple matter of cloning a repo and running a script
+                - you're able to integrate and deploy multiple times per day
+
+    ## Continuous Integration
+        - ultimate goal of continuous integration is to make releasing a business decision, not a technical decision. 
+        ### CI is a practice, not a tool
+            - many people think CI means using a CI server; not true!
+            - releasing latest work at will requires 3 things:
+                #### Integrate many times per day
+                    - integration means merging together all the code the team has written
+                    - integrate as often as possible, some teams even do every commit
+                    - the more often you integrate, the less painful it is overall.
+                #### Never break the integration build
+                    - integration branch needs to be 'known-good', it must always build and pass its tests
+                #### Keep the integration branch ready to release
+                    - every story includes tasks needed to update the build and deployment scripts when needed
+        ### Multistage Integration Build
+            - contains two separate builds, the normal fast build, and the slower secondary build.
+            - can help transition from asynchronous to sycnhronous integration
+        ### Pull Requests and Code Reviews
+            - PRs not a good fit for CI. too slow, instead use pairing or mobbing.
+            - possibly perform code reviews after integrating.
+            - can work well as a coordination mechanism between teams that don't share ownership
+        ### Indicators
+            - When you integrate continuously
+                - deploying and releasing is painless
+                - your team experiences few integration conflicts and confusing integration bugs
+                - team members can easily synchronize their work
+                - your team can release with the push of a button, whenever your on-site customers are ready
+    
+    ## Test-Driven Development
+        - done well, TDD ensure that the code does exactly waht you mean, not just what you say
+        ### Why TDD Works
+            - every few minutes, TDD verifies the code does what you think it should do
+        ### How to use TDD
+            - tdd doesn't prevent mistakes; it reveals them
+            #### Step 1: think
+                - 
+            
 
 
 
