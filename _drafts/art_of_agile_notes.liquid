@@ -1929,7 +1929,99 @@ tags: mgmt tech agile kals_notes
         ### How to use TDD
             - tdd doesn't prevent mistakes; it reveals them
             #### Step 1: think
-                - 
+                - dont write any production code unless you have a failing test
+                - sometimes thinking ahead is too difficult; use a spike solution
+            #### Step 2: Red bar
+                - when you know your next step, write the test
+                - predict what will happen, then use your watch script to verify
+                - if it doesn't fail as expected, understand why, you need to be able to predict
+            #### Step 3: Green Bar
+                - write just enough production code to get the test to pass
+                - if you can't figure out the mistake quickly, start again from scratch, you've made too big a change
+            #### Step 4: Refactor
+                - once tests are passing, refactor as much as you like
+            #### Step 5: Repeat
+                - when you're ready to add new behavior, start the cycle again
+                - the key to successful TDD is small increments and fast feedback
+        ### Eat the onion from the inside out
+            - core interface
+            - calculations and branches
+            - loops and generalizations
+            - special cases and error handling
+            - runtime assertions
+        ### Indicators
+            - when you use TDD well
+                - you spend little time debugging
+                - you continue to make programming mistakes, but you find them in a matter of minutes and can fix them easily
+                - you have total confidence the whole codebase does what programmers intended it to do 
+                - you aggressively refactor at every opportunity, confident in the knowledge the tests will catch any mistakes
+
+    ## Fast, reliable Tests
+        ### Rely on Narrow Unit Tests
+            - broad tests seem like a good way to get coverage, but they're a trap
+            - a narrow test is focused on a small amount of code
+            - best tests are unit tests, fast and deterministic. likely means they run in memory.
+            - vast majority of tests should be unit tests
+        ### Test outside interactions with narrow integration tests
+            - tests code that talks to the outside world
+            - units tests can test hundreds or thousands per second, narrow integration tests maybe dozens per second
+            - design your code to minimize the number of narrow integration tests required
+        ### Simulate Nonlocal Dependencies
+            - create infrastucture wrapper for external dependencies
+        ### Control Global State
+            - When you encouner a flaky test, fix it the same day
+        ### Write Sociable Tests
+            - try to avoid using doubles/mocks etc. as then you need more integration tests
+        ### Separate infrastuctureand logic
+            - purel ogic with no dependenciesis the easiest to test by far
+        ### Use broad tests only as a safety net
+            - just a few small smoke tests for most common scenarios 
+        ### Adding tests to existing code
+            - introduce  characterization tests as first, then slowly refactor
+        ### Indicators
+            - when you write fast, reliable tests
+                - you don't 'fix' flaky tests by running the test suite again
+                - your narrow integratino tests are proportional to the number of external services and components your code uses
+                - you have only a small number of broad tests
+                - your test suite average at least 100 tests per secondary
+    ## Refactoring
+        ### How to refactor
+            - proceed in a series of very small transformations
+            - read martin fowler's 'refactorings'
+        ### Refactoringin Action
+            - big example
+            - look up gilded rose kata
+        ### Indicators
+            - when you use refactoring as an everyday part of your toolkit
+                - the code constantly improves
+                - you make significant design changes safely and confidently
+                - every week, the code is at least slightly better than it was the week before
+
+    ## Spike solutions
+        - whenevery you're faced with a question, don't speculate, conduct an experiment.
+        - a spike is a small experiment, usually less than a day, and the result is discarded
+        ### Quick Questions
+            - a REPL or throwaway test is quick and easy for simple language/library/tools questions
+        ### Third Party Dependencies
+            - for libs, frameworks, services, create a small standalone program to explore it
+            - for complex deps like frameworks, do the tutorial
+        ### Design Experiments
+            - create a throwawy branch to experiment with, and not have to worry about anything breaking
+            - if it doesn't work out, delete it, if it does, keep it around for reference
+        ### Making time for Spikes
+            - slack absorbs the cost, and sometimes warrants adding a spike story or task to the board
+        ### Indicators
+            - when you clarify technical questions with well-directed isolated experiemnts
+                - rather than speculating, you conduct an experiment
+                - complexities of production code don't interfere with your experiments
+
+
+
+
+
+
+
+
             
 
 
