@@ -2017,6 +2017,238 @@ tags: mgmt tech agile kals_notes
 
 
 
+# Chapter 14
+# Design
+    - 'evolutionary design' proactively reduces the cost of change
+    - without it, agile teams do collapse under the weight of unmaintainable code
+# Incremental Design
+    ## Never Stop Designing
+        - with Pairing or Mobbing, at least have the programmers are dedicated to thinking about design, and TDD encourags you to improve design at every stage
+    ## How Incremental Design Works
+        - works with 'simple design' and 'reflective design'
+            - simple design: start with simplest design that could possibly work
+            - incremental design: when the design doesn't do everything you ned, incrementally add to it
+            - reflective design: every time you make a change, improve the design by reflecting on its strengths and weaknesses
+        - always start by being completely specific; don't try to solve more general problems
+        - wait to introduce abstractions
+        - the 2nd time you add to a design element, modify it just enough to solve the two problems it needs to solve
+        - the 3rd time, generalize just enough to solve the 3 problems
+        - continue, by 4th time it should be general enough for your needs
+    ## Levels of Design
+        - incremental design happens at all levels, from within a class to application architecture
+        - quality tends to improve in bursts
+        ### Within a class or module
+            - refactorings happen every few minutes, during the 'refactoring' step of the TDD cycle
+            - breakthroughs happen severeal times per hour, and often take a matter of minutes
+        ### Across classes and modules
+            - when you see a problem, add it to your notes and come back during a refactoring step of TDD
+            - cross-module, cross-class refactorings happen several times per day. breakthroughs a few times per week, take several hours to complete.
+        ### Application Architecture
+            - breakthroughs in architecture happen every few months, can take several weeks or longer to refactor
+            - refactor classes/modules as you work every day, and use slack to update other classes/modules
+            - keep delivering stories while you refactor, don't take a break to refactor all at once.
+            - balance technical excellence with delivering value, always.
+            - could put an ARD 'architectural decision record' in the code
+        ### Risk Driven Architecture
+            - in any given week you'll have a certain amount of slack; give priority to architectural risks.
+        ### Indicators
+            - you you use incremental design well:
+                - every week advances software's capabilities and design in equal measur
+                - you have no need to skip stoires for a week or more to focus on refactoring or design
+                - every week, the quality of the sotware is beter than it was the week before
+                - as time goes on, the software becomes increasingly easy to maintain and extend
+
+    # Simple design
+        - always ask yourself "when I need to change this, how hard will it be?"
+        - agile is the result of embracing Simplicity
+        ### YAGNI: You aren't gonna need it
+            - better not to speculate about what you might need.
+            - remove code that's no longer in use
+        ### Once and Only Once
+            - express every concept once. and only once.
+            - dont express concept with primitives, use a new type
+        ### Coupling and Cohesion
+            - parts of code are coupled when change to one necessitates change to another
+            - code is cohesive when it's physically close together in source files
+            - best code has low coupling. if there is coupling, it should be highly cohesive.
+        ### Third Party Components
+            - isolate 3rd party dependencies behind an interface you control
+            - create wrappers incrementally, only exposing features you need
+        ### Fail Fast
+            - throw errors whenever you believe something shouldn't happen
+        ### Self-Documenting Code
+            - use idioms/patterns that are common for your language and team.
+            - if introducing something new, run it by your teammates
+        ### Published Interfaces
+            - minimize published interfaces; very difficult to modify
+        ### Performance Optimization
+            - your intuition about performance is almost always going to be wrong
+            - most of the time, slowness will be network, db, or filesystem
+        ### Indicators
+            - when you create simple designs:
+                - your team doesn't write code in anticipation of future stories
+                - your team finishes work more quickly, becuase they don't build things that aren't needed today
+                - your design supports arbitrary changes easily
+                - although new features might require a lot of new code, changes to existing code are localized and straightforward
+
+    # Reflective Design
+        - entities are not designed to be extended, but are designed to be modified
+        ## How Reflective Design Works
+            - don't speculate about the future; care about the change you're making right now
+                1. look at the code you're about t work on.
+                2. identify flaws in the design
+                3. choose one thing to improve first
+                4. incrementally refactor the code to reach the desired design
+                5. repeat until your task is done
+        ## Reverse-Engineering the Design
+            - first step is to analyze code if you don't understand it; maybe ask somebody to explain it to you
+            - a simple sketch of classes/files involved will help
+        ## Identifying Improvements
+            - don't look for ways to scrap everything; lok for problems that detract and restore/improve, don't re-invent. 
+        ## Code Smells
+            ### Shotgun Surgery and Divergent Change
+                - shotgun surgery occurs when you have to modify multiple modules/classes to make a single change
+                - divergent change is the opposite: when unrelated changes affect the same module or class
+            ### Primitive Obsession and Data Clumps
+                - primitive obsession when important design concepts are represented by generic types
+                - data clumps occur when several variables always appear together
+            ### Data Class and Code Class
+                - put methods in the same class as the data they operate upon
+            ### Squashed Errors and Coddled Nulls
+                - handle errors only when you're able to provide a meaningful alternative
+                - fail fast, don't return null or allow null
+            ### Time Dependencies and Half-Baked Objects
+                - don't force clients to manage an objects state
+        ## Incrementally Refactor
+            - make changes using a series of small refactorings
+            - don't worry about making the code perfect
+        ## Indicators
+            - when you use reflective design well
+                - your team constantly improves the design of existing code
+                - when working on a task, programmers often refactor to make the task easier
+                - refactorings are focused where they'll do the most good
+                - the code steadily becomes easier and more convenient to work with
+        
+# Chapter 15 - Devops 
+    - breaking down the walls between development, operations, and security allows teams to create software that's safer, more reliable, easier to manage
+    ## Build for Operations
+        - include people with operations and security skills as part of your team
+        ### Threat Modeling
+            - answer 4 questions to understand your system and how it can be compromised:
+                1. what are you building?
+                2. What can go wrong?
+                3. What should you do about those things that can go wrong?
+                4. Did you do a decent job of analysis?
+        ### Logging
+            - create user stories to answer what will be useful in an investigation
+        ### Indicators
+            - When you build for operations:
+                - your team has considered and addressed potential security threats
+                - alerts are targeted and relevant
+                - when productino issues occur, your organization is prepared to respond
+                - your software is resilient and stable
+
+    ## Feature Flags
+        - allows teams to deploy unfinished code without releasing it
+        ### Keystones
+            - when working on something new, wireup the UI last, there will be no way to access it
+        ### Feature Flags
+            - use code to control visibility, not a comment
+            - be sure to remove them after they're no longer needed
+            #### Application Configuration
+                - pull the flag from a constant, env. variable etc.
+            #### User Configuration
+                - useful if you want to release a feature to a subset of users
+        #### Indicators
+            - when you use keystones and feature flags well:
+                - your team can deploy software that includes incomplete code 
+                - releasing is a business decision, not a technical decision
+                - flag-related code is clean, well designed, and well tested
+                - flags and their code are reomved after the corresponding feature is released
+            
+    ## Continuous Deployment
+        - by deploying small pieces frequently, you reduce the risk that a big change will cause problems.
+        ##  How to Use Continuous Deployment
+            - has preconditions:
+                - use CI to keep code ready to release
+                - improve uality to the point it can be deployed without manual testing
+                - use feature flags or keystones to decouple deployments from releases
+                - establish moniotring to alert deployment failures
+        ## Detecting Deployment Failures
+            - monitor for error rates, performance issues, business metric issues
+            - optionally use canary releases for phased rollouts
+        ## Resolving Deployment Failures
+            - when a deploy goes wrong, immediately 'stop the line' and focus on fixing the issue
+            ### Roll back the deploy
+                - blue/green is a simple way to rollback
+            ### Fix the deploy
+                - revert the changes so you're back to a good state 
+                - schedule an incident analysis
+            Alternative: Fix forward
+                - just revert and deploy, can be slower than a dedicated roll-back
+        ## Incremental Releases
+            - for large or risky changes, run in production before you reveal to users
+        ## Data Migration
+            - 3 steps:
+                - deploy code that understands both the new and old schema. deploy the data migration code at the same time
+                - after deploy is successful, run the db migration code
+                - when migration is complete, remove the old code then deploy again
+        ## Indicators
+            - When your team deploys continuously
+                - deploying to production becomes a stress-free nonevent
+                - when deployment problems occur, they're easily resolved
+                - deploys are unlikely to cause production issues, and when they do , they're usually quick to fix
+
+    ## Evolutionary System Architecture
+        ### Are you Really gonna need it?
+            - stackoverflow is one of the 50-highest trafficked sites and has a pretty low-tech system architecture
+        ### Aim for Simplicity
+            - what's the simplest architecture that will solve the current problems
+            #### 1. Start with an ideal world
+                - think about logical separate of components, regulatory concerns etc.
+            #### 2. Introduce imperfect components and network
+                - what's the simplest way to achieve fail-over 
+            #### 3. Limit resources
+                - don't speculate about future load, look at real usage and trends
+            #### 4. Consider humans and Teams
+                - do you need to split components to make cross-team communication easier?
+        ### Controlling Complexity
+            - some complexity is essential, others is accidental
+            #### Evolutionary Design
+                - splitting components tends to increase overall complexity, moves complexity fro application architecture to system architecture
+            #### Self-Discipline
+                - network calls enforce isolation; without them you need a disciplined team
+            #### Fast Deployment
+                - use zero friction builds, then you don't need to split a component to make deployments easier
+            #### Vertical Scaling
+                - design your architecture to match the problem, rather than designing to match your teams
+            #### Refactoring System Architecture
+                ##### Multirepo components -> Monorepo components
+                    - combine several repos into one and factor out shared components
+                ##### Components -> Microliths
+                    - use separate directories instead of separate servers
+                ##### Microliths -> Modules
+                    - remove the top-level interface file and call the code normally
+                ##### Modules -> New Modules
+                    - more of an application architecture question
+                ##### Big ball of mud -> Modules
+                    - evolutionary design can transform it to modules
+                ##### Modules -> Microliths
+                    - introduce a top-level interface file and only allow calls through it
+                ##### Microliths -> Components
+                    - a lot of work, especially on the operations side
+                ##### Modules -> Components
+                    - jump straight from a module to a component, often via a re-write
+                ##### Monorepo components -> multirepo components
+                    - could be useful if moving ownership to another team
+                ##### Compound Refactorings
+                    - combine the above in series
+        ### Indicators
+            - when you evolve your system architecture well
+                - small systems have small architecutres, large systems have manageable architectures
+                - the sytem architecture is easy to explain and understand
+                - accidental complexity is kept to a minimum
+
 
 
 
