@@ -2249,6 +2249,86 @@ tags: mgmt tech agile kals_notes
                 - the sytem architecture is easy to explain and understand
                 - accidental complexity is kept to a minimum
 
+# Chapter 16 - Quality
+    - Quality is not just about testing, it's about the way you approach your work, and build into everything
+    ## No Bugs
+        - Eliminate errors at their source rather than finding and fixing them after the fact
+    ## Don't play the bug game
+        - no reason to discern between 'bugs', 'defects', etc.
+        - what really matters is whether you will do or not do something.
+        - a bug is anything your team consdiers 'done' that later needs correction
+        - if something needs work, it gets a story card
+    ## How to build quality in 
+        - keep internal quality as high as possible while keeping external quality at a level required by stakeholders.
+        ### Prevent Programmers Errors
+            - TDD
+            - sensible hours, pair programming, mobbing to bring fresh and multiple perspectives.
+            - supplement with good standards
+        ### Prevent Design Mistakes
+            - manfiest as complicated, confusing code that's hard to get right
+            - use collective code ownership, evolutionary design, and slack to continuously improve
+        ### Prevent Requirements Errors
+            - team needs to include on-site customers with skills to understand, decide and explain the requirements
+        ### Prevent Systemic Errors
+            - every 'escaped' defect indicates a need to improve your dev system.
+            - if you're are looking for bugs after building, use that as a clue to where your process needs to improve
+            - if your team thought something was done and later needs fixing, consider an incident analysis
+        ### Fix Bugs Immediately
+            - if too big to fix quickly, have a huddle and see if there's enough slack to fix it
+            - if not enough slack, decide if it's important enough to go into next release, or put in visual plan
+            - if not important enough to fix, discard the bug
+        ### Testers' Role
+            - tend to focus on getting requirements right, collaborate with customers to iron out details
+            - others are more technical, focus on investigating logs in production, performance, etc.
+        ### `Tude
+            - "bugs are for other people"
+        ### Indicators
+            - When your team has a culture of 'no bugs'
+                - your team is confident in teh quality of its software
+                - you're comfortable releasing to production without a manual testing phase
+                - stakeholders, customers, and users rarely encounter unpleasant surprises
+                - your team spends its time producing great software instead of fighting fires
+
+# Blind Spot Discovery
+    - when you fins a problem, fix the gap, think about what happened in the process that allowed the bug to occur
+    ## Validated Learning
+        - nobody really knows what you should build, not even the people asking for it
+        - your job is to take those ideas, test them, and learn what you should really build
+        - use the build-measure-learn loop
+            1. build : what's the smallest thing we can put in front of real customers?
+            2. measure: prior to showing anyone, decide what data you need to see to validate/invalidate the idea
+            3. learn: if you validated the hypothesis, continue, otherwise change plans
+        - don't assume delivering stories will be enough; do everything you can to avlidate assumptions and get feedback
+    ## Exploratory Testing
+        - a technique for finding blind spots
+            1. charter: what you're going to explory and why, should give about an hour or two of work
+            2. observe: use the software via UI, APIs, etc.observe anything you can; logs, db etc.
+                - look for 2 things: anything out of the ordinary and anything you can modify (url, form field, etc.)
+                - take notes as you go
+            3. vary: think of ways to break the system
+        - as you go, use your obesrvations to decide what to explore next.
+    ## Chaos Engineering
+        - deliberatly inject failures into running systems
+            1. start with an understanding of the system's "steady state"; which parts of system most valuable to check first?
+            2. prepare the vary the system in some way and form a hypothesis about what will happen
+            3. make the change, observe what happens. 
+    ## Indicators
+        - When you use blind spot discovery well:   
+            - the team trusts the quality of its software
+            - the taem doesn't use blind spot discovery as a form of pre-release testing
+            - the number of defects found in production and by blind-spot techniques declines over time
+            - the amount of time needed needed for blind spot discovery declines over time
+
+# Incident Analysis
+    ## The Nature of Failure
+        - failure is a consequence of the entire development system in which work is performed.
+        - when failure occurs, it's because multiple things go wrong at once
+        - systems exhibit a drift towards failure; stay vigilent, past successes don't guarantee future success
+        - treat every failure as an opportunity to learn and improve
+        
+
+
+
 
 
 
