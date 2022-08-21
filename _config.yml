@@ -46,4 +46,4 @@ exclude:
   - Dockerfile
   - .idea/
   - CNAME
-theme: jekyll-theme-modernist
+theme: jekyll-theme-hacker
