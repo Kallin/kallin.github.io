@@ -261,7 +261,7 @@ PLATFORMS
 
 DEPENDENCIES
   github-pages (~> 227)
-  jekyll-theme-midnight
+  jekyll-theme-tactile
 
 BUNDLED WITH
    2.3.10
