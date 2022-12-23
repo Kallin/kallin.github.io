@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "Kal's Notes: The Art of Agile Development, 2nd Edition"
 tags: mgmt tech agile kals_notes
 ---
