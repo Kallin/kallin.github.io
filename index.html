@@ -2,26 +2,28 @@
 layout: default
 ---
 
-<h2>Posts</h2>
+<h2>Posts by date</h2>
 
 <section>
     <ul>
         {% for post in site.posts %}
             <li>
-                <a href="{{ post.url }}">{{ post.title }}</a>
+                <a href="{{ post.url }}">{{ post.title }}</a> - {{ post.date || date_to_long_string }}
             </li>
         {% endfor %}
     </ul>
 </section>
 
-<h2>Tags</h2>
+<h2>Posts by tag</h2>
 
 <section class="bg-purple-100">
     {% for tag in site.tags %}
         <h3>{{ tag[0] }}</h3>
         <ul>
             {% for post in tag[1] %}
-                <li><a href="{{ post.url }}">{{ post.title }}</a></li>
+                <li>
+                    <a href="{{ post.url }}">{{ post.title }}</a> - {{ post.date || date_to_long_string }}
+                </li>
             {% endfor %}
         </ul>
     {% endfor %}
