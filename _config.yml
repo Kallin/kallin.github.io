@@ -9,3 +9,5 @@ github:
   owner_name: Kallin Nagelberg
 
 theme: minima
+
+github: [metadata]
