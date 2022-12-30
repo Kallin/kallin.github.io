@@ -11,3 +11,6 @@ github:
 theme: minima
 
 github: [metadata]
+
+disqus:
+  shortname: happycampers-dance
