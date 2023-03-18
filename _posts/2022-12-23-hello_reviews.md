@@ -1,8 +1,7 @@
 ---
 layout: post
 title:  "Welco(me) Back!"
-date:   2022-12-23
-tags: personal-development
+tags: personal-development tech
 ---
 
 So, it begins again!
