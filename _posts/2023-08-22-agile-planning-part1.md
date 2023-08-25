@@ -62,4 +62,4 @@ chartering a team's purpose and mission, though we won't go into that here.
 
 # Next: Generating the Possible Increments
 
-Please join me soon for the next post, where we'll explore how to generate that initial set of possible valuable increments.
+Please continue onto the [next post]({% post_url 2023-08-24-agile-planning-part2 %}) in this series, where we'll explore how to generate that initial set of possible valuable increments.
