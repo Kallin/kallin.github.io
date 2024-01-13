@@ -4,6 +4,9 @@ description: >-
   The Reality-Adjacent Thoughts of Kallin Nagelberg
 url: "http://happycampers.dance"
 
+plugins:
+  - jekyll-sitemap
+
 github:
   owner_url: https://github.com/Kallin/
   owner_name: Kallin Nagelberg
