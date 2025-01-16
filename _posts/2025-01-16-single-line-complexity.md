@@ -53,7 +53,7 @@ We have 0 assignments, 11 branches, and 3 conditionals, resulting in an ABC scor
 Consider a method that scores well on complexity metrics but contains a single line that combines multiple assignments, branches, and conditions. 
 With the current AbcSize Metric, it doesn't matter if that logic is spread across 10 lines, or packed into one. 
 
-For Example, here is some code with an ABC score of 10.3 (3 assignemnts, 9 branches, 4 conditionals). 
+For Example, here is some code with an ABC score of 10.3 (3 assignments, 9 branches, 4 conditionals). 
 
 Spread across 11 lines:
 
