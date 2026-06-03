@@ -1,0 +1,16 @@
+---
+// Cloudflare Web Analytics — privacy-first (no cookies, no consent banner,
+// no personal data). Loaded only in production builds so local dev doesn't
+// generate hits. This is the single place analytics is wired.
+const enabled = import.meta.env.PROD;
+---
+{
+	enabled && (
+		<script
+			is:inline
+			defer
+			src="https://static.cloudflareinsights.com/beacon.min.js"
+			data-cf-beacon='{"token": "6dfb32d141104eb591f2deaf652da17d"}'
+		/>
+	)
+}
