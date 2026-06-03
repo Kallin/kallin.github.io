@@ -3,6 +3,7 @@ title: 'Comparing Adjacent Elements in Ruby'
 description: 'Three Ruby techniques for comparing adjacent array elements — a manual loop, the elegant each_cons method, and a zip-and-rotate combo — demonstrated on the puzzle of finding the smallest gap between sorted integers.'
 pubDate: '2023-03-18'
 tags: ['personal-development', 'coding', 'tech']
+draft: true
 ---
 
 # CodinGame

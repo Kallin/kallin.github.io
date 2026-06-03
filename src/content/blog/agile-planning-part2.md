@@ -3,6 +3,7 @@ title: 'Visual Agile Planning in a Remote World - Part 2: Generating the Increme
 description: 'A step-by-step walkthrough of using cluster mapping on a virtual whiteboard to brainstorm, cluster, organize, and refine the possible valuable increments for an agile team.'
 pubDate: '2023-08-24'
 tags: ['personal-development', 'coding', 'tech']
+draft: true
 ---
 
 This post is a continuation from the [last post](/blog/agile-planning-part1/) in this series. Please start there if you still need to read it.

@@ -3,6 +3,7 @@ title: 'A Developer In the Deep End'
 description: 'A new Director of Engineering recounts being thrown into management without a mentor, and shares the seven books that helped him find his footing — plus a plan to review them in future posts.'
 pubDate: '2023-03-09'
 tags: ['personal-development', 'tech']
+draft: true
 ---
 
 Admittedly, and perhaps ashamedly, I wasn’t always an avid reader of books. It’s not that I never read, but I could go for months or maybe even a year without reading a book cover to cover. My rationalization was that I’m already reading so much daily, from news to technical guides to source code, and that ought to be enough. More recently, I’ve come to believe that mindset was misguided. 

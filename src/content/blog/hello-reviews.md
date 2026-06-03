@@ -3,6 +3,7 @@ title: 'Welco(me) Back!'
 description: 'A relaunch of the author''s blog, laying out why they''re writing again and the themes — book reviews, software, management, board gaming, urban planning, photography, and fitness — they plan to explore, starting with tech book reviews.'
 pubDate: '2022-12-23'
 tags: ['personal-development', 'tech']
+draft: true
 ---
 
 So, it begins again!

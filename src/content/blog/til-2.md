@@ -3,6 +3,7 @@ title: 'TIL 2: Javascript Polyfills and Transpiling'
 description: 'A short TIL explaining what JavaScript polyfills and transpilers are, how they keep code working across browsers, and the popular tools for each (core-js, polyfill.io, Babel).'
 pubDate: '2024-06-12'
 tags: ['tech', 'personal-development', 'javascript']
+draft: true
 ---
 
 Today I learned about Javascript [Polyfills and Transpilers](https://javascript.info/polyfills).

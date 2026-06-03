@@ -1,16 +1,14 @@
 ---
 title: 'Understanding Complexity Density: A New Approach with RuboCop'
-description: 'Introduces a new RuboCop cop, Metrics/SingleLineComplexity, that applies the ABC metric per line to quantify "complexity density" and flag individual lines packing too much logic.'
+description: 'A RuboCop cop I proposed — Metrics/SingleLineComplexity — that applies the ABC metric per line to measure "complexity density" and flag the individual lines packing in too much logic.'
 pubDate: '2025-01-16'
 tags: ['tech', 'coding', 'ruby']
 ---
 
 
-Recently, I've developed a new type of RuboCop check that introduces the concept of "complexity density," leveraging the ABC metric to identify particularly complex lines in your Ruby code. 
-This new cop, `Metrics/SingleLineComplexity`, can be viewed [here](https://github.com/rubocop/rubocop/pull/13595/files#diff-bac0afb83227700f28b5a130464cd6a6307fc7a8321aee0eab729a9dcae936c6),
- where it's under review as a pull request on the RuboCop Project.
+A while back I built a RuboCop check around an idea I call "complexity density" — using the ABC metric to flag individual lines of Ruby that pack in too much logic. I [proposed it to RuboCop](https://github.com/rubocop/rubocop/pull/13595) as a new cop, `Metrics/SingleLineComplexity`. A maintainer engaged with it and helped sharpen the tests, but I didn't push it over the finish line — the PR went stale and was eventually auto-closed, so it never shipped in RuboCop itself. The idea still holds up, though, and it's small enough to drop into a project as a custom cop or package as a standalone gem.
 
-In this post, I'll explain what complexity density is and how it can help you write cleaner, more maintainable code.
+This post explains what complexity density is and why I still think it's the more interesting thing to measure.
 
 # Why 'Complexity Density'?
 
@@ -28,11 +26,11 @@ Could we move beyond subjective debates and provide an objective threshold for i
 
 The ABC metric quantifies complexity based on three factors:
 
-Assignments (A): Variable assignments or reassignments.
+Assignments (A): variable assignments and reassignments (`=`, `+=`, …).
 
-Branches (B): Control structures such as conditionals or loops.
+Branches (B): method calls and message sends — each call "branches" execution off to another piece of code.
 
-Conditions (C): Boolean expressions and evaluations.
+Conditionals (C): conditional and comparison logic (`==`, `<`, `>`, `&&`, ternaries, …).
 
 It is a well established method for measuring complexity in code, and RuboCop already includes a cop, `Metrics/AbcSize`, that uses the ABC metric to identify complex methods.
 
@@ -94,10 +92,6 @@ could provide a more nuanced view of code complexity.
 
 # Conclusion
 
-By introducing line-level complexity analysis with the ABC metric, this new RuboCop cop introduces a new tool to help us increase our codebases'
-maintainability. 
- 
+A per-method complexity check can't tell whether logic is spread cleanly across ten readable lines or crammed into one inscrutable one — both score the same. Measuring complexity *per line* surfaces exactly the dense, hard-to-parse lines that slip past `AbcSize` and `LineLength` alike.
 
-Give it a try on your Ruby Project, and let me know what you think! If people like it, perhaps it could be ported to other languages as well.
-
-Oh, and please give a Thumbs Up to the PR if you'd like to see it included in future versions of RuboCop 😊
+The cop is small enough to drop into a project as a custom cop, or to package as a gem — the [PR](https://github.com/rubocop/rubocop/pull/13595) has the implementation and tests if you want a starting point. And I still think "complexity density" — complexity weighed against the lines or characters it's spread across — is a more useful unit to measure than either raw per-method ABC or line length on its own.

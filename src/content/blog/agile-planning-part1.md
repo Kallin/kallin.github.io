@@ -3,6 +3,7 @@ title: 'Visual Agile Planning in a Remote World - Part 1: Tools and Horizons'
 description: 'How to apply The Art of Agile Planning to remote teams using a virtual whiteboard, and an introduction to the planning horizons framework for structuring work from purpose down to weekly tasks.'
 pubDate: '2023-08-22'
 tags: ['personal-development', 'coding', 'tech']
+draft: true
 ---
 
 Ever since reading [The Art of Agile Planning (2nd Edition)](https://www.jamesshore.com/v2/books/aoad2), I've wanted to put everything I could from that book into practice during my work as a software developer and to help manage various aspects of my technology organization. With a recent project, I've had the opportunity to explore some of the visual planning ideas outlined in the book, focusing on how it works best for teams in a remote-first environment.
