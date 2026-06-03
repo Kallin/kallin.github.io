@@ -1,0 +1,62 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const recent = posts.slice(0, 6);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="intro">
+				<h1>{SITE_TITLE}</h1>
+				<p class="tagline">{SITE_DESCRIPTION}</p>
+				<p>
+					I build software and games — lately a board-game design engine, a VR
+					flyer, and assorted side quests. This is where I write things down: what
+					I'm learning, what I'm making, and the occasional reality-adjacent thought.
+					Start with the <a href="/blog">blog</a> or read a bit <a href="/about">about me</a>.
+				</p>
+			</section>
+			<section class="recent">
+				<h2>Recent posts</h2>
+				<ul>
+					{recent.map((post) => (
+						<li>
+							<a href={`/blog/${post.id}/`}>
+								<span class="post-title">{post.data.title}</span>
+								<FormattedDate date={post.data.pubDate} />
+							</a>
+						</li>
+					))}
+				</ul>
+				<p><a href="/blog">All posts →</a></p>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main { max-width: 720px; }
+	.intro { margin-bottom: 3rem; }
+	.tagline { color: rgb(var(--gray)); font-size: 1.2rem; margin-top: -0.5rem; }
+	.recent ul { list-style: none; padding: 0; }
+	.recent li { margin-bottom: 0.75rem; border-bottom: 1px solid rgb(var(--gray-light)); padding-bottom: 0.75rem; }
+	.recent li a { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; text-decoration: none; }
+	.recent li a:hover .post-title { text-decoration: underline; }
+	.post-title { font-weight: 600; }
+	.recent li :global(time) { color: rgb(var(--gray)); font-size: 0.85rem; white-space: nowrap; }
+</style>

@@ -1,0 +1,37 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`About — ${SITE_TITLE}`} description="About Kallin Nagelberg." />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>About</h1>
+			<p>
+				I'm Kallin Nagelberg — a software developer and engineering leader who likes
+				building things and writing about what I learn along the way. Topics here lean
+				toward software, coding, and the craft of making teams and tools work better,
+				with the occasional detour into games and board-game design.
+			</p>
+			<p>A few of my other hangouts on the net:</p>
+			<ul>
+				<li><a href="https://github.com/Kallin">GitHub</a> — code &amp; projects</li>
+				<li><a href="https://www.linkedin.com/in/kallin/">LinkedIn</a></li>
+				<li><a href="https://www.goodreads.com/user/show/15580883-kallin-nagelberg">GoodReads</a></li>
+				<li><a href="https://www.codingame.com/profile/4b1d61768cee9c0433fa188b757ef9535296954">CodinGame</a></li>
+			</ul>
+			<p>
+				Want to reach out? Find me on <a href="https://www.linkedin.com/in/kallin/">LinkedIn</a>
+				or say hi on <a href="https://www.codingame.com/profile/4b1d61768cee9c0433fa188b757ef9535296954">CodinGame</a>.
+			</p>
+		</main>
+		<Footer />
+	</body>
+</html>
