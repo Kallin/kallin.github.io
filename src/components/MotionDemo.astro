@@ -1,0 +1,233 @@
+---
+// One interactive demo block for the motion-contact-sheet post: a live
+// animation (Run button + slow-mo) on top, the pre-generated contact sheet
+// below, and a model's read of that sheet as the caption. Reused per scenario.
+interface Props {
+  scenario?: string;
+  sheet?: string;
+}
+const { scenario, sheet } = Astro.props;
+const hasRead = Astro.slots.has('default');
+---
+
+<figure class="motion-demo" data-scenario={scenario}>
+  {scenario && (
+    <Fragment>
+      {scenario === 'tiny-token' ? (
+        <div class="md-stage">
+          <span class="md-token">●</span>
+        </div>
+      ) : (
+        <div class="md-stage">
+          <span class="md-slot md-from"></span>
+          <span class="md-slot md-to"></span>
+          <span class="md-card">★</span>
+        </div>
+      )}
+      <div class="md-controls">
+        <button class="md-run" type="button">▶ Run it</button>
+        <button class="md-reset" type="button">↺ Reset</button>
+        <label class="md-slow"><input type="checkbox" class="md-slowcheck" /> slow-mo</label>
+      </div>
+    </Fragment>
+  )}
+  {sheet && (
+    <Fragment>
+      <button class="md-zoom" type="button" aria-label="Enlarge contact sheet">
+        <img class="md-sheet" src={sheet} alt={`Contact sheet — ${scenario ?? 'animation'}`} loading="lazy" />
+        <span class="md-zoom-hint">⤢ click to enlarge</span>
+      </button>
+      <dialog class="md-lightbox"><img src={sheet} alt="Contact sheet (full size)" /></dialog>
+    </Fragment>
+  )}
+  {hasRead && <figcaption class="md-read"><slot /></figcaption>}
+</figure>
+
+<style>
+  .motion-demo { margin: 2.5rem 0; }
+  .md-stage {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    aspect-ratio: 620 / 280;
+    margin: 0 auto;
+    border-radius: 14px;
+    overflow: hidden;
+    background: radial-gradient(120% 140% at 10% 10%, #1b2150, #0c0f22);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    perspective: 1200px;
+  }
+  .md-slot {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    box-sizing: border-box;
+    width: 15%; aspect-ratio: 9 / 13; border-radius: 8px;
+    border: 2px dashed rgba(255, 255, 255, 0.45);
+  }
+  .md-from { left: 5%; }
+  .md-to { right: 5%; }
+  .md-card {
+    position: absolute; top: 50%; left: 5%; transform: translateY(-50%);
+    box-sizing: border-box;
+    width: 15%; aspect-ratio: 9 / 13; border-radius: 8px;
+    background: linear-gradient(150deg, #ffd36e, #ff8a5c);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    display: grid; place-items: center; font-size: 1.7rem; color: #1a1a1a;
+    will-change: transform;
+  }
+  .md-token {
+    position: absolute; top: 18%; left: 8%; transform: translate(0, 0);
+    width: 34px; height: 34px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffd36e, #ff8a5c);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    display: grid; place-items: center; font-size: 1rem; color: #1a1a1a;
+    will-change: transform;
+  }
+  .md-controls { display: flex; gap: 1.2rem; align-items: center; justify-content: center; margin: 0.9rem 0 0.2rem; }
+  .md-run { padding: 0.5rem 1.1rem; border-radius: 8px; border: 1px solid rgb(var(--gray-light)); background: white; font: inherit; font-weight: 700; cursor: pointer; }
+  .md-run:hover { border-color: rgb(var(--gray)); }
+  .md-reset { padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid rgb(var(--gray-light)); background: transparent; color: rgb(var(--gray)); font: inherit; cursor: pointer; }
+  .md-reset:hover { border-color: rgb(var(--gray)); color: rgb(var(--gray-dark)); }
+  .md-slow { font-size: 0.85rem; color: rgb(var(--gray)); user-select: none; }
+  .md-zoom { display: block; width: 100%; padding: 0; border: none; background: none; cursor: zoom-in; position: relative; margin-top: 0.6rem; }
+  .md-sheet { width: 100%; border-radius: 10px; display: block; }
+  .md-zoom-hint { position: absolute; top: 0.6rem; right: 0.6rem; background: rgba(0, 0, 0, 0.65); color: #fff; font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+  .md-zoom:hover .md-zoom-hint { opacity: 1; }
+  .md-lightbox { max-width: 96vw; max-height: 94vh; padding: 0; border: none; background: transparent; cursor: zoom-out; }
+  .md-lightbox::backdrop { background: rgba(0, 0, 0, 0.85); }
+  .md-lightbox img { max-width: 96vw; max-height: 94vh; display: block; }
+  .md-read {
+    font-size: 0.95rem; color: rgb(var(--gray-dark));
+    border-left: 3px solid var(--accent); padding-left: 1rem; margin-top: 1rem; font-style: italic;
+  }
+</style>
+
+<script>
+  // Scenario keyframes — these mirror the demo repo's WAAPI scenarios so the
+  // live animation matches what its committed contact sheet captured.
+  const SCEN: Record<string, {
+    build: (travel: number) => Keyframe[];
+    opts: KeyframeAnimationOptions;
+    onFinish?: (el: HTMLElement, travel: number) => string;
+  }> = {
+    slide: {
+      build: (d) => [{ transform: 'translateY(-50%) translateX(0)' }, { transform: `translateY(-50%) translateX(${d}px)` }],
+      opts: { duration: 1200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
+    },
+    // lifts out of its slot, arcs + flips end-over-end across, lands in the far
+    // slot, then a double scale-pulse at rest
+    banger: {
+      build: (d) => {
+        const T = (x: number) => `translateY(-50%) translateX(${x}px)`;
+        const Tv = (x: number, y: number) => `translateY(-50%) translateX(${x}px) translateY(${y}px)`;
+        return [
+          { transform: `${T(0)} rotateY(0deg) scale(1)`, offset: 0 },
+          { transform: `${Tv(d / 2, -30)} rotateY(90deg) scale(1.06)`, offset: 0.28 },
+          { transform: `${T(d)} rotateY(180deg) scale(1)`, offset: 0.52 },
+          { transform: `${T(d)} rotateY(180deg) scale(1)`, offset: 0.62 },
+          { transform: `${T(d)} rotateY(180deg) scale(1.16)`, offset: 0.72 },
+          { transform: `${T(d)} rotateY(180deg) scale(1)`, offset: 0.82 },
+          { transform: `${T(d)} rotateY(180deg) scale(1.1)`, offset: 0.91 },
+          { transform: `${T(d)} rotateY(180deg) scale(1)`, offset: 1 },
+        ];
+      },
+      opts: { duration: 2600, easing: 'linear', fill: 'forwards' },
+    },
+    // the SAME trip as banger, but it stalls in the wrong spot: lands short of
+    // the slot, hangs there as if finished, then snaps to its real resting place
+    'banger-broken': {
+      build: (d) => {
+        const T = (x: number) => `translateY(-50%) translateX(${x}px)`;
+        const Tv = (x: number, y: number) => `translateY(-50%) translateX(${x}px) translateY(${y}px)`;
+        return [
+          { transform: `${T(0)} rotateY(0deg) scale(1)`, offset: 0 },
+          { transform: `${Tv(d / 2, -30)} rotateY(90deg) scale(1.06)`, offset: 0.3 },
+          { transform: `${Tv(d * 0.82, 10)} rotateY(180deg) scale(1)`, offset: 0.6 },   // lands SHORT and a touch low
+          { transform: `${Tv(d * 0.82, 10)} rotateY(180deg) scale(1)`, offset: 1 },     // hangs there, looks settled
+        ];
+      },
+      opts: { duration: 2600, easing: 'linear', fill: 'forwards' },
+      onFinish: (_el, d) => `translateY(-50%) translateX(${d}px) rotateY(180deg) scale(1)`, // then snaps into the slot
+    },
+    // a 250ms flip-flight: too fast for a screenshot burst to sample without
+    // slowing it down first
+    'too-fast': {
+      build: (d) => {
+        const T = (x: number) => `translateY(-50%) translateX(${x}px)`;
+        const Tv = (x: number, y: number) => `translateY(-50%) translateX(${x}px) translateY(${y}px)`;
+        return [
+          { transform: `${T(0)} rotateY(0deg) scale(1)`, offset: 0 },
+          { transform: `${Tv(d / 2, -26)} rotateY(90deg) scale(1.06)`, offset: 0.45 },
+          { transform: `${T(d)} rotateY(180deg) scale(1)`, offset: 0.9 },
+          { transform: `${T(d)} rotateY(180deg) scale(1)`, offset: 1 },
+        ];
+      },
+      opts: { duration: 250, easing: 'linear', fill: 'forwards' },
+    },
+    // slide to the midpoint, hold there for 60% of the duration, then slide on:
+    // a long quiet stretch that even time-sampling would waste cells on
+    'long-pause': {
+      build: (d) => {
+        const T = (x: number) => `translateY(-50%) translateX(${x}px)`;
+        return [
+          { transform: `${T(0)}`, offset: 0 },
+          { transform: `${T(d / 2)}`, offset: 0.2 },
+          { transform: `${T(d / 2)}`, offset: 0.8 },
+          { transform: `${T(d)}`, offset: 1 },
+        ];
+      },
+      opts: { duration: 2600, easing: 'linear', fill: 'forwards' },
+    },
+    // a small token drifting in the corner of a big empty stage: nothing worth
+    // a cell until the sheet auto-crops to where the pixels actually change
+    'tiny-token': {
+      build: () => [{ transform: 'translate(0, 0)' }, { transform: 'translate(150px, 80px)' }],
+      opts: { duration: 1400, easing: 'ease-in-out', fill: 'forwards' },
+    },
+  };
+
+  document.querySelectorAll<HTMLElement>('.motion-demo').forEach((demo) => {
+    // click-to-zoom (works for every demo, regardless of scenario)
+    const zoom = demo.querySelector<HTMLButtonElement>('.md-zoom');
+    const lightbox = demo.querySelector<HTMLDialogElement>('.md-lightbox');
+    zoom?.addEventListener('click', () => lightbox?.showModal());
+    lightbox?.addEventListener('click', () => lightbox.close());
+
+    const def = SCEN[demo.dataset.scenario ?? ''];
+    if (!def) return;
+    const animated = demo.querySelector<HTMLElement>('.md-card, .md-token')!;
+    const from = demo.querySelector<HTMLElement>('.md-from');
+    const to = demo.querySelector<HTMLElement>('.md-to');
+    const btn = demo.querySelector<HTMLButtonElement>('.md-run')!;
+    const resetBtn = demo.querySelector<HTMLButtonElement>('.md-reset');
+    const slow = demo.querySelector<HTMLInputElement>('.md-slowcheck');
+    // Reset returns the element to its starting rest without playing: cancel any
+    // animation (which drops the forwards fill) and clear the inline transform so
+    // the CSS rest (which equals each scenario's first keyframe) applies again.
+    resetBtn?.addEventListener('click', () => {
+      animated.getAnimations().forEach((a) => a.cancel());
+      animated.style.transform = '';
+    });
+    btn.addEventListener('click', () => {
+      animated.getAnimations().forEach((a) => a.cancel());
+      const travel = from && to ? to.getBoundingClientRect().left - from.getBoundingClientRect().left : 0;
+      const frames = def.build(travel);
+      // seat the element on the first keyframe and commit it before replaying,
+      // so every run starts from the same place (no end-state flashing through)
+      animated.style.transform = (frames[0].transform as string) ?? '';
+      void animated.getBoundingClientRect();
+      const anim = animated.animate(frames, def.opts);
+      if (slow?.checked) anim.updatePlaybackRate(0.25);
+      if (def.onFinish) {
+        const rest = def.onFinish(animated, travel);
+        anim.finished
+          .then(() => {
+            anim.commitStyles();
+            anim.cancel();
+            // next frame: jump to flat rest with no transition — the snap
+            requestAnimationFrame(() => { animated.style.transform = rest; });
+          })
+          .catch(() => {});
+      }
+    });
+  });
+</script>

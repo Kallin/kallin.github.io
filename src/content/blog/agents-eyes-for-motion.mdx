@@ -1,0 +1,193 @@
+---
+title: 'Giving Coding Agents Eyes for Motion'
+description: 'Coding agents are blind to animation. They read your test logs, watch them go green, and never see that the transition looks broken. Here’s a trick that gives an agent motion perception: capture the animation as a timed burst, tile it into one labeled contact sheet, and hand it back as a single image.'
+pubDate: '2026-06-03'
+tags: ['ai', 'tooling', 'testing']
+draft: true
+---
+
+import MotionDemo from '../../components/MotionDemo.astro';
+
+There’s a blind spot in coding with AI agents that took me a while to name: **agents can’t see motion.**
+
+Here are two takes on the same animation. Hit **Run it** on each, and try slow-mo. The first is the one you meant to ship: a card lifts out of its slot, flips end-over-end as it crosses, lands in the next slot, and pulses twice.
+
+<MotionDemo scenario="banger" />
+
+The second is what an off day actually ships. Same start, same end, same passing tests. But it stops just short of its slot, hangs there for a beat like it's done, then jumps the last bit into place.
+
+<MotionDemo scenario="banger-broken" />
+
+You spotted the broken one in about half a second. Your test suite didn’t: every coordinate still lands where it should, the DOM still cleans up, the assertions are green on both. And the agent that built this is coding from the same green signal you just overrode with your eyes. It can’t see the jank. It tells you it’s done, and it’s wrong.
+
+An agent can read your code, run your tests, parse the output, and confidently tell you the animation is fixed. And it might be. The assertions are green, the coordinates check out, the DOM cleans up. But "the element ends at x=240, y=512 and the transform is removed" is not the same claim as "the element *moved* the way a human wants it to." The gap between those two is exactly where animation bugs live.
+
+I kept hitting this on a UI with a lot of bespoke animation. The bugs that survived a green test suite were always the visual ones: a card that stops a hair short of its slot and jumps the last few pixels, a flash at the destination before the flight even starts, a landing that settles a touch low. Not one of them moves a number a test asserts, so the agent doing the work has no way to know it's there.
+
+## The obvious fix doesn’t work
+
+The instinct is "just give the agent a screenshot." But one screenshot is one moment. It says nothing about *how* the element got there. And the natural next thought, "a screenshot per frame," hits two walls:
+
+1. **Cost.** Twenty frames is twenty images in the agent’s context. That’s expensive, and it crowds out the working context the agent actually needs.
+2. **Order.** A pile of separate images loses the one thing that matters most for motion: *sequence*. The model has to reconstruct the timeline from twenty unordered inputs, and it’s bad at that.
+
+Agents also can’t watch video, so the one medium built for motion is off the table.
+
+## One labeled contact sheet
+
+The trick that worked: **collapse the whole animation into a single image**. A contact sheet is like a roll of film laid out as a grid, each cell timestamped.
+
+One image is cheap. The grid preserves sequence by construction: frame one is top-left, time flows left-to-right, top-to-bottom. And because the entire motion is visible *at once*, the model can spot a cross-frame artifact (the snap, the flash, an easing that lurches) in a single glance, instead of diffing twenty separate inputs in its head. It turns "perceive motion over time," which agents are bad at, into "read one picture," which they’re good at.
+
+Here’s what that looks like for the animation you ran at the very top, the whole multi-phase sequence as one image an agent can read:
+
+<MotionDemo sheet="/images/posts/banger-sheet.png">
+**What a model reconstructs from this sheet, cold:** “The card starts in the left slot, lifts, then flies rightward across the stage, spinning edge-on through a vertical-sliver midpoint as it flips, before widening back into a full card face as it lands. It eases out smoothly and looks clean, with a brief scale-up just before it settles.” No prompt, no hint about what the animation was meant to do. It read the whole thing off one image. (Every model read quoted in this post is real output from a single cold pass, trimmed only for length.)
+</MotionDemo>
+
+That reframing is the whole idea. Everything else is making it actually work.
+
+Here’s the simplest case: a card sliding left to right. Hit **Run it** (try slow-mo), then look at the contact sheet below, the single image an agent reads instead of watching the motion.
+
+<MotionDemo scenario="slide" sheet="/images/posts/slide-sheet.png">
+**What a fresh model sees reading this sheet:** “A card slides horizontally from the left slot to the right slot along a straight path, easing in and out: small steps at the start, larger strides through the middle, then settling gently into the destination. It looks clean, with no overshoot or jitter.”
+</MotionDemo>
+
+The cell labels get small when the sheet is scaled to fit, so the tool also emits a **markdown companion** alongside the image. The per-cell data stays readable at any size (and gives the model a text anchor for the timing), and you can **click the sheet to zoom** for the full-resolution version.
+
+<details>
+<summary>The slide sheet's markdown companion</summary>
+
+| cell | source frame | native time |
+| --- | --- | --- |
+| 00 | frame-000 | t0 |
+| 01 | frame-007 | +220ms |
+| 02 | frame-009 | +67ms |
+| 03 | frame-011 | +64ms |
+| 04 | frame-013 | +62ms |
+| 05 | frame-014 | +31ms |
+| 06 | frame-017 | +94ms |
+| 07 | frame-020 | +93ms |
+| 08 | frame-025 | +156ms |
+| 09 | frame-038 | +402ms |
+| 10 | frame-047 | +267ms |
+
+</details>
+
+## Making the sheet readable
+
+The slide was the easy case: slow, big, steady motion. Real animation breaks a naive capture in a few predictable ways, and you can watch each fix flip the sheet from useless to readable.
+
+**The motion is too fast.** Here's the same kind of flip, but it runs in 250 ms, a blink. Run it (slow-mo helps), then look at what a straight capture gets you:
+
+<MotionDemo scenario="too-fast" sheet="/images/posts/toofast-blur-sheet.png">
+**A model handed the native-speed capture:** “I can barely reconstruct this. The card jumps from the left slot, to a smeared sliver mid-stage, to already parked at the right slot. One real in-between frame, too blurred to place. I can tell it goes left to right, but the path and the easing are unrecoverable at this rate.”
+</MotionDemo>
+
+A browser screenshot has a floor around 40 to 50 ms, so a 250 ms transition gives you three usable frames: start, one smear, end. The fix is to slow the animation down before you capture, overriding the engine's global time scale (GSAP's `timeScale`, or `playbackRate` on a `<video>`) by, say, 6×. Same flip, now sampled across the whole arc:
+
+<MotionDemo sheet="/images/posts/toofast-clear-sheet.png">
+**The same model, after 6× slowdown:** “The card starts docked in the left slot, flies rightward, narrows to a thin sliver mid-flight as it flips around its vertical axis, then widens back to a full face near the destination. It eases in slowly and accelerates hard through the back half. A clean flip-and-fly, no flicker or snapping.”
+</MotionDemo>
+
+The labels already report native time, and the header notes how much you slowed the capture, so a 90 ms gap on the sheet is 90 ms in the real animation.
+
+**The motion is tiny.** A card crossing the stage fills the frame; a toast sliding into a corner doesn't. Here's a token drifting in the corner of a big empty stage:
+
+<MotionDemo scenario="tiny-token" sheet="/images/posts/tinytoken-nocrop-sheet.png">
+**Captured whole-stage,** the token is a speck lost in empty pixels. The motion you care about is a few percent of each cell, and a vision model has no reason to look there.
+</MotionDemo>
+
+Crop to where the pixels actually change, the bounding box of motion across the whole burst, and the same capture becomes legible:
+
+<MotionDemo sheet="/images/posts/tinytoken-crop-sheet.png">
+**A model reading the cropped sheet:** “A small token glides diagonally from the upper-left toward the lower-right, easing in gently then carrying through at a smooth, steady pace. A clean, single continuous flight, no snapping or overshoot.”
+</MotionDemo>
+
+**Nothing is happening.** Most of an animation is often an element sitting still. Here's a card that slides to the middle, waits, then slides on:
+
+<MotionDemo scenario="long-pause" sheet="/images/posts/longpause-naive-sheet.png">
+**Sampled evenly in time,** half the cells are the same motionless card parked at the midpoint. Wasted.
+</MotionDemo>
+
+Score each frame by how much it changed from the last, and sample along *cumulative motion* instead. The dead hold collapses to a single labeled jump; every other cell lands where something is actually moving:
+
+<MotionDemo sheet="/images/posts/longpause-smart-sheet.png">
+**The same animation, motion-sampled:** “The card travels rightward across the stage, gliding with a slight lift as it crosses the middle. The gutter deltas are uneven though: one frame waits ~457 ms while the others tick ~90 ms, which says there's a real pause partway through the flight.”
+</MotionDemo>
+
+Notice what that model did: it read the *pause* off the timing labels, not the picture. A freeze leaves no visual trace, so it's the gutter delta that gives it away. Motion shows up in the cells; held time shows up in the labels.
+
+## The payoff
+
+Everything above just makes the sheet legible. Here's what it's for.
+
+Remember the broken animation at the very top, the one that stops short of its slot and jumps the last bit into place. You caught it in half a second. Your agent can't watch it. But hand it that animation's contact sheet and tell it what you saw, and it can finally look:
+
+<MotionDemo sheet="/images/posts/bangerbroken-sheet.png">
+**You: “the card lands a bit short of its slot, hangs there, then jumps in.” The agent, reading the sheet:** “Tracing cells 16 to 22, the card travels right but parks just short of and left of the dashed slot, sitting in the same shy position across cells 19, 20, and 21 as if the flight had finished. Only in the final cell does it appear seated inside the slot. The label on cell 21 is a much larger delta than the steps before it: the long hang right before the last jump.”
+</MotionDemo>
+
+It isn't taking your word for it anymore; it's looking at the thing it's describing, citing the exact cells where the card sits parked and the timing label on the hang. It fixes the landing, re-captures, and the sheet comes back as the clean flight from the top of this section: the card crosses, settles into its slot with its two little pulses, no short stop and no jump.
+
+That's the whole loop, and it's worth being precise about: **you supply the intent, the sheet supplies the eyes.** This isn't an agent turned loose to hunt for bugs it can't see. You describe the artifact you're staring at, the contact sheet lets the agent see it too, and a re-capture confirms the fix. You stay in the loop; the agent finally gets to be in the room.
+
+## Try it yourself
+
+None of this needs special infrastructure. It runs on what your coding agent already has: a shell, the ability to read an image back into its context, and Node. Claude Code and Cursor's agent mode both qualify. The tooling is [two small Node scripts](https://github.com/Kallin/motion-contact-sheet), `mcs-capture` and `mcs-sheet`.
+
+Point the capture at a running page, clip to the thing that moves, and slow the animation down enough that the burst can sample it:
+
+```bash
+mcs-capture --url http://localhost:3000 --clip ".toast" --slowdown 6 --out frames/
+mcs-sheet frames/ --edges
+```
+
+Then your agent reads `frames/contact-sheet.png` and looks. That's the whole tool.
+
+The one thing that trips people up: **don't run the burst through a browser MCP.** A screenshot over MCP is a 300 to 500 ms round trip, and the burst needs a frame every 60 to 200 ms, so the cadence collapses. Use the MCP, or a `--play` expression, to *stage* the scene (navigate, click to the right state), then let the in-process script fire the burst. MCP for staging, the script for the capture.
+
+In practice it's a short back-and-forth:
+
+> **You:** the dropdown opens but the last frame jumps.
+>
+> **Agent** *(captures, builds the sheet, reads it)*: Confirmed. Between cells 8 and 9 it drops about 6px after appearing to settle; the easing overshoots and the final keyframe corrects it. *(fixes the keyframe, re-captures)* Clean now, the last four cells hold position.
+
+Wiring it to your agent, in increasing order of polish:
+
+- **Scripts plus a sentence.** Drop the two scripts in your project and tell the agent, in its instructions, to reach for them whenever you describe something that looks wrong in motion. Works today, with nothing else.
+- **A skill.** The repo ships a Claude Code skill that encodes the whole routine: when to use it, the exact commands, the slowdown-and-clip gotchas, so the agent runs it on its own. Drop it in `.claude/skills/` and forget about it.
+
+## Under the hood
+
+If you want to know how the sheet decides what to keep, it's three cheap passes over the burst, and you can see each one.
+
+**Oversample, then throw most of it away.** The capture grabs far more frames than the sheet keeps. Here are all 110 frames from that long-pause animation:
+
+<MotionDemo sheet="/images/posts/longpause-all-sheet.png">
+The card slides in over the first dozen frames, sits at the midpoint for sixty-odd identical ones, then slides out. Keeping all of them would be a wall of the same motionless card.
+</MotionDemo>
+
+**Score each frame by how much it moved.** The builder converts each frame to grayscale and takes the mean absolute difference from the frame before it: one number for how much changed. Rendered back as an image, that scoring layer is the whole trick laid bare:
+
+<MotionDemo sheet="/images/posts/longpause-diffs-sheet.png">
+The motion-detection layer. Bright where the card's edges moved between frames, black where nothing did. The hold is a run of pure black frames: zero motion, zero cells spent on them. The two bright bursts are the slide-in and the slide-out.
+</MotionDemo>
+
+**Crop to the footprint.** Stack all those diffs into one saturating image and you get the motion footprint, every pixel the animation ever touched. The auto-crop is just the box around it:
+
+<MotionDemo sheet="/images/posts/longpause-envelope.png">
+The cumulative motion envelope. A small element moving in a big stage leaves a small bright box, and the cells zoom into it instead of wasting themselves on static chrome.
+</MotionDemo>
+
+Then the selection walks evenly along *cumulative* motion instead of time, so the dead hold collapses to a single labeled jump (that `+1.7s` back in the selection rung) while the two slides get sampled densely. Duration is irrelevant; only motion spends cells.
+
+**A note on frame rate.** A browser screenshot has a floor. `page.screenshot` lands around 40 to 50 ms when it's clipping a real chunk of the page, so maybe 20 frames a second; the bottleneck is encoding the PNG, which scales with the clipped area, so a tight clip climbs back toward 60. Either way it isn't enough for a 200 ms transition on its own. Slowdown is the multiplier: your effective resolution is `capture_fps × slowdown`. Capture at 20 fps, slow the animation 6×, and you're sampling the native motion as if you had a 120 fps camera. That's how a screenshot loop that can't catch a fast transition ends up reading it frame by frame.
+
+And you don't have to cram a long animation into one sheet. Capture the whole thing, then build a sheet per phase, or point the agent at just the window where the bug lives. The sheet is cheap; make as many as the motion deserves.
+
+## Where it should live
+
+The eventual home for this is probably a browser-automation MCP server: one that runs the capture in-process and hands back the finished sheet, so any agent gets motion perception without orchestrating shell commands at all. That closes the last gap. The round-trip latency that makes a naive "screenshot every 60 ms" approach miss the cadence goes away when the capture never leaves the browser process.
+
+But the core idea needs none of that. If your agent is editing animations and confidently telling you they’re fixed, hand it a contact sheet. It’ll start catching the things it’s been blind to.
