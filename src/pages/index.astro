@@ -5,9 +5,10 @@ import Header from '../components/Header.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { getCollection } from 'astro:content';
+import { isVisible } from '../utils/posts';
 
 const posts = (await getCollection('blog'))
-	.filter((p) => !p.data.draft)
+	.filter(isVisible)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 const recent = posts.slice(0, 6);
 ---

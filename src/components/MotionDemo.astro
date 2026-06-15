@@ -34,7 +34,7 @@ const hasRead = Astro.slots.has('default');
   {sheet && (
     <Fragment>
       <button class="md-zoom" type="button" aria-label="Enlarge contact sheet">
-        <img class="md-sheet" src={sheet} alt={`Contact sheet — ${scenario ?? 'animation'}`} loading="lazy" />
+        <img class="md-sheet" src={sheet} alt={`Contact sheet: ${scenario ?? 'animation'}`} loading="lazy" />
         <span class="md-zoom-hint">⤢ click to enlarge</span>
       </button>
       <dialog class="md-lightbox"><img src={sheet} alt="Contact sheet (full size)" /></dialog>
