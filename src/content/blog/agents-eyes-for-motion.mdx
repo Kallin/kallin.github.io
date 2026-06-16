@@ -1,14 +1,13 @@
 ---
 title: 'Giving Coding Agents Eyes for Motion'
-description: 'Coding agents are blind to animation. They read your test logs, watch them go green, and never see that the transition looks broken. Here’s a trick that gives an agent motion perception: capture the animation as a timed burst, tile it into one labeled contact sheet, and hand it back as a single image.'
+description: 'Coding agents can’t see motion: they write an animation, watch the tests pass, and never notice it looks broken. Here’s a trick that gives an agent motion perception: capture the animation as a timed burst, tile it into one labeled contact sheet, and hand it back as a single image.'
 pubDate: '2026-06-03'
 tags: ['ai', 'tooling', 'testing']
-draft: true
 ---
 
 import MotionDemo from '../../components/MotionDemo.astro';
 
-There’s a blind spot in coding with AI agents that took me a while to name: **agents can’t see motion.**
+Coding agents can’t see motion. An agent writes an animation, runs the tests, sees them pass, and has no idea whether what it built looks right or looks broken. The log is green either way.
 
 Here are two takes on the same animation. Hit **Run it** on each, and try slow-mo. The first is the one you meant to ship: a card lifts out of its slot, flips end-over-end as it crosses, lands in the next slot, and pulses twice.
 
@@ -145,7 +144,7 @@ mcs-sheet frames/ --edges
 
 Then your agent reads `frames/contact-sheet.png` and looks. That's the whole tool.
 
-The one thing that trips people up: **don't run the burst through a browser MCP.** A screenshot over MCP is a 300 to 500 ms round trip, and the burst needs a frame every 60 to 200 ms, so the cadence collapses. Use the MCP, or a `--play` expression, to *stage* the scene (navigate, click to the right state), then let the in-process script fire the burst. MCP for staging, the script for the capture.
+One trap to avoid: **don't run the burst through a browser MCP.** A screenshot over MCP is a 300 to 500 ms round trip, and the burst needs a frame every 60 to 200 ms, so the cadence collapses. Use the MCP, or a `--play` expression, to *stage* the scene (navigate, click to the right state), then let the in-process script fire the burst. MCP for staging, the script for the capture.
 
 In practice it's a short back-and-forth:
 
