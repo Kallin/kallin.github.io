@@ -23,6 +23,8 @@ An agent can read your code, run your tests, parse the output, and confidently t
 
 I kept hitting this on a UI with a lot of bespoke animation. The bugs that survived a green test suite were always the visual ones: a card that stops a hair short of its slot and jumps the last few pixels, a flash at the destination before the flight even starts, a landing that settles a touch low. Not one of them moves a number a test asserts, so the agent doing the work has no way to know it's there.
 
+*Code, if you want to follow along: [`motion-contact-sheet`](https://github.com/Kallin/motion-contact-sheet), the `mcs-capture` and `mcs-sheet` scripts.*
+
 ## The obvious fix doesn’t work
 
 The instinct is "just give the agent a screenshot." But one screenshot is one moment. It says nothing about *how* the element got there. And the natural next thought, "a screenshot per frame," hits two walls:
