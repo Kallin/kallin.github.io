@@ -9,12 +9,12 @@ import Comments from '../components/Comments.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, socialImage } = Astro.props;
 ---
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead title={title} description={description} image={socialImage ?? heroImage} />
 		<style>
 			main {
 				width: calc(100% - 2em);

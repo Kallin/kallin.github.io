@@ -11,6 +11,10 @@ const blog = defineCollection({
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
+			// Social-card image (og:image / twitter:image). Use when the post wants a
+			// purpose-built share card distinct from any in-body hero — e.g. a card with
+			// the title baked in, which would read as duplicated if shown in the body.
+			socialImage: z.optional(image()),
 			tags: z.array(z.string()).default([]),
 			draft: z.boolean().default(false),
 		}),
