@@ -9,6 +9,8 @@ import MotionDemo from '../../components/MotionDemo.astro';
 
 Coding agents can’t see motion. An agent writes an animation, runs the tests, sees them pass, and has no idea whether what it built looks right or looks broken. The log is green either way.
 
+*Code, if you want to follow along: [`motion-contact-sheet`](https://github.com/Kallin/motion-contact-sheet), the `mcs-capture` and `mcs-sheet` scripts.*
+
 Here are two takes on the same animation. Hit **Run it** on each, and try slow-mo. The first is the one you meant to ship: a card lifts out of its slot, flips end-over-end as it crosses, lands in the next slot, and pulses twice.
 
 <MotionDemo scenario="banger" />
@@ -22,8 +24,6 @@ You spotted the broken one in about half a second. Your test suite didn’t: eve
 An agent can read your code, run your tests, parse the output, and confidently tell you the animation is fixed. And it might be. The assertions are green, the coordinates check out, the DOM cleans up. But "the element ends at x=240, y=512 and the transform is removed" is not the same claim as "the element *moved* the way a human wants it to." The gap between those two is exactly where animation bugs live.
 
 I kept hitting this on a UI with a lot of bespoke animation. The bugs that survived a green test suite were always the visual ones: a card that stops a hair short of its slot and jumps the last few pixels, a flash at the destination before the flight even starts, a landing that settles a touch low. Not one of them moves a number a test asserts, so the agent doing the work has no way to know it's there.
-
-*Code, if you want to follow along: [`motion-contact-sheet`](https://github.com/Kallin/motion-contact-sheet), the `mcs-capture` and `mcs-sheet` scripts.*
 
 ## The obvious fix doesn’t work
 
