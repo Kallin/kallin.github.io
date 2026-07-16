@@ -1,0 +1,59 @@
+---
+// The series convention: every new term of art gets one of these. A visually
+// distinct block that stops the narrative, explains the underlying concept in
+// plain terms, and (where it earns it) embeds a steppable demo. Posts import
+// this and wrap the explainer + demo together so the reader always knows
+// "we're pausing to teach" from the background alone.
+interface Props {
+	title: string;
+}
+const { title } = Astro.props;
+---
+
+<aside class="concept">
+	<div class="concept-tag">
+		<span class="concept-kicker">concept</span>
+		<span class="concept-title">{title}</span>
+	</div>
+	<div class="concept-body">
+		<slot />
+	</div>
+</aside>
+
+<style>
+	.concept {
+		margin: 2.5rem 0;
+		padding: 1.4rem 1.6rem 1.1rem;
+		background: #f3f6fc;
+		border: 1px solid #dbe4f2;
+		border-radius: 14px;
+	}
+	.concept-tag {
+		display: flex;
+		align-items: baseline;
+		gap: 0.7em;
+		margin-bottom: 0.6rem;
+	}
+	.concept-kicker {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	.concept-title {
+		font-size: 1.05rem;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+	}
+	.concept-body :global(p) {
+		margin: 0.7em 0;
+	}
+	.concept-body :global(p:first-child) {
+		margin-top: 0;
+	}
+	.concept-body :global(figure) {
+		/* demos inside a concept block sit flush on the tinted card */
+		background: #fff;
+	}
+</style>

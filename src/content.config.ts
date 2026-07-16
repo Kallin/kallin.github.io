@@ -17,6 +17,12 @@ const blog = defineCollection({
 			socialImage: z.optional(image()),
 			tags: z.array(z.string()).default([]),
 			draft: z.boolean().default(false),
+			// Multi-part series. `series` is a shared slug across the parts;
+			// `seriesOrder` is the 1-based position. The SeriesNav component uses
+			// these to render the breadcrumb + prev/next, and honours the draft
+			// rule (unpublished parts never appear in the production nav).
+			series: z.string().optional(),
+			seriesOrder: z.number().optional(),
 		}),
 });
 

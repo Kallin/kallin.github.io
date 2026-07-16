@@ -1,0 +1,85 @@
+---
+// A post figure that opens full-size in a lightbox on click. For dense images
+// (timelines, contact sheets, wide charts) that get squeezed by the prose column.
+interface Props {
+	src: string;
+	alt: string;
+}
+const { src, alt } = Astro.props;
+---
+
+<figure class="zoomable">
+	<button class="zi-open" type="button" aria-label={`Enlarge: ${alt}`}>
+		<img src={src} alt={alt} loading="lazy" />
+		<span class="zi-hint">⤢ click to enlarge</span>
+	</button>
+	<dialog class="zi-lightbox">
+		<img src={src} alt={alt} loading="lazy" />
+	</dialog>
+</figure>
+
+<style>
+	.zoomable {
+		margin: 2.5rem 0;
+	}
+	.zi-open {
+		position: relative;
+		display: block;
+		width: 100%;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: zoom-in;
+	}
+	.zi-open img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 10px;
+	}
+	.zi-hint {
+		position: absolute;
+		right: 10px;
+		bottom: 10px;
+		padding: 0.2em 0.6em;
+		font-size: 0.75rem;
+		color: rgb(var(--gray-dark));
+		background: rgba(255, 255, 255, 0.85);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+	.zi-open:hover .zi-hint,
+	.zi-open:focus-visible .zi-hint {
+		opacity: 1;
+	}
+	.zi-lightbox {
+		max-width: min(96vw, 1600px);
+		max-height: 92vh;
+		padding: 0;
+		border: none;
+		border-radius: 10px;
+		background: #fff;
+		cursor: zoom-out;
+	}
+	.zi-lightbox::backdrop {
+		background: rgba(10, 12, 20, 0.75);
+	}
+	.zi-lightbox img {
+		display: block;
+		width: 100%;
+		height: auto;
+		max-height: 92vh;
+		object-fit: contain;
+	}
+</style>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.zoomable').forEach((fig) => {
+		const open = fig.querySelector<HTMLButtonElement>('.zi-open')!;
+		const box = fig.querySelector<HTMLDialogElement>('.zi-lightbox')!;
+		open.addEventListener('click', () => box.showModal());
+		box.addEventListener('click', () => box.close());
+	});
+</script>

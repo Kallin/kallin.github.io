@@ -1,0 +1,351 @@
+---
+// A manually-stepped reinforcement-learning loop: the network acts, the game
+// responds, a reward eventually arrives, the dials get nudged, and self-play
+// closes the loop. Continues the running tic-tac-toe example.
+---
+
+<figure class="rld">
+	<svg viewBox="0 0 560 250" role="img" aria-label="The reinforcement learning loop between a network and a game, ending in self-play">
+		<defs>
+			<marker id="rld-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"></path>
+			</marker>
+		</defs>
+
+		<!-- learner -->
+		<g class="part p-net">
+			<rect x="20" y="50" width="170" height="92" rx="12" />
+			<text class="ttl" x="105" y="78" text-anchor="middle">the network</text>
+			{[55, 105, 155].map((cx) => (
+				<g class="dial" transform={`translate(${cx},115)`}>
+					<circle r="10" />
+					<line class="tick" x1="0" y1="0" x2="0" y2="-8" />
+				</g>
+			))}
+		</g>
+
+		<!-- world -->
+		<g class="part p-game">
+			<rect x="370" y="50" width="170" height="92" rx="12" />
+			<text class="ttl" x="455" y="68" text-anchor="middle">the game</text>
+			<g class="mini">
+				{[1, 2].map((k) => (
+					<>
+						<line class="grid" x1={426 + k * 21} y1="76" x2={426 + k * 21} y2="139" />
+						<line class="grid" x1="426" y1={76 + k * 21} x2="489" y2={76 + k * 21} />
+					</>
+				))}
+				{[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+					<text class={`mark m-${i}`} x={426 + (i % 3) * 21 + 10.5} y={76 + Math.floor(i / 3) * 21 + 16} text-anchor="middle" />
+				))}
+			</g>
+		</g>
+
+		<!-- arrows -->
+		<line class="arr a-act" x1="196" y1="74" x2="362" y2="74" marker-end="url(#rld-arr)" />
+		<text class="albl l-act" x="279" y="64" text-anchor="middle">action</text>
+		<line class="arr a-obs" x1="364" y1="122" x2="198" y2="122" marker-end="url(#rld-arr)" />
+		<text class="albl l-obs" x="281" y="140" text-anchor="middle">new observation</text>
+		<path class="arr a-rew" d="M 455 152 Q 280 232 108 150" fill="none" marker-end="url(#rld-arr)" />
+		<text class="albl l-rew" x="281" y="212" text-anchor="middle">reward</text>
+		<text class="plus" x="500" y="170" text-anchor="middle">+1</text>
+
+		<!-- self-play staircase (final step) -->
+		<g class="stairs">
+			{['gen 0', 'gen 10', 'gen 40', 'gen 120'].map((g, k) => (
+				<g class={`chip c-${k}`}>
+					<rect x={165 + k * 68} y={232 - k * 16 - 26} width="58" height="24" rx="7" />
+					<text x={165 + k * 68 + 29} y={232 - k * 16 - 10} text-anchor="middle">{g}</text>
+				</g>
+			))}
+			<text class="albl s-lbl" x="280" y="248" text-anchor="middle">the opponent is a copy of you, one generation back</text>
+		</g>
+	</svg>
+
+	<div class="rld-controls">
+		<button class="rld-back" type="button">← Back</button>
+		<span class="rld-count"></span>
+		<button class="rld-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="rld-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.rld {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.rld svg {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.part rect {
+		fill: #fff;
+		stroke: rgb(var(--gray));
+		stroke-width: 1.6;
+		transition: stroke 0.3s ease, fill 0.3s ease;
+	}
+	.part.hot rect {
+		stroke: var(--accent);
+		stroke-width: 2.4;
+		fill: #f7f9ff;
+	}
+	.ttl {
+		font-size: 14px;
+		font-weight: 700;
+		fill: rgb(var(--gray-dark));
+	}
+	.dial circle {
+		fill: #fff;
+		stroke: rgb(var(--gray));
+		stroke-width: 1.6;
+		transition: stroke 0.3s ease;
+	}
+	.dial .tick {
+		stroke: rgb(var(--gray-dark));
+		stroke-width: 2;
+		stroke-linecap: round;
+		transition: transform 0.6s ease;
+	}
+	.dial.nudged circle {
+		stroke: #177a4c;
+		stroke-width: 2.2;
+	}
+	.dial.nudged .tick {
+		transform: rotate(48deg);
+	}
+	.grid {
+		stroke: rgb(var(--gray));
+		stroke-width: 1.6;
+		stroke-linecap: round;
+	}
+	.mark {
+		font-size: 15px;
+		font-weight: 800;
+		fill: rgb(var(--gray-dark));
+	}
+	.mark.hot {
+		fill: var(--accent);
+	}
+	.arr {
+		stroke: rgb(var(--gray-light));
+		stroke-width: 2;
+		transition: stroke 0.3s ease, opacity 0.3s ease;
+	}
+	.arr.hot {
+		stroke: var(--accent);
+		stroke-width: 2.6;
+		stroke-dasharray: 8 6;
+		animation: rld-flow 0.9s linear infinite;
+	}
+	.arr.hot.green {
+		stroke: #177a4c;
+	}
+	.arr.faint,
+	.albl.faint,
+	.plus.faint {
+		opacity: 0.22;
+	}
+	@keyframes rld-flow {
+		to {
+			stroke-dashoffset: -14;
+		}
+	}
+	.albl {
+		font-size: 12px;
+		font-style: italic;
+		fill: rgb(var(--gray));
+		transition: opacity 0.3s ease;
+	}
+	.albl.hot {
+		fill: rgb(var(--gray-dark));
+		font-weight: 600;
+	}
+	.plus {
+		font-size: 16px;
+		font-weight: 800;
+		fill: #177a4c;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.plus.show {
+		opacity: 1;
+	}
+	.stairs {
+		opacity: 0;
+		transition: opacity 0.4s ease;
+	}
+	.stairs.show {
+		opacity: 1;
+	}
+	.chip rect {
+		fill: #eef2f7;
+		stroke: #2f5d8a;
+		stroke-width: 1.3;
+	}
+	.chip.c-3 rect {
+		fill: #fbf3e6;
+		stroke: #b45309;
+		stroke-width: 1.8;
+	}
+	.chip text {
+		font-size: 11px;
+		font-weight: 700;
+		fill: rgb(var(--gray-dark));
+	}
+	.rld-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.2rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.rld-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.rld-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.rld-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.rld-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.rld-caption {
+		min-height: 4.5em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = {
+		caption: string;
+		board: (string | [string, boolean])[]; // 9 cells; [mark, hot]
+		hotParts?: string[];
+		hotArrows?: string[]; // classes among a-act/a-obs/a-rew
+		faintArrows?: string[];
+		showPlus?: boolean;
+		nudge?: boolean;
+		stairs?: boolean;
+	};
+
+	const E = '';
+	const STEPS: Step[] = [
+		{
+			caption:
+				'Reinforcement learning is a loop with two parties. On one side, the learner: our network and its dials. On the other, the world it acts in, which for us is always a game. Nothing has happened yet. Step forward to run the loop.',
+			board: [E, E, E, E, E, E, E, E, E],
+			faintArrows: ['a-act', 'a-obs', 'a-rew'],
+		},
+		{
+			caption:
+				'The network acts. It reads the board and plays its move, exactly the forward pass you stepped through a moment ago. An X lands in the center.',
+			board: [E, E, E, E, ['X', true] as [string, boolean], E, E, E, E],
+			hotParts: ['p-net'],
+			hotArrows: ['a-act'],
+			faintArrows: ['a-obs', 'a-rew'],
+		},
+		{
+			caption:
+				'The world answers. The game applies the move, the opponent replies, and a fresh observation flows back. Notice what is missing: nobody says whether that move was good. There are no labels here, only consequences.',
+			board: [E, ['O', true] as [string, boolean], E, E, 'X', E, E, E, E],
+			hotParts: ['p-game'],
+			hotArrows: ['a-obs'],
+			faintArrows: ['a-act', 'a-rew'],
+		},
+		{
+			caption:
+				'The loop spins until the game ends. Only then does feedback arrive, and it is a single number: +1 for a win, −1 for a loss. Here the diagonal lands and the +1 comes back. That thin trickle of signal is all the teaching this system ever gets.',
+			board: [['X', true] as [string, boolean], 'O', E, 'O', ['X', true] as [string, boolean], E, E, E, ['X', true] as [string, boolean]],
+			hotArrows: ['a-rew'],
+			faintArrows: ['a-act', 'a-obs'],
+			showPlus: true,
+		},
+		{
+			caption:
+				'Now the learning happens. Every dial that contributed to the winning moves gets nudged, the same nudging from the network block, so those judgments come a little easier next time. Watch the dials turn. Then the board resets and the loop runs again. Millions of times.',
+			board: [['X', true] as [string, boolean], 'O', E, 'O', ['X', true] as [string, boolean], E, E, E, ['X', true] as [string, boolean]],
+			hotParts: ['p-net'],
+			faintArrows: ['a-act', 'a-obs', 'a-rew'],
+			showPlus: true,
+			nudge: true,
+		},
+		{
+			caption:
+				'One question left: who is the opponent inside the game? The neat answer is a copy of yourself, usually one generation back. Win or lose, you learn either way, and as you improve, so does the opposition. The curriculum writes itself: generation by generation, the network climbs on its own shoulders.',
+			board: [E, E, E, E, E, E, E, E, E],
+			faintArrows: ['a-act', 'a-obs', 'a-rew'],
+			stairs: true,
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.rld').forEach((root) => {
+		const caption = root.querySelector('.rld-caption')!;
+		const count = root.querySelector('.rld-count')!;
+		const back = root.querySelector<HTMLButtonElement>('.rld-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.rld-next')!;
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			root.querySelectorAll('.part').forEach((el) => el.classList.remove('hot'));
+			root.querySelectorAll('.arr, .albl').forEach((el) => el.classList.remove('hot', 'faint', 'green'));
+			s.board.forEach((cell, k) => {
+				const el = root.querySelector(`.m-${k}`)!;
+				const [mark, hot] = Array.isArray(cell) ? cell : [cell, false];
+				el.textContent = mark;
+				el.classList.toggle('hot', hot);
+			});
+			s.hotParts?.forEach((c) => root.querySelector(`.${c}`)?.classList.add('hot'));
+			s.hotArrows?.forEach((c) => {
+				const arr = root.querySelector(`.${c}`);
+				arr?.classList.add('hot');
+				if (c === 'a-rew') arr?.classList.add('green');
+				root.querySelector(`.l-${c.slice(2)}`)?.classList.add('hot');
+			});
+			s.faintArrows?.forEach((c) => {
+				root.querySelector(`.${c}`)?.classList.add('faint');
+				root.querySelector(`.l-${c.slice(2)}`)?.classList.add('faint');
+			});
+			root.querySelector('.plus')?.classList.toggle('show', !!s.showPlus);
+			root.querySelectorAll('.dial').forEach((el) => el.classList.toggle('nudged', !!s.nudge));
+			root.querySelector('.stairs')?.classList.toggle('show', !!s.stairs);
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

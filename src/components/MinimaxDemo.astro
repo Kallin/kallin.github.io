@@ -1,0 +1,274 @@
+---
+// A manually-stepped minimax explainer for the game-AI series opener.
+// Self-contained: inline SVG tree + a small step machine. No props; the tree
+// and step script live here because the post uses exactly one instance.
+---
+
+<figure class="mmx">
+	<svg viewBox="0 0 680 340" role="img" aria-label="A small game tree stepped through minimax">
+		<!-- edges root -> mins -->
+		<line class="edge e-ra" x1="340" y1="56" x2="140" y2="150" />
+		<line class="edge e-rb" x1="340" y1="56" x2="340" y2="150" />
+		<line class="edge e-rc" x1="340" y1="56" x2="540" y2="150" />
+		<!-- edges mins -> leaves -->
+		<line class="edge e-a1" x1="140" y1="176" x2="80" y2="266" />
+		<line class="edge e-a2" x1="140" y1="176" x2="200" y2="266" />
+		<line class="edge e-b1" x1="340" y1="176" x2="280" y2="266" />
+		<line class="edge e-b2" x1="340" y1="176" x2="400" y2="266" />
+		<line class="edge e-c1" x1="540" y1="176" x2="480" y2="266" />
+		<line class="edge e-c2" x1="540" y1="176" x2="600" y2="266" />
+
+		<!-- root (you, MAX) -->
+		<g class="node n-root">
+			<rect x="310" y="16" width="60" height="40" rx="9" />
+			<text class="nval v-root" x="340" y="42" text-anchor="middle">?</text>
+		</g>
+		<text class="side" x="288" y="42" text-anchor="end">you pick the biggest</text>
+
+		<!-- min nodes -->
+		<g class="node min n-a">
+			<circle cx="140" cy="163" r="20" />
+			<text class="nval v-a" x="140" y="169" text-anchor="middle">?</text>
+		</g>
+		<g class="node min n-b">
+			<circle cx="340" cy="163" r="20" />
+			<text class="nval v-b" x="340" y="169" text-anchor="middle">?</text>
+		</g>
+		<g class="node min n-c">
+			<circle cx="540" cy="163" r="20" />
+			<text class="nval v-c" x="540" y="169" text-anchor="middle">?</text>
+		</g>
+		<text class="side" x="588" y="129" text-anchor="start">they pick the</text>
+		<text class="side" x="588" y="144" text-anchor="start">smallest</text>
+
+		<!-- leaves -->
+		<g class="node leaf n-a1"><rect x="56" y="266" width="48" height="34" rx="7" /><text x="80" y="288" text-anchor="middle">+3</text></g>
+		<g class="node leaf n-a2"><rect x="176" y="266" width="48" height="34" rx="7" /><text x="200" y="288" text-anchor="middle">−2</text></g>
+		<g class="node leaf n-b1"><rect x="256" y="266" width="48" height="34" rx="7" /><text x="280" y="288" text-anchor="middle">+5</text></g>
+		<g class="node leaf n-b2"><rect x="376" y="266" width="48" height="34" rx="7" /><text x="400" y="288" text-anchor="middle">+1</text></g>
+		<g class="node leaf n-c1"><rect x="456" y="266" width="48" height="34" rx="7" /><text x="480" y="288" text-anchor="middle">+8</text></g>
+		<g class="node leaf n-c2"><rect x="576" y="266" width="48" height="34" rx="7" /><text x="600" y="288" text-anchor="middle">−9</text></g>
+
+		<text class="lane" x="20" y="40">your move</text>
+		<text class="lane" x="20" y="166">their move</text>
+		<text class="lane" x="20" y="324">outcomes</text>
+	</svg>
+
+	<div class="mmx-controls">
+		<button class="mmx-back" type="button">← Back</button>
+		<span class="mmx-count"></span>
+		<button class="mmx-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="mmx-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.mmx {
+		margin: 2.5rem 0;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.mmx svg {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.edge {
+		stroke: rgb(var(--gray-light));
+		stroke-width: 2;
+		transition: stroke 0.25s ease, stroke-width 0.25s ease;
+	}
+	.edge.hot {
+		stroke: var(--accent);
+		stroke-width: 3.5;
+	}
+	.edge.dim {
+		stroke: rgb(var(--gray-light));
+		opacity: 0.45;
+	}
+	.node rect,
+	.node circle {
+		fill: #fff;
+		stroke: rgb(var(--gray));
+		stroke-width: 1.6;
+		transition: stroke 0.25s ease, fill 0.25s ease;
+	}
+	.node text {
+		font-size: 17px;
+		font-weight: 700;
+		fill: rgb(var(--gray-dark));
+	}
+	.node.hot rect,
+	.node.hot circle {
+		stroke: var(--accent);
+		stroke-width: 3;
+		fill: #eef1ff;
+	}
+	.node.out rect,
+	.node.out circle {
+		opacity: 0.4;
+	}
+	.node.out text {
+		opacity: 0.4;
+	}
+	.nval {
+		fill: rgb(var(--gray));
+	}
+	.node.solved .nval {
+		fill: rgb(var(--gray-dark));
+	}
+	.side,
+	.lane {
+		font-size: 12.5px;
+		fill: rgb(var(--gray));
+		font-style: italic;
+	}
+	.mmx-caption {
+		min-height: 4.5em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+	.mmx-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.2rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.mmx-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.mmx-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.mmx-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.mmx-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+</style>
+
+<script>
+	// Step machine: each step lists hot nodes/edges, solved values, dimmed items,
+	// and the caption. Declarative so the walkthrough is easy to tweak.
+	type Step = {
+		caption: string;
+		hot?: string[]; // classes to mark .hot
+		out?: string[]; // classes to mark .out (faded)
+		dim?: string[]; // edges to fade
+		values?: Record<string, string>; // value-text class -> label
+		solved?: string[]; // nodes whose value is final
+	};
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'A tiny game. You choose one of three moves, then your opponent chooses, and the game ends. Each box at the bottom scores that ending for you: positive is good, negative is bad.',
+		},
+		{
+			caption:
+				'The eye goes straight to the +8. The single best outcome on the whole board lives down the right-hand branch.',
+			hot: ['n-c1'],
+		},
+		{
+			caption:
+				'But you do not get the last word. If you head right, your opponent picks next, and they will take the option that is worst for you: the −9. Assuming they play well, that branch is not worth +8. It is worth −9.',
+			hot: ['n-c', 'n-c2', 'e-c2'],
+			dim: ['e-c1'],
+			values: { 'v-c': '−9' },
+			solved: ['n-c'],
+		},
+		{
+			caption:
+				'Score the left branch the same way. Between +3 and −2, a good opponent hands you the −2.',
+			hot: ['n-a', 'n-a2', 'e-a2'],
+			dim: ['e-a1'],
+			values: { 'v-a': '−2', 'v-c': '−9' },
+			solved: ['n-a', 'n-c'],
+		},
+		{
+			caption:
+				'And the middle: between +5 and +1, they concede the +1. Every branch now has an honest value, the best you can get if the opponent never blunders.',
+			hot: ['n-b', 'n-b2', 'e-b2'],
+			dim: ['e-b1'],
+			values: { 'v-a': '−2', 'v-b': '+1', 'v-c': '−9' },
+			solved: ['n-a', 'n-b', 'n-c'],
+		},
+		{
+			caption:
+				'Now your move is easy: the biggest of −2, +1 and −9. You go middle, for a guaranteed +1. The flashy +8 branch was a trap sitting right next to the worst outcome in the game.',
+			hot: ['n-root', 'n-b', 'e-rb'],
+			out: ['n-a1', 'n-c1'],
+			dim: ['e-ra', 'e-rc', 'e-a1', 'e-c1'],
+			values: { 'v-a': '−2', 'v-b': '+1', 'v-c': '−9', 'v-root': '+1' },
+			solved: ['n-a', 'n-b', 'n-c', 'n-root'],
+		},
+		{
+			caption:
+				'That is minimax: assume a perfect opponent and let the values flow up the tree, taking the minimum at their turns and the maximum at yours. Everything from 1950s checkers to Deep Blue is this idea, plus enormous cleverness about not visiting branches that cannot matter.',
+			hot: ['n-root', 'n-b', 'n-b2', 'e-rb', 'e-b2'],
+			dim: ['e-ra', 'e-rc', 'e-a1', 'e-a2', 'e-b1', 'e-c1', 'e-c2'],
+			values: { 'v-a': '−2', 'v-b': '+1', 'v-c': '−9', 'v-root': '+1' },
+			solved: ['n-a', 'n-b', 'n-c', 'n-root'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.mmx').forEach((root) => {
+		const caption = root.querySelector('.mmx-caption')!;
+		const count = root.querySelector('.mmx-count')!;
+		const back = root.querySelector<HTMLButtonElement>('.mmx-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.mmx-next')!;
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			root.querySelectorAll('.node, .edge').forEach((el) => {
+				el.classList.remove('hot', 'out', 'dim', 'solved');
+			});
+			root.querySelectorAll('.nval').forEach((el) => (el.textContent = '?'));
+			s.hot?.forEach((c) => root.querySelector(`.${c}`)?.classList.add('hot'));
+			s.out?.forEach((c) => root.querySelector(`.${c}`)?.classList.add('out'));
+			s.dim?.forEach((c) => root.querySelector(`.${c}`)?.classList.add('dim'));
+			s.solved?.forEach((c) => root.querySelector(`.${c}`)?.classList.add('solved'));
+			if (s.values) {
+				for (const [cls, v] of Object.entries(s.values)) {
+					const el = root.querySelector(`.${cls}`);
+					if (el) el.textContent = v;
+				}
+			}
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

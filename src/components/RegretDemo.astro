@@ -1,0 +1,296 @@
+---
+// A manually-stepped regret-matching demo on rock-paper-scissors: the tiny
+// core of CFR. Rounds are precomputed data so every number shown is exact.
+---
+
+<figure class="rgd">
+	<div class="rgd-round" aria-live="polite">
+		<span class="rgd-you">You: <b class="rgd-you-move">–</b></span>
+		<span class="rgd-them">Them: <b class="rgd-them-move">–</b></span>
+		<span class="rgd-result">–</span>
+	</div>
+
+	<table class="rgd-table">
+		<thead>
+			<tr><th>move</th><th>regret so far</th><th>how you'll play next</th></tr>
+		</thead>
+		<tbody>
+			<tr class="row-r">
+				<td class="mv">✊ Rock</td>
+				<td class="reg reg-r">0</td>
+				<td class="strat"><span class="bar bar-r"></span><span class="pctxt pct-r">33%</span></td>
+			</tr>
+			<tr class="row-p">
+				<td class="mv">✋ Paper</td>
+				<td class="reg reg-p">0</td>
+				<td class="strat"><span class="bar bar-p"></span><span class="pctxt pct-p">33%</span></td>
+			</tr>
+			<tr class="row-s">
+				<td class="mv">✌️ Scissors</td>
+				<td class="reg reg-s">0</td>
+				<td class="strat"><span class="bar bar-s"></span><span class="pctxt pct-s">33%</span></td>
+			</tr>
+		</tbody>
+	</table>
+
+	<div class="rgd-controls">
+		<button class="rgd-back" type="button">← Back</button>
+		<span class="rgd-count"></span>
+		<button class="rgd-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="rgd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.rgd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.rgd-round {
+		display: flex;
+		gap: 1.6em;
+		align-items: baseline;
+		justify-content: center;
+		font-size: 1rem;
+		min-height: 1.6em;
+		color: rgb(var(--gray-dark));
+	}
+	.rgd-round .rgd-result {
+		font-weight: 700;
+	}
+	.rgd-round .lose {
+		color: #b4341f;
+	}
+	.rgd-round .win {
+		color: #177a4c;
+	}
+	.rgd-table {
+		width: 100%;
+		margin: 0.9rem 0 0.3rem;
+		border-collapse: collapse;
+		font-size: 0.92rem;
+	}
+	.rgd-table th {
+		text-align: left;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: rgb(var(--gray));
+		font-weight: 600;
+		padding: 0.3em 0.6em;
+		border-bottom: 1px solid rgb(var(--gray-light));
+	}
+	.rgd-table td {
+		padding: 0.45em 0.6em;
+		border-bottom: 1px solid rgb(var(--gray-light));
+	}
+	.rgd-table tr:last-child td {
+		border-bottom: none;
+	}
+	.rgd-table tr.played td {
+		background: #eef1ff;
+	}
+	.mv {
+		white-space: nowrap;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+	}
+	.reg {
+		font-variant-numeric: tabular-nums;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		width: 8em;
+	}
+	.reg.up {
+		color: var(--accent);
+	}
+	.strat {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		min-width: 11em;
+	}
+	.bar {
+		display: inline-block;
+		height: 10px;
+		border-radius: 3px;
+		background: var(--accent);
+		width: 33%;
+		max-width: 70%;
+		transition: width 0.45s ease;
+	}
+	.pctxt {
+		font-size: 0.85rem;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+		font-weight: 600;
+	}
+	.rgd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.5rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.rgd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.rgd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.rgd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.rgd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.rgd-caption {
+		min-height: 4.5em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = {
+		caption: string;
+		you?: string;
+		them?: string;
+		result?: string;
+		resultCls?: 'win' | 'lose';
+		regrets: [number, number, number]; // R, P, S
+		strategy: [number, number, number]; // percentages
+		played?: 0 | 1 | 2;
+		highlight?: (0 | 1 | 2)[];
+	};
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'Rock, paper, scissors, played over and over. The plan: after every round, for each move you DIDN’T make, write down how much better it would have done than what you actually played. That tally is regret. With no regrets yet, play everything equally.',
+			regrets: [0, 0, 0],
+			strategy: [33, 33, 33],
+		},
+		{
+			caption:
+				'Round one. The coin flip lands on Rock. Your opponent plays Paper. You lose the round.',
+			you: '✊',
+			them: '✋',
+			result: 'you lose',
+			resultCls: 'lose',
+			regrets: [0, 0, 0],
+			strategy: [33, 33, 33],
+			played: 0,
+		},
+		{
+			caption:
+				'Now the bookkeeping. Playing Paper instead would have tied: one point better than losing, so Paper’s regret goes up by 1. Scissors would have WON: two points better, so Scissors goes up by 2. Rock earns nothing. You never change what happened; you just record what you wish you’d done.',
+			you: '✊',
+			them: '✋',
+			result: 'you lose',
+			resultCls: 'lose',
+			regrets: [0, 1, 2],
+			strategy: [33, 33, 33],
+			highlight: [1, 2],
+		},
+		{
+			caption:
+				'Here’s the rule that makes it an algorithm: next round, play each move in proportion to its positive regret. Paper has 1, Scissors has 2, Rock has 0. So: Paper a third of the time, Scissors two thirds, Rock never. You lean toward what you wish you’d been doing.',
+			regrets: [0, 1, 2],
+			strategy: [0, 33, 67],
+		},
+		{
+			caption:
+				'Round two: the lean pays off. You draw Scissors, they repeat Paper, you win. But bookkeeping is loyal to nobody: relative to your win, Rock would have lost (down 2) and Paper would have tied (down 1). Scissors is now the only move with positive regret, so you’d play it every time.',
+			you: '✌️',
+			them: '✋',
+			result: 'you win',
+			resultCls: 'win',
+			regrets: [-2, 0, 2],
+			strategy: [0, 0, 100],
+			played: 2,
+		},
+		{
+			caption:
+				'Your opponent notices the scissors habit and switches to Rock. You lose, and the tally responds instantly: Paper (which would have beaten their Rock) jumps to 2, Rock climbs back to −1. New mix: half Paper, half Scissors. Every attempt to exploit you feeds regret to exactly the move that punishes the exploit.',
+			you: '✌️',
+			them: '✊',
+			result: 'you lose',
+			resultCls: 'lose',
+			regrets: [-1, 2, 2],
+			strategy: [0, 50, 50],
+			played: 2,
+			highlight: [1],
+		},
+		{
+			caption:
+				'Fast-forward a few million rounds with both players doing this, and something lovely falls out: the AVERAGE of all the mixes you played settles at a third, a third, a third: the strategy nobody can exploit. No move has regret worth chasing anymore. That self-balancing tally, scaled up to games with hidden cards and long sequences of decisions, is CFR.',
+			regrets: [0, 0, 0],
+			strategy: [33, 33, 34],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.rgd').forEach((root) => {
+		const q = (s: string) => root.querySelector(s)!;
+		const caption = q('.rgd-caption');
+		const count = q('.rgd-count');
+		const back = q('.rgd-back') as HTMLButtonElement;
+		const next = q('.rgd-next') as HTMLButtonElement;
+		const rows = [q('.row-r'), q('.row-p'), q('.row-s')];
+		const regs = [q('.reg-r'), q('.reg-p'), q('.reg-s')];
+		const bars = [q('.bar-r'), q('.bar-p'), q('.bar-s')] as HTMLElement[];
+		const pcts = [q('.pct-r'), q('.pct-p'), q('.pct-s')];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			q('.rgd-you-move').textContent = s.you ?? '–';
+			q('.rgd-them-move').textContent = s.them ?? '–';
+			const res = q('.rgd-result');
+			res.textContent = s.result ?? '–';
+			res.className = 'rgd-result' + (s.resultCls ? ` ${s.resultCls}` : '');
+			rows.forEach((r, k) => r.classList.toggle('played', s.played === k));
+			s.regrets.forEach((v, k) => {
+				regs[k].textContent = String(v);
+				regs[k].classList.toggle('up', !!s.highlight?.includes(k as 0 | 1 | 2));
+			});
+			s.strategy.forEach((v, k) => {
+				bars[k].style.width = `${v * 0.7}%`;
+				pcts[k].textContent = `${v}%`;
+			});
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

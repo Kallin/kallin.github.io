@@ -1,0 +1,150 @@
+---
+title: 'One Machine, Any Game'
+description: "Opening a series about a question that won't leave me alone: if you handed a machine a board game's instruction manual and the contents of its box, could it teach itself to play well? Any game, with no game-specific code. Seventy-five years of game-playing AI says the pieces finally exist. The catch is how you tell the machine the rules."
+pubDate: '2026-07-15'
+tags: ['ai', 'ml', 'games', 'reinforcement-learning']
+socialImage: '../../assets/game-ai-og.png'
+draft: false
+series: 'game-ai'
+seriesOrder: 1
+---
+
+import Concept from '../../components/Concept.astro';
+import MinimaxDemo from '../../components/MinimaxDemo.astro';
+import NeuralNetDemo from '../../components/NeuralNetDemo.astro';
+import RegretDemo from '../../components/RegretDemo.astro';
+import RLDemo from '../../components/RLDemo.astro';
+import ZoomImage from '../../components/ZoomImage.astro';
+
+Here's a question that's been bugging me for a long time. If you handed a machine a board game, the instruction manual plus what's in the box (the cards, the board, the dice, the little wooden pieces), could it teach itself to play well? No programmer wiring it up for that specific game. Just the rules, and the machine.
+
+Not one game. Any game. The same system that teaches itself chess should handle Monopoly, Ticket to Ride, and the half-finished prototype a designer scribbled last week, because it never knew which one it was playing in the first place.
+
+I think the answer is yes, and I've started building the tool to find out. This series is the working log of that attempt, from the very beginning. But before the first experiment, I want to set the table properly, because the idea only makes sense against seventy-five years of history. Every tool I'll be reaching for was forged in someone else's fight with a game, and the arc of those fights bends somewhere interesting.
+
+<Concept title="How this series explains things">
+Whenever a new technical term shows up for the first time, the story stops and a block like this one explains the underlying concept in plain terms, with a small demo you can step through yourself. No gesturing at an acronym and moving on. Everything here is written for a general technical audience; no machine-learning background assumed.
+</Concept>
+
+Here's the territory: seventy-five years on a single line, color-coded by the thread each milestone belongs to (click it to zoom). The rest of this post walks it left to right.
+
+<ZoomImage src="/images/posts/ml0-timeline.png" alt="Timeline of game-playing AI milestones from Turochamp in 1948 through Student of Games in 2023, color-coded into search, learning, hidden information, and convergence threads" />
+
+## The search era: thinking ahead, very fast
+
+Games were the first thing AI researchers reached for, before the field had a name. [Alan Turing wrote a chess program](https://en.wikipedia.org/wiki/Turochamp) in 1948 with no computer capable of running it; he executed it by hand, one instruction at a time, half an hour per move. [Claude Shannon published the blueprint](https://en.wikipedia.org/wiki/Claude_Shannon#Shannon's_computer_chess_program) for computer chess in 1950. The idea at the center of both is the one that carried the next fifty years: look ahead.
+
+<Concept title="Minimax: assume the worst, pick the best">
+A game between two good players has a strange property: you can score a position by assuming the best from both sides. Consider each of your moves, then each of the opponent's replies, and so on down a branching tree, until you reach positions you can score. Then let the scores flow back up: at your turns, take the branch with the maximum; at theirs, assume they take the minimum, the one worst for you. The move that survives that pessimism is the right one. It's easier stepped through than described:
+
+<MinimaxDemo />
+</Concept>
+
+That's minimax, and with a pruning trick called alpha-beta (skip any branch that provably can't change the answer) it is, at heart, the whole search era. [Arthur Samuel's checkers program](https://en.wikipedia.org/wiki/Arthur_Samuel_(computer_scientist)) was playing credible games on an IBM 704 by the late 1950s. [Chinook](https://en.wikipedia.org/wiki/Chinook_(computer_program)) took the world checkers title in 1994. [Deep Blue beat Garry Kasparov](https://en.wikipedia.org/wiki/Deep_Blue_(chess_computer)) in 1997 by searching two hundred million positions a second. And in 2007, checkers wasn't just beaten but [solved outright](https://www.science.org/doi/10.1126/science.1144079): perfect play from both sides is a draw, full stop.
+
+But notice what every one of those systems needed: a human-written formula saying how good a position is. The search reaches down the tree, hits positions nobody has time to explore further, and asks "roughly, who's winning here?" Deep Blue's answer was thousands of hand-tuned features crafted by engineers and grandmasters. The machine did the looking; humans did the judging. That's the wall the search era never really got past, and Go sat behind it, smug, for decades. Too many branches to search, too subtle to hand-score.
+
+## The learning turn: judgment you don't have to write
+
+The escape had been hiding in the timeline all along. Back in 1959, Samuel's checkers program *learned*: it adjusted its own judgment formula by playing against itself, until it could beat its own author. Samuel coined the term "machine learning" to describe what it was doing. It might be the most powerful idea in this whole story, learning from your own experience instead of from instructions, and its reach goes far beyond games: the reinforcement learning that helps turn raw language models into things like ChatGPT belongs to the same family. But in 1959 the idea was decades ahead of its hardware, and it sat mostly dormant for thirty years.
+
+It woke up in 1992 as [TD-Gammon](https://en.wikipedia.org/wiki/TD-Gammon), a backgammon program built at IBM by Gerald Tesauro. Instead of a hand-written formula, it used a neural network, and instead of expert data, it learned entirely from playing itself, hundreds of thousands of games. It reached the level of the best human players, and its opening theory was so alien and so sound that human backgammon changed in response.
+
+<Concept title="A neural network: judgment you train instead of write">
+For our purposes, a neural network is a judgment machine you don't write, you train. Numbers describing a position go in, they ricochet through layers of internal dials called weights, and a verdict comes out. The magic isn't in any dial; it's that there's an automatic procedure for turning them. Every time the network's judgment turns out wrong, each dial gets nudged in the direction that would have made it less wrong. Millions of nudges later you have judgment, distilled from experience nobody had to articulate. Here's one picking a tic-tac-toe move, small enough to watch. You'll spot the right move yourself in half a second; watch the network arrive at the same place:
+
+<NeuralNetDemo />
+</Concept>
+
+<Concept title="Reinforcement learning, and playing against yourself">
+Where does the experience come from? There are two broad ways to teach a network. The first is *supervised* learning: show it examples with the answers attached, the way you'd study from a solutions manual. For games that means recorded expert play: here's the position, here's what the master did, copy that. The second is *reinforcement* learning, and it's the one this whole series runs on: no answers, no examples, just consequences. Step through one lap of the loop:
+
+<RLDemo />
+
+The supervised shortcut is tempting, and famous systems have leaned on it hard: the original AlphaGo studied thirty million positions from human games before self-play took over, and [AlphaStar](https://www.nature.com/articles/s41586-019-1724-z) broke into StarCraft II by first imitating hundreds of thousands of human replays. But copying has a built-in ceiling (the teacher) and a built-in prerequisite (a mountain of recorded expert games). Here's the thing about that prerequisite: a board game someone designed *last week* has no recorded games, no experts, no solutions manual. Whatever plays it well has to get there from first principles. That's not an aesthetic choice for this project; it's forced. Which is fine, because the field already showed the way: AlphaGo Zero dropped the human data entirely and beat the human-taught version 100 games to 0.
+</Concept>
+
+You know where this thread goes, because it made the news. [AlphaGo](https://www.nature.com/articles/nature16961) beat Lee Sedol at Go in 2016 by welding the two eras together: deep networks supplying the judgment, search supplying the lookahead. Then [AlphaZero](https://arxiv.org/abs/1712.01815) dropped the human game data and mastered chess, shogi, and Go from bare rules with one algorithm, and [MuZero](https://arxiv.org/abs/1911.08265) went further still and learned without even being told the rules. Watch the trajectory: less and less human knowledge in, more and more games covered by a single method. Generality was the direction the whole field was drifting.
+
+## The hidden-information problem
+
+Everything above shares an assumption so natural you might not notice it: both players can see the whole game. Chess, checkers, Go, backgammon. Nothing is hidden. The state of the world is right there on the table.
+
+Now pick up almost any modern board game. Your opponents' cards are hidden. The deck is shuffled. Bids are secret, roles are concealed, the dungeon deck is face down. The moment information hides, minimax's little ritual of "assume the best reply" stops even being well-defined, because the best reply to *what*? You don't know what they're holding. Worse, good play under hidden information sometimes *requires randomness*: any poker player who never bluffs, or always does, is a vending machine waiting to be exploited. There is no single "best move" to search for; the right answer is a *mixture*, a calibrated tendency. Search built for chess simply does not produce that.
+
+Poker was the proving ground, and the breakthrough there has a name almost nobody outside the field knows: [counterfactual regret minimization](http://modelai.gettysburg.edu/2013/cfr/cfr.pdf), CFR, [introduced at the University of Alberta in 2007](https://papers.nips.cc/paper_files/paper/2007/file/08d98638c6fcd194a4b1e6992063e944-Paper.pdf). It deserves a real explanation, because the idea at its core is small enough to hold in your hand.
+
+<Concept title="Regret matching: the engine inside CFR">
+After a round, ask a simple question about each move you didn't make: how much better would it have done than what I actually played? That number is your regret for skipping it. Keep a running tally per move, and next round play each move in proportion to its accumulated regret, leaning toward the things you keep wishing you'd done. That's the whole mechanism. Step through it on rock-paper-scissors and watch it teach itself the right way to play:
+
+<RegretDemo />
+
+Two things make this profound. The strategy it converges to is a *mixture*, exactly the calibrated randomness hidden-information games demand, and it comes out of arithmetic, not intuition. CFR is this tally industrialized: run over a full game tree, at every decision point, under every hidden hand you might be facing (that's the "counterfactual" part), astronomically many times. The bluffing frequencies that beat the pros fell out of that bookkeeping. And if this hooked you, [Neller and Lanctot's tutorial](http://modelai.gettysburg.edu/2013/cfr/cfr.pdf) builds real CFR starting from exactly the rock-paper-scissors tally you just stepped through.
+</Concept>
+
+That engine let machines [essentially solve limit hold'em](https://www.science.org/doi/10.1126/science.1259433) in 2015, then beat top professionals at no-limit ([Libratus](https://www.science.org/doi/10.1126/science.aao1733), [DeepStack](https://www.science.org/doi/10.1126/science.aam6960)), then [win a six-player game](https://www.science.org/doi/10.1126/science.aay2400) with Pluribus in 2019. We'll go much deeper later in the series, because hidden information turns out to be where my own project's hardest and strangest lessons live.
+
+So by 2019 there were two great traditions, each superhuman on its own turf and awkward on the other's: the AlphaZero family for perfect information, the CFR family for hidden information. The obvious question was whether they had to stay separate. In 2023, DeepMind's [Student of Games](https://www.science.org/doi/10.1126/sciadv.adg3256) answered no: one algorithm, combining guided search, self-play learning, and game-theoretic reasoning, playing chess and Go *and* poker and Scotland Yard, all strongly. Its authors called it "a significant step towards truly general algorithms for arbitrary environments." That paper is the closest thing this series has to a north star.
+
+## So why isn't this solved?
+
+Read that history with a designer's eye and something jumps out. Seventy-five years, and virtually every system on that timeline plays a *handful of games*, hand-integrated by researchers, one bespoke effort per title. AlphaZero played three. Student of Games, four. Each new game meant experts writing a new fast rules engine and wiring it in by hand.
+
+Board games meanwhile number in the hundreds of thousands, with more designed every day, and the people designing them would *love* to know what a strong, unbiased player thinks of their prototype. Is the first player advantaged? Is there a degenerate strategy that ruins everything? Does the auction actually matter, or is it noise? Today the only way to find out is hundreds of human playtests. The technology to answer those questions automatically exists, scattered across those papers. What's missing is the bridge: a way to go from *a game as a designer conceives it* to *a thing these algorithms can chew on*, without a research team in the middle.
+
+Academia has actually been circling that bridge for twenty years, under the banner of **general game playing**, and the attempts are instructive, both for what they proved and for how they chose their audience.
+
+The flagship is Stanford's [General Game Playing project](https://en.wikipedia.org/wiki/General_game_playing), launched in 2005 with a [language called GDL](http://ggp.stanford.edu/) (Game Description Language) and an annual AAAI competition with a real cash prize: programs are handed games they have never seen, in GDL, and have to play them well with no human in the loop. It worked, as science. Champions like CadiaPlayer and Sancho proved that a single program really can sight-read an arbitrary rulebook and play competently, and the competition drove a decade of research. But GDL is first-order logic, and its original form couldn't even *express* hidden information or dice; an extension ([GDL-II](https://en.wikipedia.org/wiki/Game_Description_Language)) bolted those on later. Most modern board games simply don't fit the original formalism, and no working designer could write it if they did.
+
+The most beautiful project in the space is [Ludii](https://ludii.games/), from Cameron Browne's group at Maastricht: over a thousand games described as compositions of "ludemes," reusable atoms of game structure, built for the Digital Ludeme Project, whose mission is partly archaeological: reconstructing how ancient games, some known only from fragmentary boards and dig sites, were plausibly played. If you love games, lose an afternoon in their library. But its describing language is still a researcher's instrument, and the AIs that play Ludii games are general-purpose search agents, not the modern learning stack.
+
+There are others ([Regular Boardgames](https://arxiv.org/abs/1706.02462) brings formal language theory; DeepMind's [OpenSpiel](https://github.com/google-deepmind/open_spiel) is the research world's shared shelf of games and algorithms, each game hand-coded by an expert). They're serious systems, and if you want to feel the audience they were all built for, here is legal tic-tac-toe in GDL:
+
+```lisp
+(<= (legal ?player (mark ?m ?n))
+    (true (cell ?m ?n b))
+    (true (control ?player)))
+
+(<= (next (cell ?m ?n x))
+    (does xplayer (mark ?m ?n)))
+```
+
+That's first-order logic. It is precise, general within its limits, and utterly alien to every working game designer on earth. Nobody who thinks in decks, drafts, and worker placement is going to express their game as [Horn clauses](https://en.wikipedia.org/wiki/Horn_clause). None of this is a knock on those projects; they were built as research instruments and historical archives, and they succeeded as exactly that. But it means the bridges were all built from the algorithms' side of the river, and the people with the games, the designers, still can't get across.
+
+## The bet, stated properly
+
+My bet is that the bridge has to be built from the designer's side, and that this is now an engineering problem rather than a research problem.
+
+So the project, which I've been calling Grimoire, starts with a description format that speaks board game. Cards, dice, decks, hands, a market, a discard pile. Phases and turns. What a player may do and when. Here's real tic-tac-toe from it, same game as the GDL above:
+
+```yaml
+components:
+  x_marker:
+    display: "X"
+    count: 5
+  o_marker:
+    display: "O"
+    count: 5
+
+containers:
+  table:
+    board:
+      preset: grid
+      rows: 3
+      cols: 3
+      accepts: [x_marker, o_marker]
+
+flow:
+  # setup, the turn loop, and how the game ends
+  # live here, in the same vocabulary
+```
+
+A designer can read that cold. And the intent is that you never need to be a programmer to write one: describe your game in that language directly, or through a visual editor built from the same pieces, cards and dice and phases as things you place rather than syntax you type.
+
+Underneath, the format compiles down to exactly what the last seventy-five years of algorithms want to eat. An engine runs the game and, at every decision, can answer the two questions every method on that timeline asks: *what does the world look like right now* (as a vector of numbers, respecting who can see what) and *what are the legal moves*. That pair, observations and actions, is the lingua franca of modern game AI; it's the same interface the reinforcement-learning world standardized as [Gymnasium](https://gymnasium.farama.org/), and it's the shape OpenSpiel-style research toolkits speak. The formalism doesn't disappear. It just stops being the human interface and becomes what it always should have been: a compile target.
+
+And then, on top of that engine, the fun part: the toolbox. Self-play learning in the TD-Gammon tradition. Lookahead in the minimax tradition and its modern randomized descendants (which get their own tinted block the moment we meet one properly). Regret minimization in the CFR tradition for games that hide information, which is most of them. Newer nets too, where they earn their keep: attention-based architectures are tantalizing for board games because a hand of cards is a *set of things with relationships*, exactly what attention models; evolutionary methods are on the table as well. I genuinely don't know which techniques will win for which kinds of games. Finding out is most of the point.
+
+Two honest disclaimers. First, none of the individual techniques here are my inventions; the bet is entirely in the bridge, one pipeline from designer-readable rules to all of them at once, with no per-game code anywhere. Second, this is a journey in progress, not a retrospective of a finished thing. I don't know yet how far it goes.
+
+So that's the vision. From here, this series becomes a working log of chasing it: the experiments, the dead ends, the results that evaporate under a second look, and the occasional thing that actually works. Join me on the journey; I hope you find it as interesting to follow as I'm finding it to build.

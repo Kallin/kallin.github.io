@@ -1,0 +1,410 @@
+---
+// A manually-stepped forward-pass explainer: a tic-tac-toe position ricochets
+// through a small net and comes out as move probabilities. The position is one
+// where the reader spots the winning move instantly (X completes the diagonal
+// bottom-right), so they can check the network's verdict against their own.
+// Layout is computed here so the SVG stays terse; the step machine mirrors
+// MinimaxDemo's.
+
+type Pt = { x: number; y: number };
+const IN_X = 96;
+const H1_X = 300;
+const H2_X = 450;
+const OUT_X = 600;
+
+// board: X O . / O X . / . . .   (you are X; bottom-right wins the diagonal)
+const CELLS = ['X', 'O', '', 'O', 'X', '', '', '', ''];
+const CELL_LABELS = [
+	'top-left', 'top-middle', 'top-right',
+	'middle-left', 'center', 'middle-right',
+	'bottom-left', 'bottom-middle', 'bottom-right',
+];
+const enc = (c: string) => (c === 'X' ? '1' : c === 'O' ? '−1' : '0');
+
+const inputs = CELLS.map((c, i) => ({
+	label: `${CELL_LABELS[i]}: ${c || 'empty'}`,
+	value: enc(c),
+	p: { x: IN_X, y: 28 + i * 40 },
+}));
+const h1: Pt[] = [70, 140, 210, 280, 350].map((y) => ({ x: H1_X, y }));
+const h2: Pt[] = [70, 140, 210, 280, 350].map((y) => ({ x: H2_X, y }));
+const outputs: { label: string; score: string; prob: number; p: Pt }[] = [
+	{ label: 'top-right', score: '+0.3', prob: 0.09, p: { x: OUT_X, y: 70 } },
+	{ label: 'middle-right', score: '−0.5', prob: 0.03, p: { x: OUT_X, y: 140 } },
+	{ label: 'bottom-left', score: '+0.1', prob: 0.07, p: { x: OUT_X, y: 210 } },
+	{ label: 'bottom-middle', score: '−0.2', prob: 0.05, p: { x: OUT_X, y: 280 } },
+	{ label: 'bottom-right', score: '+3.2', prob: 0.76, p: { x: OUT_X, y: 350 } },
+];
+
+const edges: { x1: number; y1: number; x2: number; y2: number; cls: string }[] = [];
+inputs.forEach((a) =>
+	h1.forEach((b, j) =>
+		edges.push({ x1: a.p.x + 15, y1: a.p.y, x2: b.x - 15, y2: b.y, cls: `eg-ih to-h1-${j}` })
+	)
+);
+h1.forEach((a) =>
+	h2.forEach((b) => edges.push({ x1: a.x + 15, y1: a.y, x2: b.x - 15, y2: b.y, cls: 'eg-hh' }))
+);
+h2.forEach((a) =>
+	outputs.forEach((b) =>
+		edges.push({ x1: a.x + 15, y1: a.y, x2: b.p.x - 16, y2: b.p.y, cls: 'eg-ho' })
+	)
+);
+
+// mini board, vertically centered beside the input column
+const B = 36; // cell size
+const BX = -146;
+const BY = 118;
+const BAR_MAX = 64;
+---
+
+<figure class="nnd">
+	<svg viewBox="-160 0 900 400" role="img" aria-label="A tic-tac-toe position flowing through a small neural network into move probabilities">
+		{edges.map((e) => <line class={`edge ${e.cls}`} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} />)}
+
+		<!-- mini board -->
+		<g class="board">
+			{[1, 2].map((k) => (
+				<>
+					<line class="grid" x1={BX + k * B} y1={BY} x2={BX + k * B} y2={BY + 3 * B} />
+					<line class="grid" x1={BX} y1={BY + k * B} x2={BX + 3 * B} y2={BY + k * B} />
+				</>
+			))}
+			<rect class="board-pick" x={BX + 2 * B + 2} y={BY + 2 * B + 2} width={B - 4} height={B - 4} rx="5" />
+			{CELLS.map((c, i) =>
+				c ? (
+					<text class={`glyph g-${c.toLowerCase()}`} x={BX + (i % 3) * B + B / 2} y={BY + Math.floor(i / 3) * B + B / 2 + 7} text-anchor="middle">
+						{c}
+					</text>
+				) : null
+			)}
+			<text class="lane" x={BX + 1.5 * B} y={BY + 3 * B + 22} text-anchor="middle">the position</text>
+			<text class="lane" x={BX + 1.5 * B} y={BY - 14} text-anchor="middle">you are X</text>
+		</g>
+
+		{
+			inputs.map((n, i) => (
+				<g class={`node in n-in-${i}`}>
+					<circle cx={n.p.x} cy={n.p.y} r="14" />
+					<text class="val" x={n.p.x} y={n.p.y + 4} text-anchor="middle">
+						{n.value}
+					</text>
+					<text class="lbl" x={n.p.x - 22} y={n.p.y + 3.5} text-anchor="end">
+						{n.label}
+					</text>
+				</g>
+			))
+		}
+		{h1.map((p, j) => (
+			<g class={`node hid n-h1-${j}`}>
+				<circle cx={p.x} cy={p.y} r="15" />
+			</g>
+		))}
+		{h2.map((p, j) => (
+			<g class={`node hid n-h2-${j}`}>
+				<circle cx={p.x} cy={p.y} r="15" />
+			</g>
+		))}
+		{
+			outputs.map((n, i) => (
+				<g class={`node out n-out-${i}`}>
+					<circle cx={n.p.x} cy={n.p.y} r="15" />
+					<text class={`score s-out-${i}`} x={n.p.x} y={n.p.y + 4} text-anchor="middle" />
+					<text class="lbl olbl" x={n.p.x + 23} y={n.p.y - 7} text-anchor="start">
+						{n.label}
+					</text>
+					<g class={`bar b-out-${i}`}>
+						<rect class="bar-bg" x={n.p.x + 23} y={n.p.y + 2} width={BAR_MAX} height="10" rx="3" />
+						<rect
+							class="bar-fill"
+							x={n.p.x + 23}
+							y={n.p.y + 2}
+							width={BAR_MAX * n.prob}
+							height="10"
+							rx="3"
+						/>
+						<text class="pct" x={n.p.x + 23 + BAR_MAX + 6} y={n.p.y + 11}>
+							{Math.round(n.prob * 100)}%
+						</text>
+					</g>
+				</g>
+			))
+		}
+
+		<text class="lane" x={IN_X - 30} y="393" text-anchor="middle">what it sees</text>
+		<text class="lane" x={(H1_X + H2_X) / 2} y="393" text-anchor="middle">the dials</text>
+		<text class="lane" x={OUT_X + 30} y="393" text-anchor="middle">what it does</text>
+	</svg>
+
+	<div class="nnd-controls">
+		<button class="nnd-back" type="button">← Back</button>
+		<span class="nnd-count"></span>
+		<button class="nnd-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="nnd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.nnd {
+		margin: 2.5rem 0;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.nnd svg {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.grid {
+		stroke: rgb(var(--gray));
+		stroke-width: 2;
+		stroke-linecap: round;
+	}
+	.glyph {
+		font-size: 22px;
+		font-weight: 800;
+	}
+	.g-x {
+		fill: rgb(var(--gray-dark));
+	}
+	.g-o {
+		fill: rgb(var(--gray));
+	}
+	.board-pick {
+		fill: #eef1ff;
+		stroke: var(--accent);
+		stroke-width: 2;
+		opacity: 0;
+		transition: opacity 0.35s ease;
+	}
+	.board-pick.show {
+		opacity: 1;
+	}
+	.edge {
+		stroke: rgb(var(--gray-light));
+		stroke-width: 1.1;
+		transition: stroke 0.3s ease, opacity 0.3s ease;
+	}
+	.edge.hot {
+		stroke: var(--accent);
+		stroke-width: 1.8;
+		stroke-dasharray: 7 5;
+		animation: nnd-flow 0.9s linear infinite;
+	}
+	.edge.done {
+		stroke: rgb(var(--gray));
+		opacity: 0.55;
+	}
+	.edge.faint {
+		opacity: 0.25;
+	}
+	@keyframes nnd-flow {
+		to {
+			stroke-dashoffset: -12;
+		}
+	}
+	.node circle {
+		fill: #fff;
+		stroke: rgb(var(--gray));
+		stroke-width: 1.5;
+		transition: stroke 0.3s ease, fill 0.3s ease, opacity 0.3s ease;
+	}
+	.node.hot circle {
+		stroke: var(--accent);
+		stroke-width: 2.6;
+		fill: #eef1ff;
+	}
+	.node.done circle {
+		stroke: rgb(var(--gray-dark));
+	}
+	.node.faint circle,
+	.node.faint text {
+		opacity: 0.3;
+	}
+	.node text {
+		fill: rgb(var(--gray-dark));
+	}
+	.val {
+		font-size: 12px;
+		font-weight: 700;
+	}
+	.lbl {
+		font-size: 10.5px;
+		fill: rgb(var(--gray));
+	}
+	.score {
+		font-size: 10.5px;
+		font-weight: 700;
+	}
+	.lane {
+		font-size: 12.5px;
+		font-style: italic;
+		fill: rgb(var(--gray));
+	}
+	.bar {
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.bar.show {
+		opacity: 1;
+	}
+	.bar-bg {
+		fill: rgb(var(--gray-light));
+	}
+	.bar-fill {
+		fill: var(--accent);
+		transform-origin: left center;
+		transform: scaleX(0);
+		transition: transform 0.5s ease 0.1s;
+	}
+	.bar.show .bar-fill {
+		transform: scaleX(1);
+	}
+	.pct {
+		font-size: 10.5px;
+		fill: rgb(var(--gray-dark));
+		font-weight: 600;
+	}
+	.nnd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.2rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.nnd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.nnd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.nnd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.nnd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.nnd-caption {
+		min-height: 4.5em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = {
+		caption: string;
+		hot?: string[];
+		done?: string[];
+		faint?: string[];
+		showScores?: boolean;
+		showBars?: boolean;
+		showPick?: boolean;
+	};
+
+	const IN_NODES = [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => `.n-in-${i}`);
+	const H1_NODES = [0, 1, 2, 3, 4].map((j) => `.n-h1-${j}`);
+	const H2_NODES = [0, 1, 2, 3, 4].map((j) => `.n-h2-${j}`);
+	const OUT_NODES = [0, 1, 2, 3, 4].map((i) => `.n-out-${i}`);
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'You are X, and you can probably see the move already. Now watch a network find it. First, the board becomes numbers: your marks are 1, your opponent’s are −1, empty squares are 0. That list is the observation. The network never sees the grid, only these nine numbers.',
+			hot: IN_NODES,
+			faint: ['.eg-ih', '.eg-hh', '.eg-ho', ...H1_NODES, ...H2_NODES, ...OUT_NODES],
+		},
+		{
+			caption:
+				'Watch one unit in the middle column. All nine numbers flow into it along wires, and every wire has a dial on it: a weight. The unit multiplies each input by its dial, adds them up, and squashes the result into a small range. That single squashed number is all it says.',
+			hot: ['.to-h1-0', '.n-h1-0'],
+			done: IN_NODES,
+			faint: ['.eg-hh', '.eg-ho', ...H1_NODES.slice(1), ...H2_NODES, ...OUT_NODES, '.eg-ih:not(.to-h1-0)'],
+		},
+		{
+			caption:
+				'Now the whole column at once. Each unit has its own set of dials, so each learns to fire on a different pattern: one might light up when two of your marks share a line, another when the opponent is threatening a column. Nobody assigns those meanings. They emerge from training.',
+			hot: ['.eg-ih', ...H1_NODES],
+			done: IN_NODES,
+			faint: ['.eg-hh', '.eg-ho', ...H2_NODES, ...OUT_NODES],
+		},
+		{
+			caption:
+				'The next column reads the first one the same way: patterns of patterns. "Two of mine on the diagonal AND the third square is still empty" is the kind of combination that lives here. Stack a few layers and the network can represent judgments nobody wrote out by hand.',
+			hot: ['.eg-hh', ...H2_NODES],
+			done: [...IN_NODES, '.eg-ih', ...H1_NODES],
+			faint: ['.eg-ho', ...OUT_NODES],
+		},
+		{
+			caption:
+				'Out the right side: one raw score per empty square (the occupied squares are simply not on offer). Higher means the network likes the move more, and every score traces back through the dials to those nine numbers.',
+			hot: ['.eg-ho', ...OUT_NODES],
+			done: [...IN_NODES, '.eg-ih', ...H1_NODES, '.eg-hh', ...H2_NODES],
+			showScores: true,
+		},
+		{
+			caption:
+				'Finally the scores become a choice: squash them into percentages that sum to 100. Bottom-right, at 76%: it found the winning diagonal, the same move you saw at step one. Training a network is nothing more than nudging millions of those dials until this last column keeps agreeing with the best move available.',
+			hot: ['.n-out-4'],
+			done: [...IN_NODES, '.eg-ih', ...H1_NODES, '.eg-hh', ...H2_NODES, '.eg-ho', ...OUT_NODES.slice(0, 4)],
+			showScores: true,
+			showBars: true,
+			showPick: true,
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.nnd').forEach((root) => {
+		const caption = root.querySelector('.nnd-caption')!;
+		const count = root.querySelector('.nnd-count')!;
+		const back = root.querySelector<HTMLButtonElement>('.nnd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.nnd-next')!;
+		const scores = ['+0.3', '−0.5', '+0.1', '−0.2', '+3.2'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			root.querySelectorAll('.node, .edge').forEach((el) => el.classList.remove('hot', 'done', 'faint'));
+			s.hot?.forEach((sel) => root.querySelectorAll(sel).forEach((el) => el.classList.add('hot')));
+			s.done?.forEach((sel) => root.querySelectorAll(sel).forEach((el) => el.classList.add('done')));
+			s.faint?.forEach((sel) => root.querySelectorAll(sel).forEach((el) => el.classList.add('faint')));
+			scores.forEach((v, k) => {
+				const el = root.querySelector(`.s-out-${k}`);
+				if (el) el.textContent = s.showScores ? v : '';
+			});
+			root.querySelectorAll('.bar').forEach((el) => el.classList.toggle('show', !!s.showBars));
+			root.querySelector('.board-pick')?.classList.toggle('show', !!s.showPick);
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

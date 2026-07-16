@@ -6,10 +6,13 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 import Comments from '../components/Comments.astro';
+import SeriesNav from '../components/SeriesNav.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage, socialImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, socialImage, series, seriesOrder } =
+	Astro.props;
+const inSeries = series && typeof seriesOrder === 'number';
 ---
 
 <html lang="en">
@@ -76,9 +79,11 @@ const { title, description, pubDate, updatedDate, heroImage, socialImage } = Ast
 							}
 						</div>
 						<h1>{title}</h1>
+						{inSeries && <SeriesNav series={series} seriesOrder={seriesOrder} placement="top" />}
 						<hr />
 					</div>
 					<slot />
+					{inSeries && <SeriesNav series={series} seriesOrder={seriesOrder} placement="bottom" />}
 				</div>
 			</article>
 			<Comments />
