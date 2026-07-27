@@ -1,0 +1,373 @@
+---
+// Credit assignment through time, shown at DECISION NODES: each node is a
+// position with probability bars over the legal options and one option
+// actually played. The terminal +1 flows backward up the spine, stamps each
+// node, and the update happens per-node: the played bar grows, rivals shrink.
+type Opt = { label: string; w: number; w2: number; picked?: boolean };
+type Node = { tag: string; bad?: boolean; opts: Opt[] };
+
+const NODES: Node[] = [
+	{
+		tag: 'decision 14 · hand: 1 cloth',
+		opts: [
+			{ label: 'take a good', w: 41, w2: 45, picked: true },
+			{ label: 'take camels', w: 34, w2: 32 },
+			{ label: 'sell a set', w: 25, w2: 23 },
+		],
+	},
+	{
+		tag: 'decision 121 · holding a diamond',
+		bad: true,
+		opts: [
+			{ label: 'trade the diamond away', w: 9, w2: 12, picked: true },
+			{ label: 'take a good', w: 55, w2: 53 },
+			{ label: 'take camels', w: 36, w2: 35 },
+		],
+	},
+	{
+		tag: 'decision 268 · hand: 3 cloth',
+		opts: [
+			{ label: 'sell the set', w: 33, w2: 37, picked: true },
+			{ label: 'take a good', w: 42, w2: 40 },
+			{ label: 'take camels', w: 25, w2: 23 },
+		],
+	},
+];
+---
+
+<figure class="crd">
+	<div class="nodes">
+		{NODES.map((n, i) => (
+			<>
+				{i > 0 && <div class="dots" aria-hidden="true">⋮</div>}
+				<div class={`node${n.bad ? ' bad' : ''}`}>
+					<span class="tag">{n.tag}</span>
+					<span class="opts">
+						{n.opts.map((o) => (
+							<span class={`opt${o.picked ? ' picked' : ''}`}>
+								<span class="olbl">{o.picked ? '► ' : ''}{o.label}</span>
+								<span class="track"><span class="fill" style={`--w:${o.w}%;--w2:${o.w2}%`}></span></span>
+								<span class="pct">{o.w}%</span>
+								<span class={`delta ${o.picked ? 'up' : 'dn'}`}>{o.picked ? '▲' : '▼'}</span>
+							</span>
+						))}
+					</span>
+					<span class="stamp w">+1</span>
+				</div>
+			</>
+		))}
+		<div class="dots" aria-hidden="true">⋮</div>
+		<div class="outcome win">WIN +1</div>
+	</div>
+
+	<div class="others">
+		<div class="mrow">
+			another game · hand: 3 gold · <em>sold the set</em>
+			<span class="pill w">won +1</span>
+		</div>
+		<div class="mrow">
+			another game · hand: 3 spice · <em>sold the set</em>
+			<span class="pill l">lost −1</span>
+		</div>
+		<div class="tally">
+			selling a matched set <em>from positions like these</em>:
+			<span class="pill w">+1</span><span class="pill w">+1</span><span class="pill l">−1</span>
+			<span class="verdict">the vote leans yes</span>
+		</div>
+	</div>
+
+	<div class="crd-controls">
+		<button class="crd-back" type="button">← Back</button>
+		<span class="crd-count"></span>
+		<button class="crd-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="crd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.crd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.nodes {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.15rem;
+		margin-bottom: 0.7rem;
+	}
+	.dots {
+		text-align: center;
+		color: rgb(var(--gray));
+		font-size: 0.8rem;
+		line-height: 1;
+	}
+	.node {
+		display: grid;
+		grid-template-columns: 172px 1fr 44px;
+		align-items: center;
+		gap: 0.6em;
+		padding: 0.4em 0.6em;
+		border: 1.5px solid rgb(var(--gray-light));
+		border-radius: 9px;
+		transition: border-color 0.3s ease, background 0.3s ease;
+	}
+	.crd.s3 .node.bad {
+		border-color: #b4341f;
+		background: #faf1ee;
+	}
+	.tag {
+		font-size: 0.72rem;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		line-height: 1.3;
+	}
+	.opts {
+		display: flex;
+		flex-direction: column;
+		gap: 0.18rem;
+	}
+	.opt {
+		display: grid;
+		grid-template-columns: 128px 1fr 34px 14px;
+		align-items: center;
+		gap: 0.4em;
+	}
+	.olbl {
+		font-size: 0.66rem;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		text-align: right;
+		white-space: nowrap;
+	}
+	.opt.picked .olbl {
+		color: rgb(var(--gray-dark));
+	}
+	.track {
+		position: relative;
+		height: 9px;
+		background: rgb(var(--gray-light));
+		border-radius: 3px;
+	}
+	.fill {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: var(--w);
+		background: #c3c9d4;
+		border-radius: 3px;
+		transition: width 0.5s ease;
+	}
+	.opt.picked .fill {
+		background: var(--accent);
+	}
+	.crd.s4 .fill {
+		width: var(--w2);
+	}
+	.pct {
+		font-size: 0.64rem;
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+	.delta {
+		font-size: 0.6rem;
+		opacity: 0;
+		transition: opacity 0.35s ease;
+	}
+	.delta.up {
+		color: #177a4c;
+	}
+	.delta.dn {
+		color: #b4341f;
+	}
+	.crd.s4 .delta {
+		opacity: 1;
+	}
+	.stamp {
+		justify-self: center;
+		padding: 0.1em 0.4em;
+		border-radius: 999px;
+		font-size: 0.72rem;
+		font-weight: 700;
+		opacity: 0;
+		transition: opacity 0.45s ease;
+	}
+	.stamp.w {
+		background: #eaf4ee;
+		border: 1.5px solid #177a4c;
+		color: #177a4c;
+	}
+	.crd.s2 .stamp {
+		opacity: 1;
+	}
+	.outcome {
+		align-self: center;
+		padding: 0.3em 0.8em;
+		border-radius: 8px;
+		font-size: 0.8rem;
+		font-weight: 700;
+	}
+	.outcome.win {
+		border: 1.5px solid #177a4c;
+		background: #eaf4ee;
+		color: #177a4c;
+	}
+	.others {
+		visibility: hidden;
+		opacity: 0;
+		transition: opacity 0.4s ease;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin-bottom: 0.2rem;
+	}
+	.crd.s5 .others {
+		visibility: visible;
+		opacity: 1;
+	}
+	.mrow,
+	.tally {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		font-size: 0.78rem;
+		color: rgb(var(--gray-dark));
+	}
+	.mrow em,
+	.tally em {
+		font-style: normal;
+		font-weight: 700;
+	}
+	.pill {
+		padding: 0.05em 0.4em;
+		border-radius: 999px;
+		font-weight: 700;
+		font-size: 0.72rem;
+	}
+	.pill.w {
+		background: #eaf4ee;
+		border: 1.5px solid #177a4c;
+		color: #177a4c;
+	}
+	.pill.l {
+		background: #faf1ee;
+		border: 1.5px solid #b4341f;
+		color: #b4341f;
+	}
+	.verdict {
+		color: rgb(var(--gray));
+	}
+	.crd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.crd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.crd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.crd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.crd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.crd-caption {
+		min-height: 9em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+	@media (max-width: 560px) {
+		.node {
+			grid-template-columns: 1fr 2.6em;
+		}
+		.tag {
+			grid-column: 1 / -1;
+		}
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				"Three of one game's roughly three hundred decisions. At each node the network read the position and spread its confidence across the legal options; the arrow marks the one it actually played. Each node is written into a ledger (the position, the options, the probabilities) and sits there unscored, because during play nothing comes back. The one number arrives at the end: +1 if the game is won, −1 if it is lost.",
+			cls: [],
+		},
+		{
+			caption:
+				'This game was won, so a +1 flows backward through every node on the path, and each ledger row inherits it. That is the whole mechanism: the final result is the only credit there is, and every decision that led to it gets stamped with it.',
+			cls: ['s2'],
+		},
+		{
+			caption:
+				'Look at the middle node. Trading the diamond away was a 9% long-shot; during training the network samples from its leanings rather than always playing the favourite, so long-shots get tried. This one collected a +1 because the game around it happened to be won. The stamp is blind. Blunders in wins get rewarded, brilliancies in losses get punished.',
+			cls: ['s2', 's3'],
+		},
+		{
+			caption:
+				'Now the update, node by node: the bar of the played move grows a little and its rivals give up the difference. No bar is stored anywhere to edit; the only thing that changes is the 24,000 dials, each nudged (the dial-turning from Part 1, steered by the stamps) so that the played move scores a bit higher from that position. Nothing global happens to an action as an idea; three separate leanings shifted at three separate positions. A −1 would have pushed the same bars the other way.',
+			cls: ['s2', 's4'],
+		},
+		{
+			caption:
+				'The rescue is volume, pooled by resemblance. Other games hold no identical position, but plenty of similar ones. The network cannot file each position separately; look-alikes lean on the same dials, so their nudges pull together: +1, +1, −1 for selling a matched set. Over thousands of games, moves that are genuinely good in a kind of position win the vote.',
+			cls: ['s2', 's4', 's5'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.crd').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.crd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.crd-next')!;
+		const count = root.querySelector('.crd-count')!;
+		const caption = root.querySelector('.crd-caption')!;
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			root.classList.remove('s2', 's3', 's4', 's5');
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

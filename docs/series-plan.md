@@ -100,7 +100,7 @@ enumeration as the two day-one bets. `.grim` anatomy. Observations and action ma
 Gymnasium/PettingZoo/SB3 MaskablePPO off the shelf. It beats random; the loop closes.
 War stories: the do-nothing loop, the seat advantage, the bigger brain that changed
 nothing. Ends on: every number is self-referential, so build a real yardstick.
-Demos: GrimDemo, EncodeDemo, PPODemo. Figures: jaipur-table, pipeline, noop-loop,
+Demos: GrimDemo, EncodeDemo, CreditDemo, PPODemo. Figures: jaipur-table, pipeline, noop-loop,
 seat-advantage.
 
 ### 3. Beaten by an If-Statement — NEXT

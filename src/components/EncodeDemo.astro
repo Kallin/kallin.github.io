@@ -1,0 +1,502 @@
+---
+// A manually-stepped demo: a real Jaipur table becomes the numbers and the
+// legal-action mask the first learner actually received. The honest punchline
+// is v1's count-only encoding: the machine knew HOW MANY cards were in the
+// market, never WHICH ones.
+const MARKET = [
+	{ g: 'diamond', c: '#7aa7d4' },
+	{ g: 'gold', c: '#d9a441' },
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'camel', c: '#c2a171' },
+];
+const HAND = [
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'spice', c: '#c96f4a' },
+	{ g: 'leather', c: '#9b8360' },
+];
+const COUNTS = [
+	['market', '5'],
+	['your hand', '4'],
+	['their hand', '5'],
+	['deck', '32'],
+	['your herd', '1'],
+	['their herd', '0'],
+	['diamond tokens', '5'],
+	['cloth tokens', '7'],
+	['…', ''],
+];
+const ACTIONS = [
+	{ key: 'take', label: 'take a good', legal: true },
+	{ key: 'camels', label: 'take the camels', legal: true },
+	{ key: 'exchange', label: 'exchange with the market', legal: true },
+	{ key: 'sell', label: 'sell goods', legal: true },
+];
+const SUB_GOOD = [
+	{ key: 'cloth', label: 'cloth (you hold 2)', legal: true },
+	{ key: 'spice', label: 'spice (you hold 1)', legal: true },
+	{ key: 'leather', label: 'leather (you hold 1)', legal: true },
+	{ key: 'diamond', label: 'diamond', legal: false, why: 'you hold none' },
+	{ key: 'gold', label: 'gold', legal: false, why: 'you hold none' },
+];
+const SUB_COUNT = [
+	{ key: 'one', label: 'sell 1', legal: true },
+	{ key: 'two', label: 'sell 2', legal: true },
+];
+---
+
+<figure class="ecd">
+	<div class="stage">
+		<!-- the table -->
+		<div class="table-view">
+			<div class="zone z-market">
+				<span class="zlbl">market</span>
+				<div class="cards">
+					{MARKET.map((k) => (
+						<span class="card" style={`--cc:${k.c}`}>{k.g}</span>
+					))}
+				</div>
+			</div>
+			<div class="zone z-opp">
+				<span class="zlbl">their hand</span>
+				<div class="cards">
+					{[0, 1, 2, 3, 4].map(() => (
+						<span class="card back">?</span>
+					))}
+				</div>
+			</div>
+			<div class="zone z-hand">
+				<span class="zlbl">your hand</span>
+				<div class="cards">
+					{HAND.map((k) => (
+						<span class="card" style={`--cc:${k.c}`}>{k.g}</span>
+					))}
+				</div>
+			</div>
+		</div>
+
+		<!-- the numbers -->
+		<div class="vec-view">
+			<span class="zlbl">what the first learner received (41 numbers, abridged)</span>
+			<div class="vec">
+				{COUNTS.map(([l, v]) => (
+					<span class="cell">
+						<b>{v}</b>
+						<i>{l}</i>
+					</span>
+				))}
+			</div>
+		</div>
+
+		<!-- the actions -->
+		<div class="act-view">
+			<span class="zlbl">question 1: which action?</span>
+			<ul class="acts acts-main">
+				{ACTIONS.map((a) => (
+					<li class={`av-${a.key} ${a.legal ? 'ok' : 'masked'}`}>
+						<span class="bit">{a.legal ? '1' : '0'}</span>
+						{a.label}
+					</li>
+				))}
+			</ul>
+		</div>
+
+		<!-- the follow-up questions -->
+		<div class="sub-views">
+			<div class="sub-view sv-good">
+				<span class="zlbl">question 2: sell which good?</span>
+				<ul class="acts">
+					{SUB_GOOD.map((a) => (
+						<li class={`sv-${a.key} ${a.legal ? 'ok' : 'masked'}`}>
+							<span class="bit">{a.legal ? '1' : '0'}</span>
+							{a.label}
+							{a.why && <em> ({a.why})</em>}
+						</li>
+					))}
+				</ul>
+			</div>
+			<div class="sub-view sv-count">
+				<span class="zlbl">question 3: how many?</span>
+				<ul class="acts">
+					{SUB_COUNT.map((a) => (
+						<li class={a.legal ? 'ok' : 'masked'}>
+							<span class="bit">{a.legal ? '1' : '0'}</span>
+							{a.label}
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
+
+		<!-- into the network -->
+		<div class="net-view">
+			<span class="zlbl">one question through the network from part 1</span>
+			<div class="pipe">
+				<span class="stagebox">
+					<b>41</b>
+					<i>numbers in</i>
+				</span>
+				<span class="arr">→</span>
+				<span class="stagebox">
+					<b>network</b>
+					<i>~24,000 dials</i>
+				</span>
+				<span class="arr">→</span>
+				<div class="scores">
+					<div class="srow"><span class="slbl">cloth</span><span class="strack"><span class="sfill" style="width:61%"></span></span><span class="spct">0.61</span></div>
+					<div class="srow"><span class="slbl">spice</span><span class="strack"><span class="sfill" style="width:22%"></span></span><span class="spct">0.22</span></div>
+					<div class="srow"><span class="slbl">leather</span><span class="strack"><span class="sfill" style="width:17%"></span></span><span class="spct">0.17</span></div>
+					<div class="srow smasked"><span class="slbl">diamond</span><span class="strack"></span><span class="spct">×0</span></div>
+					<div class="srow smasked"><span class="slbl">gold</span><span class="strack"></span><span class="spct">×0</span></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="ecd-controls">
+		<button class="ecd-back" type="button">← Back</button>
+		<span class="ecd-count"></span>
+		<button class="ecd-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="ecd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.ecd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.stage {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+	.zlbl {
+		display: block;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.zone {
+		transition: opacity 0.3s ease;
+	}
+	.cards {
+		display: flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.card {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 3.6em;
+		padding: 0.55em 0.5em;
+		border-radius: 8px;
+		border: 1.5px solid var(--cc, rgb(var(--gray)));
+		background: color-mix(in srgb, var(--cc, #ccc) 14%, white);
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		transition: opacity 0.3s ease, border-color 0.3s ease;
+	}
+	.card.back {
+		background: repeating-linear-gradient(45deg, #eef0f4, #eef0f4 4px, #e3e6ec 4px, #e3e6ec 8px);
+		border-color: rgb(var(--gray-light));
+		color: rgb(var(--gray));
+	}
+	.vec-view,
+	.act-view {
+		transition: opacity 0.3s ease;
+	}
+	.vec {
+		display: flex;
+		gap: 0.35rem;
+		flex-wrap: wrap;
+	}
+	.cell {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		min-width: 4.2em;
+		padding: 0.35em 0.5em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 8px;
+		background: #fff;
+	}
+	.cell b {
+		font-size: 1.05rem;
+		color: rgb(var(--gray-dark));
+	}
+	.cell i {
+		font-size: 0.68rem;
+		font-style: normal;
+		color: rgb(var(--gray));
+		text-align: center;
+	}
+	.acts {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.3rem 1.2rem;
+	}
+	.acts li {
+		display: flex;
+		align-items: baseline;
+		gap: 0.55em;
+		font-size: 0.9rem;
+		color: rgb(var(--gray-dark));
+		transition: opacity 0.3s ease;
+	}
+	.acts li em {
+		font-size: 0.78rem;
+		color: rgb(var(--gray));
+	}
+	.bit {
+		font-family: ui-monospace, monospace;
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: #177a4c;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 5px;
+		padding: 0 0.4em;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.acts li.masked .bit {
+		color: #b4341f;
+	}
+	/* step states */
+	.ecd.dim-hidden .z-opp .card {
+		opacity: 0.35;
+	}
+	.acts li.chosen {
+		font-weight: 700;
+	}
+	.acts li.chosen .bit {
+		background: #eaf4ee;
+	}
+	.sub-views {
+		display: grid;
+		grid-template-columns: 1.4fr 1fr;
+		gap: 0.4rem 1.2rem;
+	}
+	.net-view {
+		transition: opacity 0.3s ease;
+	}
+	.pipe {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		flex-wrap: wrap;
+	}
+	.stagebox {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		min-width: 6em;
+		padding: 0.55em 0.7em;
+		border: 1.5px solid rgb(var(--gray-light));
+		border-radius: 10px;
+		background: #fff;
+	}
+	.stagebox b {
+		font-size: 0.95rem;
+		color: rgb(var(--gray-dark));
+	}
+	.stagebox i {
+		font-size: 0.7rem;
+		font-style: normal;
+		color: rgb(var(--gray));
+	}
+	.arr {
+		color: rgb(var(--gray));
+		font-size: 1rem;
+	}
+	.scores {
+		display: flex;
+		flex-direction: column;
+		gap: 0.22rem;
+		flex: 1;
+		min-width: 12em;
+	}
+	.srow {
+		display: grid;
+		grid-template-columns: 4.4em 1fr 2.4em;
+		align-items: center;
+		gap: 0.5em;
+		font-size: 0.78rem;
+		color: rgb(var(--gray-dark));
+	}
+	.srow .slbl {
+		text-align: right;
+		font-weight: 600;
+	}
+	.strack {
+		position: relative;
+		height: 9px;
+		background: rgb(var(--gray-light));
+		border-radius: 3px;
+	}
+	.sfill {
+		position: absolute;
+		inset: 0 auto 0 0;
+		background: var(--accent);
+		border-radius: 3px;
+	}
+	.spct {
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+	}
+	.srow.smasked {
+		color: rgb(var(--gray));
+	}
+	.srow.smasked .strack {
+		opacity: 0.4;
+	}
+	.srow.smasked .spct {
+		color: #b4341f;
+	}
+	/* hide by reserving space, so the controls never shift under the cursor */
+	.ecd:not(.show-vec) .vec-view,
+	.ecd:not(.show-acts) .act-view,
+	.ecd:not(.show-good) .sv-good,
+	.ecd:not(.show-count) .sv-count,
+	.ecd:not(.show-net) .net-view {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.ecd.dim-table .table-view {
+		opacity: 0.35;
+	}
+	.ecd.show-bits .bit {
+		opacity: 1;
+	}
+	.ecd.show-bits .acts li.masked {
+		opacity: 0.45;
+	}
+	.ecd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.8rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.ecd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.ecd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.ecd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.ecd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.ecd-caption {
+		min-height: 8.75em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[]; chosen?: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'A real Jaipur position. Five cards face-up in the market, four in your hand, and your opponent holding five you cannot see. This is the thing that somehow has to fit into a neural network.',
+			cls: [],
+		},
+		{
+			caption:
+				'First, honesty about information. The engine builds the picture from YOUR seat: your cards in full detail, theirs reduced to a count. Whatever the network learns, it can never learn to peek.',
+			cls: ['dim-hidden'],
+		},
+		{
+			caption:
+				'Now look closely at what the encoder does: it reduces every zone to a single number, how many cards it holds. Not which ones. A market holding two diamonds looks exactly like a market holding two leathers. Crude, but cheap, and it works for any game; the plan is to get the loop running before getting clever.',
+			cls: ['dim-hidden', 'show-vec', 'dim-table'],
+		},
+		{
+			caption:
+				'The other half of the interface: the engine enumerates what the rules allow right now, mechanically, straight from the .grim file, and hands it over as a mask: a 1 beside an option means available, a 0 means forbidden. At the top level, all four verbs happen to be legal in this position. Suppose the answer comes back: sell.',
+			cls: ['dim-hidden', 'show-vec', 'show-acts', 'show-bits'],
+			chosen: [],
+		},
+		{
+			caption:
+				'A big action is not one giant choice; it is an interview. Answering "sell" triggers the next question, with its own options and its own mask: hard 0s the network cannot pick, like goods you do not hold. (And if a masked answer somehow arrives anyway, the engine throws an error rather than quietly fixing it. Loud failures were a design rule from day one.)',
+			cls: ['dim-hidden', 'show-vec', 'show-acts', 'show-bits', 'show-good'],
+			chosen: ['av-sell'],
+		},
+		{
+			caption:
+				'Cloth, then how many. Each answer narrows the next question, and the state updates as you go, so the network reads a fresh observation every time. Researchers call this an autoregressive action space: the learner never picks "sell 2 cloth" as one move, it answers three small questions in a row. (Humans get more courtesy: mid-interview you can un-pick a card or cancel the whole action. Only the final answer, the one that makes cards actually move, is forever.)',
+			cls: ['dim-hidden', 'show-vec', 'show-acts', 'show-bits', 'show-good', 'show-count'],
+			chosen: ['av-sell', 'sv-cloth'],
+		},
+		{
+			caption:
+				'And here is where Part 1\'s network plugs in. The 41 numbers go in one end; out the other comes a score for every possible answer to the current question, here "sell which good?". The mask multiplies the illegal answers to zero, the survivors become probabilities, and the learner draws its answer from them. Every question the interview asks, this same little loop runs: encode, mask, score, answer.',
+			cls: ['dim-hidden', 'show-vec', 'show-acts', 'show-bits', 'show-good', 'show-count', 'show-net', 'dim-table'],
+			chosen: ['av-sell', 'sv-cloth'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.ecd').forEach((root) => {
+		const caption = root.querySelector('.ecd-caption')!;
+		const count = root.querySelector('.ecd-count')!;
+		const back = root.querySelector<HTMLButtonElement>('.ecd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.ecd-next')!;
+		const ALL = ['dim-hidden', 'show-vec', 'dim-table', 'show-acts', 'show-bits', 'show-good', 'show-count', 'show-net'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.toggle(c, s.cls.includes(c)));
+			root.querySelectorAll('.acts li').forEach((el) => el.classList.remove('chosen'));
+			s.chosen?.forEach((c) => root.querySelector(`.${c}`)?.classList.add('chosen'));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

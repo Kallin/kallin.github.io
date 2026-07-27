@@ -1,0 +1,162 @@
+---
+title: 'From Random to Reasonable'
+description: "Part 2: before a machine can learn a game, something has to run the game. Building the engine that plays anything, meeting Jaipur (the two-player trading duel that carries this series), and bolting an off-the-shelf learner onto it to watch random flailing become recognizable play. Plus the first war stories: an agent that found the one legal way to do nothing forever."
+pubDate: '2026-07-28'
+tags: ['ai', 'ml', 'reinforcement-learning', 'games']
+socialImage: '../../assets/game-ai-2-og.png'
+draft: false
+series: 'game-ai'
+seriesOrder: 2
+---
+
+import Concept from '../../components/Concept.astro';
+import GrimDemo from '../../components/GrimDemo.astro';
+import EncodeDemo from '../../components/EncodeDemo.astro';
+import CreditDemo from '../../components/CreditDemo.astro';
+import PPODemo from '../../components/PPODemo.astro';
+import ZoomImage from '../../components/ZoomImage.astro';
+
+[Last time](/blog/game-ai-one-machine-any-game/) I laid out the challenge driving this series: hand a machine a board game's instruction manual and the contents of its box, and let it teach itself to play. Any game, no game-specific code.
+
+Before a machine can learn a game, though, something has to *run* the game. Deal the cards, enforce the rules, list what you're allowed to do, notice who won. That something didn't exist, so the journey starts there, and this post runs from the first line of the engine to the first moment a learning agent did something that made me sit up: not brilliance, nothing close, just the unmistakable shift from random flailing to *play*.
+
+## Meet Jaipur
+
+First, two minutes on the game itself, because nearly every example in this post is drawn from it. Jaipur is the founding game of this project, the one every new idea gets tested on first. It's a two-player card game about being the better trader in a market: quick, sharp, and much more cunning than it looks.
+
+<ZoomImage src="/images/posts/ml2-jaipur-table.png" alt="The full Jaipur table: a market of five face-up cards flanked by the deck, six goods-token stacks with declining values, both players' hands and camel herds, and a summary of the four actions" />
+
+The shape of it:
+
+- **A market of five face-up cards** sits between you, refilled from the deck the moment anyone takes from it.
+- **Six goods** (diamonds, gold, silver, cloth, spice, leather) sell for **tokens whose values shrink as each stack is bought down**. The first diamonds sold pay 7 rupees a card; latecomers get 5. Every good rewards selling *early*.
+- But **selling three, four, or five cards at once earns a hidden bonus token** on top, so there's a constant tug between cashing out now and hoarding for a bigger, riskier haul. This one tension is most of Jaipur's soul.
+- **Camels** are the odd currency: they never score directly (a 5-rupee bonus for the bigger herd aside), but they fuel the **exchange** action, swapping a fistful of camels and castoffs for the market's good cards in one turn.
+- On your turn you do **exactly one thing**: take one good, take *all* the camels, exchange two or more, or sell one type of good. Your hand holds at most seven cards; camels live outside it in your herd.
+- The round ends when three token stacks run dry or the deck runs out; most rupees wins the round, and two rounds win the match.
+
+Hidden hands, shuffled decks, hidden bonus tokens, a shared market both players can read: Jaipur packs many of the difficulties from Part 1's history into a very small box, more than enough to make it non-trivial. That's exactly what a reference game should be: small enough to iterate on, mean enough to be interesting.
+
+## The table comes first
+
+The engine came together fast. Within two days of the first commit that game was playable in a terminal. By the end of the first week the same engine ran For Sale, Crazy Eights, tic-tac-toe, and most of Star Realms, a deck-building game with enough moving parts to stress-test everything. None of those games got their own code. Each is a `.grim` file, the components-containers-flow format from last time, and the engine is a single generic machine that reads the file and runs the table. Here's what Jaipur looks like written that way, section by section:
+
+<Concept title="Anatomy of a .grim file: pieces, places, turns">
+<GrimDemo />
+</Concept>
+
+Notice that nothing in that vocabulary is Jaipur-flavored. `row`, `draw_pile`, `hand`, `shuffle`, `deal`, `choose`, `move`: those are generic primitives being configured, and they're the deeper bet under the whole project. Board games look wildly diverse, but they seem to be assembled from a surprisingly finite parts bin, so the plan is to grow a library of configurable primitives until it models 99% of what's on the shelf. Each of the first five games needed something the library didn't have yet, and each time the rule was the same: add a new general-purpose piece, never a special case for one game.
+
+That's the overview. Zooming in on one action shows the two things a format like this has to be able to do, *present a choice* and *restrict one*. Here's the actual Sell action, trimmed but real:
+
+```yaml
+sell_goods:
+  steps:
+    - choose:
+        components:
+          id: sold_cards
+          from: hand
+          what: goods_card
+          constraints:
+            - share_property: good        # one type per sale
+            - min_count_override:
+                when: { tag: luxury }     # diamonds, gold, silver
+                min: 2
+    - move: { pieces: sold_cards, to: discard }
+    - take_from_matched:                  # one token per card sold
+        from: goods_token_stacks
+        match_value: sold_cards.good
+        count: sold_cards.count
+```
+
+A `choose` step *is* a question posed at the table: a human gets a card picker, a bot gets a list of options. And the `constraints` are the rules, written as data instead of code: `share_property: good` says a sale is one type of good at a time, and the override under it is the rule that makes luxuries special: diamonds, gold, and silver can never be sold one at a time. The engine reads these and simply never offers an illegal combination; there's no if-statement anywhere enforcing any of it. Hold onto that shape, an action as a short *sequence of questions*, because the learner is about to inherit it.
+
+One honest wrinkle: not everything fits comfortably in nested keys. Conditions read best as tiny expressions, and the actual round-end rule is the string `empty_stacks(goods_token_stacks) >= 3`. That looks like a scrap of code, and the temptation is to make it one, because Python will happily hand you `eval()` and be done in an afternoon. That door stays shut. A rule you `eval()` is opaque: nothing can inspect it, check it, or translate it, and it will execute whatever a game file asks for.
+
+So the strings get a real grammar instead. [Lark](https://lark-parser.readthedocs.io/) is a parsing toolkit where you write down the shape of your language and it builds you a parser; the whole expression syntax fits in about a page of grammar, and the round-end rule above comes back not as code but as a small tree, a call to a counting function, a comparison, a number. The engine walks that tree, and so can everything else. It cost more than an afternoon and I think it buys a lot: a rule you can inspect is a rule you can check for nonsense, or render in a UI, or rewrite into whatever form some other machine wants to eat. None of that survives `eval()`. Declarative on the surface, a graph of primitives underneath, everywhere.
+
+Two design rules went in on day one, both bets on the plan: this engine exists to be learned from, so it had better suit the learning software that will plug into it later in this post. First: the engine never mutates a game in place. Every move produces a *new* game state, leaving the old one intact. That sounds like a programmer's fussiness, but it pays for itself before any learning starts: backing out of a half-finished action in the play UI is just pointing back at the world from before you started it, and the engine can probe what-ifs on copies without ever corrupting the real table. Second: at every decision, the engine can enumerate *exactly* the legal moves, from the rules, mechanically. No guessing, no "try it and see if it errors."
+
+Those two properties, cheap copies of the world plus an honest list of your options, are the doorway between "a rules engine" and "a thing AI can learn from."
+
+The engine's first player showed up days before any learning did: the random bot, which picks uniformly among whatever moves are legal. It was built as a smoke test, a way to crash-test rules by playing thousands of nonsense games. But it earns its place in this story as the natural floor: the first question you can ask of any learner is whether it beats a coin flip with legs.
+
+## Wiring the table to a learner
+
+Part 1's tic-tac-toe demo showed a network reading a board as nine numbers. A real game with hidden information needs more care, and this is where the engine's day-one design pays off. At any moment, for either seat, it can produce the two things every learning algorithm in the world wants: *what does the world look like from this chair* and *what am I allowed to do*. Step through what the first learner actually received:
+
+<Concept title="Observations and action masks: the machine's entire world">
+<EncodeDemo />
+</Concept>
+
+That count-only detail deserves a second look, because it's true and it's a little absurd: this learner plays Jaipur *without ever knowing which cards are in the market*. It knows how many. For now I'm calling that a defensible starting point: counts are cheap to encode, every game has them, and the goal is to get the loop running end to end before getting clever. The encoder is deliberately its own swappable stage of the pipeline, so a richer encoding can replace this one later without touching anything else. Whether a network can really play a card game well while blind to the actual cards is a question I'm deliberately not thinking too hard about yet.
+
+That three-question structure went in on day two, because Jaipur demanded it immediately: Sell and Exchange simply cannot be expressed as single choices. So the learner's world isn't really made of "moves" at all. It's a stream of small answered questions, and its action space is several little answer-spaces stapled side by side, one per question type. That's an unusual shape to hand a learning algorithm, and everything downstream has to be built to fit it.
+
+The bridge has been arriving one piece at a time. Assembled, it looks like this:
+
+<ZoomImage src="/images/posts/ml2-pipeline.png" alt="The pipeline end to end: a jaipur.grim file feeds the engine, which produces an observation of 41 numbers and an action mask of what is legal; those pass through the Gymnasium and PettingZoo interfaces into MaskablePPO from Stable Baselines3, whose chosen answer returns to the engine, with a reward of +1 for a win and −1 for a loss at the end of the game" />
+
+Two of those boxes are not mine, and that is precisely the point. The shape was chosen so the engine would plug straight into the existing reinforcement-learning ecosystem rather than sit politely beside it. [Gymnasium](https://gymnasium.farama.org/), maintained by the Farama Foundation as the successor to OpenAI's Gym, is that ecosystem's standard interface for "an environment an agent can act in" (observe, act, repeat). [PettingZoo](https://pettingzoo.farama.org/) is its multi-player sibling. Essentially every serious learning library speaks to both, so conforming to them buys more than tidiness: everything on that shelf becomes usable for free, along with a decade of other people's benchmarking of it.
+
+So the engine got wrapped in exactly those shapes, and the first learner came straight off the shelf: [Stable Baselines3](https://stable-baselines3.readthedocs.io/)'s [MaskablePPO](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html), battle-tested code from its maintained contrib package that already knows what to do with a legality mask. Not a toy, either. PPO is the workhorse of modern reinforcement learning, the same algorithm family used to tune large language models on human feedback. There is no custom training code anywhere in this experiment, and that is deliberate: the bet is that the *bridge* is the hard part, so the learner needs to be a known quantity. If the agent comes out weak, I want that to be a fact about my pipeline, not about some training loop I wrote at midnight.
+
+One piece is still missing. A learner needs a signal telling it whether it is playing well; Part 1's learning loop called that signal the *reward*, and choosing it is a design decision with teeth. Here there is almost nothing to choose. The one judgment the engine can pass on any game, without understanding it, is who won. It cannot know what a clever trade looks like in a game it has never seen, so there can be no points for style, no bonus for good habits: +1 for winning, −1 for losing, nothing else. Which raises the obvious question: how can one number at the very end teach anything about the three hundred decisions that produced it?
+
+<Concept title="Credit assignment: the backward stamp">
+Step through how one game's reward reaches every decision inside it:
+
+<CreditDemo />
+</Concept>
+
+So one game's outcome becomes three hundred small lessons, many of them individually wrong. What's still needed is the algorithm that grinds that noisy pile into steady improvement without letting any single game wreck the network. That algorithm is the learner named earlier:
+
+<Concept title="PPO: nudging with a seatbelt">
+The learner I bolted on is called PPO, Proximal Policy Optimization, and you already know its heart: it's the dial-nudging from Part 1's reinforcement-learning loop, made safe to industrialize. Step through the one idea that makes it work:
+
+<PPODemo />
+</Concept>
+
+One note on rhythm, because the vocabulary matters later. A *decision* is one answered question; a *game* is a few hundred of them, ending in a single +1 or −1. The learner fills its ledger with a couple thousand decisions (pieces of several games at once), turns the dials against that batch a few times, then throws the ledger away and starts a fresh one, because the old ledger describes a player who no longer exists. Repeat for a couple of million decisions and that is a *training run*; save what came out and that is a *version*, the thing I mean later when I say version 2 beat version 1.
+
+The full setup, then, and I want you to feel how thin this is: a network of about 24,000 dials (tiny; the default size, never even a considered choice). An observation of 41 counts. The win/lose reward and *nothing else*. An opponent playing uniformly random legal moves. Seats shuffled every game. Go.
+
+## Ignition
+
+It works. That's the headline of this whole first experiment, and I don't want familiarity to blunt it: a network that started the day playing cards at random, told nothing but *win: good, lose: bad*, reorganizes 24,000 numbers until it plays recognizably sensible games.
+
+In Jaipur it beats the random player essentially every game. Beating a random player is not much of an achievement, and I'll have more to say later about how little it proves. What it does prove is that the loop closes: a rules file goes in one end and something that plays comes out the other.
+
+Watching the play itself change is better than the number. Early networks discard cards they should sell and fill their hands with junk. A couple of million decisions later, patterns you'd recognize appear: hands get built around one good, sales cluster into sets, camels get scooped when the market is thick with them. Nowhere in the system is there a note saying camels are worth taking, or that a matched set beats a scattered hand. All of it condensed out of win/lose and nothing more.
+
+Better still is sitting down and playing it yourself. I built the thing. I knew exactly how thin it was, 24,000 dials and a bag of counts, and I still found myself across the table from something that was *playing*. Not well. I could beat it, and I could see why. But it took the camels when taking the camels was right. It held a set instead of dumping it. There was an opponent there.
+
+And nothing in it had ever been told it was playing Jaipur. It read a text file describing a game, played a few thousand games against an opponent picking at random, and came out the other side able to trade. That's the moment the premise from Part 1 stopped being a question I found interesting and started feeling like something that was actually going to work.
+
+## The war stories start immediately
+
+I promised the journey warts and all. Here are three from this first stretch, each of which hardened into a rule on the spot. The first taught me the thing I now assume about every learning agent: it will exploit exactly the game you wrote, not the one you meant.
+
+**The agent that found a way to do nothing, forever.** Star Realms has an attack action: spend your combat points to damage the opponent. The `.grim` file allowed "attacking" with zero combat points, a move that does exactly nothing and hands the turn along, legal because nobody thought to forbid it. And combat starts at zero, so it's available from move one. The random bot found it instantly, and games dissolved into two players "attacking" with zero swords at each other, forever. The safety net made it worse: a rule that declares a draw when the same position repeats three times fired *during setup*, and the environment was born already dead. The lesson, now stamped into the engine permanently: **a move that changes nothing must never be legal.** And note who found the crack: the random bot, by accident, on day one. A learning agent would have done something worse than find it. The moment doing nothing ever scored better than doing something, it would have moved in and never left.
+
+<ZoomImage src="/images/posts/ml2-noop-loop.png" alt="Diagram of the do-nothing loop: both players repeatedly attack with zero combat, the board never changes, and the threefold-repetition rule declares a draw before the game has begun" />
+
+**The first player wins far too often.** Take one trained agent and sit it in both Jaipur seats, the exact same brain playing itself, each side deterministically picking its best-known move. Across a couple hundred shuffled decks, the first player wins about 73% of the games. Nothing in my reading of the game prepared me for the size of that.
+
+I have to be careful about what it means, though, because I am measuring this with a weak instrument. This is one mediocre bot playing itself. A 73% split might be a fact about Jaipur, or it might be a fact about *this agent*: a player that handles the second seat badly would produce exactly this number, and a stronger one might claw most of it back. The no-randomness setup probably inflates it too; when neither player ever varies, whatever edge the first seat finds gets replayed across similar deals instead of washing out. So I can't yet tell you what going first is worth in Jaipur. I can only tell you it is worth more than any effect I am currently trying to measure.
+
+<ZoomImage src="/images/posts/ml2-seat-advantage.png" alt="Bar chart: with the same agent in both seats, the first player wins 73% of games against the second player's 27%, far from the 50/50 a fair matchup would produce" />
+
+The fix is discipline, not cleverness: every training episode randomizes who goes first, and every comparison between agents plays half the games in each seat, so the advantage cancels. It costs nothing, and it is now simply how everything gets measured.
+
+**A bigger brain changed nothing.** The default network size, remember, was never a decision, just a library default. So of course I tried a network ten times bigger. Result: statistically nothing. Identical strength. All of Jaipur-as-this-agent-plays-it apparently fits in about 24,000 numbers with room to spare. I'm choosing to read that as good news (the game fits in a small net), and it at least rules out the most natural excuse, "it just needs a bigger brain," the next time progress stalls. Though I should flag how thin the measurement is: every instrument I had for that comparison came from inside the same small world. Hold that thought.
+
+## The treadmill
+
+By this point every number the project produces looks wonderful. Beats random at every game that trains. Win rates that climb and saturate. Version 2 beats version 1, version 3 beats version 2. Progress, plainly.
+
+And yet a question has started to nag. Every one of those numbers is self-referential: beats random, beats its own previous version, beats things *from its own little world*. Random is the floor, and all I've really proven is that the agents sit above it. How far above? Compared to what? A decent hand-written bot? A competent human? I genuinely don't know, and nothing I've built so far can tell me. Two agents from the same family beating each other says who's taller; it says nothing about whether either of them can reach the shelf.
+
+That includes the bigger-brain result a few paragraphs up. "Identical strength" only ever meant identical as judged from inside that same small world, and a yardstick that can't tell two networks apart might simply be too blunt to see the difference.
+
+So that's the next job: a real yardstick. Fixed reference opponents from outside the family, and a scale that doesn't move when the thing being measured moves. I have no idea what it's going to say.

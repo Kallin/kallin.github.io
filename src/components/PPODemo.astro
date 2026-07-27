@@ -1,0 +1,344 @@
+---
+// A manually-stepped PPO intuition demo: batch of games -> nudge the habits
+// that appeared in wins -> one fluke proposes a huge nudge -> the clip caps it
+// -> repeat. No math, just the seatbelt idea.
+const ROWS = [
+	{ key: 'a', label: 'take a good card' },
+	{ key: 'b', label: 'take the camels' },
+	{ key: 'c', label: 'sell a set' },
+	{ key: 'd', label: 'exchange with the market' },
+];
+---
+
+<figure class="ppd">
+	<div class="ctx" aria-hidden="true">
+		<span class="ctxk">the position it is looking at</span>
+		<span class="ctxv">
+			<em>market</em>
+			<span class="cc cloth">cloth</span><span class="cc cloth">cloth</span><span class="cc spice">spice</span>
+			<em>your hand</em>
+			<span class="cc cloth">cloth</span><span class="cc cloth">cloth</span><span class="cc leather">leather</span>
+		</span>
+	</div>
+
+	<div class="games" aria-hidden="true">
+		<span class="ctxk">eight games played out from here</span>
+		<span class="chips">
+			{['+1', '−1', '+1', '+1', '−1', '+1', '−1', '+1'].map((r) => (
+				<span class={`chip ${r === '+1' ? 'w' : 'l'}`}>{r}</span>
+			))}
+		</span>
+		<span class="gamesnote">+1 won, −1 lost. That is the entire teaching signal.</span>
+	</div>
+
+	<div class="rowshdr" aria-hidden="true">how strongly it favours each option <strong>here</strong></div>
+
+	<div class="rows">
+		{ROWS.map((r) => (
+			<div class={`row r-${r.key}`}>
+				<span class="rlbl">{r.label}</span>
+				<span class="track">
+					<span class="fill"></span>
+					<span class="ghost"></span>
+					<span class="clipmark"></span>
+				</span>
+				<span class="pct"></span>
+			</div>
+		))}
+	</div>
+
+	<div class="ppd-controls">
+		<button class="ppd-back" type="button">← Back</button>
+		<span class="ppd-count"></span>
+		<button class="ppd-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="ppd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.ppd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.ctx {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: center;
+		gap: 0.5rem 0.7rem;
+		padding-bottom: 0.85rem;
+		margin-bottom: 0.85rem;
+		border-bottom: 1px solid rgb(var(--gray-light));
+	}
+	.ctxk {
+		font-size: 0.8rem;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+	}
+	.ctxv {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.3em;
+	}
+	.ctxv em {
+		font-style: normal;
+		font-size: 0.8rem;
+		color: rgb(var(--gray));
+		margin-right: 0.1em;
+	}
+	.cc {
+		display: inline-block;
+		padding: 0.15em 0.5em;
+		border-radius: 5px;
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: #fff;
+	}
+	.cc.cloth {
+		background: #b06fa0;
+	}
+	.cc.spice {
+		background: #c96f4a;
+	}
+	.cc.leather {
+		background: #9b8360;
+	}
+	.rowshdr {
+		font-size: 0.82rem;
+		color: rgb(var(--gray));
+		text-align: center;
+		margin-bottom: 0.6rem;
+	}
+	.rowshdr strong {
+		color: rgb(var(--gray-dark));
+	}
+	.games {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.35rem;
+		margin-bottom: 1rem;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.chips {
+		display: flex;
+		gap: 0.4rem;
+		justify-content: center;
+	}
+	.gamesnote {
+		font-size: 0.8rem;
+		color: rgb(var(--gray));
+	}
+	.ppd.show-games .games {
+		opacity: 1;
+	}
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.2em;
+		height: 2.2em;
+		border-radius: 50%;
+		font-weight: 700;
+		font-size: 0.85rem;
+	}
+	.chip.w {
+		background: #eaf4ee;
+		border: 1.5px solid #177a4c;
+		color: #177a4c;
+	}
+	.chip.l {
+		background: #faf1ee;
+		border: 1.5px solid #b4341f;
+		color: #b4341f;
+	}
+	.rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: 11.5em 1fr 3.2em;
+		align-items: center;
+		gap: 0.8em;
+	}
+	.rlbl {
+		font-size: 0.88rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		text-align: right;
+	}
+	.track {
+		position: relative;
+		height: 14px;
+		background: rgb(var(--gray-light));
+		border-radius: 4px;
+		overflow: visible;
+	}
+	.fill {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 30%;
+		background: var(--accent);
+		border-radius: 4px;
+		transition: width 0.5s ease;
+	}
+	.ghost {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 0;
+		border-radius: 4px;
+		background: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(35, 55, 255, 0.35) 3px, rgba(35, 55, 255, 0.35) 6px);
+		transition: width 0.5s ease, opacity 0.3s ease;
+		opacity: 0;
+	}
+	.ppd.show-ghost .ghost {
+		opacity: 1;
+	}
+	.clipmark {
+		position: absolute;
+		top: -5px;
+		bottom: -5px;
+		width: 3px;
+		border-radius: 2px;
+		background: #b4341f;
+		opacity: 0;
+		transition: opacity 0.3s ease, left 0.5s ease;
+	}
+	.ppd.show-clip .r-b .clipmark {
+		opacity: 1;
+	}
+	.pct {
+		font-size: 0.85rem;
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+	}
+	.ppd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.ppd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.ppd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.ppd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.ppd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.ppd-caption {
+		min-height: 7.5em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Row = { fill: number; ghost?: number; clipAt?: number };
+	type Step = {
+		caption: string;
+		cls: string[];
+		rows: Record<string, Row>;
+	};
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'The bars are how strongly the network favours each option given what it can see right here: cloth showing in the market, cloth already in hand. Untrained, they are close to noise. So play a batch of games all the way to the end and record only who won. Eight games is almost no information, and any single one could be luck, but each carries a faint signal about what was worth doing.',
+			cls: ['show-games'],
+			rows: { a: { fill: 30 }, b: { fill: 28 }, c: { fill: 20 }, d: { fill: 22 } },
+		},
+		{
+			caption:
+				'The backward stamp from the last demo does its work: selling kept landing in wins from positions that looked like this one, so selling grows here. Note what is not happening: nothing is learning to sell everywhere. The nudge lands on the judgment that reads the position, so it shifts the answer here and in every position that resembles it.',
+			cls: ['show-games'],
+			rows: { a: { fill: 31 }, b: { fill: 26 }, c: { fill: 24 }, d: { fill: 19 } },
+		},
+		{
+			caption:
+				'Here is the danger PPO exists to prevent. One lucky game where grabbing camels from a position like this happened to precede a win proposes an enormous nudge (the hatched bar). Take it raw and the judgment lurches after a fluke, wrecking answers that were perfectly good.',
+			cls: ['show-games', 'show-ghost'],
+			rows: { a: { fill: 31 }, b: { fill: 26, ghost: 58 }, c: { fill: 24 }, d: { fill: 19 } },
+		},
+		{
+			caption:
+				'The fix is a seatbelt: every nudge is clipped to a small step (the red bar). That is most of what the name means. Proximal Policy Optimization, stay proximal, stay near the judgment you already have. The probabilities recorded in the ledger are what make that measurable: proximal means near what the policy believed when it played. Evidence moves you; no single fluke yanks you.',
+			cls: ['show-games', 'show-ghost', 'show-clip'],
+			rows: { a: { fill: 31 }, b: { fill: 31, ghost: 58, clipAt: 31 }, c: { fill: 24 }, d: { fill: 19 } },
+		},
+		{
+			caption:
+				'Repeat for a couple of million decisions across thousands of games. What drifts is not one set of habits but an opinion for each situation the network can tell apart: sell here, hold in a position one card different. I did not write this algorithm; it is an off-the-shelf implementation driving a network of about 24,000 dials.',
+			cls: [],
+			rows: { a: { fill: 34 }, b: { fill: 17 }, c: { fill: 36 }, d: { fill: 13 } },
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.ppd').forEach((root) => {
+		const caption = root.querySelector('.ppd-caption')!;
+		const count = root.querySelector('.ppd-count')!;
+		const back = root.querySelector<HTMLButtonElement>('.ppd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.ppd-next')!;
+		const ALL = ['show-games', 'show-ghost', 'show-clip'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.toggle(c, s.cls.includes(c)));
+			for (const [k, r] of Object.entries(s.rows)) {
+				const row = root.querySelector(`.r-${k}`)!;
+				(row.querySelector('.fill') as HTMLElement).style.width = `${r.fill}%`;
+				(row.querySelector('.ghost') as HTMLElement).style.width = `${r.ghost ?? 0}%`;
+				const clip = row.querySelector('.clipmark') as HTMLElement;
+				if (r.clipAt) clip.style.left = `${r.clipAt}%`;
+				row.querySelector('.pct')!.textContent = `${r.fill}%`;
+			}
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

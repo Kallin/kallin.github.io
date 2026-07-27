@@ -1,0 +1,506 @@
+---
+// A manually-stepped anatomy demo: the five sections of a .grim file, shown one
+// at a time behind file-tab pills, with a mini table below that builds up as
+// the sections come into play. YAML is abridged-but-real Jaipur.
+const BOX = [
+	{ g: 'diamond', c: '#7aa7d4' },
+	{ g: 'gold', c: '#d9a441' },
+	{ g: 'silver', c: '#9aa5b1' },
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'spice', c: '#c96f4a' },
+	{ g: 'leather', c: '#9b8360' },
+	{ g: 'camel', c: '#c2a171' },
+];
+const MARKET_FILL = [
+	{ g: 'camel', c: '#c2a171' },
+	{ g: 'camel', c: '#c2a171' },
+	{ g: 'camel', c: '#c2a171' },
+	{ g: 'diamond', c: '#7aa7d4' },
+	{ g: 'cloth', c: '#b06fa0' },
+];
+const HAND_FILL = [
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'cloth', c: '#b06fa0' },
+	{ g: 'spice', c: '#c96f4a' },
+	{ g: 'leather', c: '#9b8360' },
+	{ g: 'gold', c: '#d9a441' },
+];
+const TABS = [
+	{ key: 'comp', label: 'components:' },
+	{ key: 'cont', label: 'containers:' },
+	{ key: 'setup', label: 'flow: setup' },
+	{ key: 'flow', label: 'flow: play' },
+	{ key: 'act', label: 'actions:' },
+];
+const ACTIONS = ['take a good', 'take the camels', 'exchange', 'sell goods'];
+---
+
+<figure class="gmd">
+	<div class="filebar">
+		<span class="fname">jaipur.grim</span>
+		<div class="toc">
+			{TABS.map((t) => (
+				<span class={`tab tab-${t.key}`}>{t.label}</span>
+			))}
+		</div>
+	</div>
+
+	<div class="codebox">
+		<pre class="pane pane-skel"><code>game:         <i># name, 2 players</i>
+components:   <i># every piece in the box</i>
+containers:   <i># every place a piece can be</i>
+flow:         <i># phases: set up the table, then play</i>
+              <i># (the actions live inside the play phase)</i></code></pre>
+		<pre class="pane pane-comp"><code>components:
+  goods_card:
+    variants:
+      - {'{'} good: diamond, tag: luxury, count: 6 {'}'}
+      - {'{'} good: leather, tag: common, count: 10 {'}'}
+      <i># ...gold, silver, cloth, spice + the tokens</i>
+  camel_card:
+    variants: [{'{'} tag: animal, count: 11 {'}'}]</code></pre>
+		<pre class="pane pane-cont"><code>containers:
+  table:                <i># shared zones</i>
+    deck:   {'{'} preset: draw_pile {'}'}
+    market: {'{'} preset: row, size: 5, refill: after_action {'}'}
+  player_area:          <i># one of each per seat</i>
+    hand: {'{'} preset: hand, max_size: 7 {'}'}
+    herd: {'{'} preset: pile {'}'}</code></pre>
+		<pre class="pane pane-setup"><code>flow:
+  - phase: setup      <i># preparing the table is just the first phase</i>
+    steps:
+      - stock: {'{'} components: [goods_card, camel_card], into: deck {'}'}
+      - shuffle: deck
+      - move: {'{'} from: deck, to: market, what: camel_card, count: 3 {'}'}
+      - deal: {'{'} from: deck, to: hand, count: 5 {'}'}</code></pre>
+		<pre class="pane pane-flow"><code>flow:
+  - phase: play
+    steps:
+      - loop:
+          turns: {'{'} mode: alternating, actions_per_turn: 1 {'}'}
+          end_when:
+            - "empty_stacks(goods_token_stacks) >= 3"
+            - "count(deck) == 0"</code></pre>
+		<pre class="pane pane-act"><code>flow:
+  - phase: play
+    steps:
+      - loop:
+          actions:
+            take_good:     <i># choose 1 card from the market, refill</i>
+            take_camels:   <i># all market camels to your herd</i>
+            exchange:      <i># swap 2 or more cards with the market</i>
+            sell_goods:    <i># pick a set from hand, earn tokens</i></code></pre>
+	</div>
+
+	<div class="table-view">
+		<div class="box-row">
+			<span class="zlbl">the box</span>
+			<div class="cards">
+				{BOX.map((k) => (
+					<span class="card" style={`--cc:${k.c}`}>{k.g}</span>
+				))}
+				<span class="tok">7</span>
+				<span class="tok">5</span>
+				<span class="tok">3</span>
+			</div>
+		</div>
+		<div class="zones">
+			<div class="zone zn-deck">
+				<span class="znlbl">deck</span>
+				<div class="cards">
+					<span class="card back fill-item">38</span>
+				</div>
+			</div>
+			<div class="zone zn-market">
+				<span class="znlbl">market · 5 slots</span>
+				<div class="cards">
+					{MARKET_FILL.map((k) => (
+						<span class="slot"><span class="card fill-item" style={`--cc:${k.c}`}>{k.g}</span></span>
+					))}
+				</div>
+			</div>
+			<div class="zone zn-herd">
+				<span class="znlbl">your herd</span>
+				<div class="cards">
+					<span class="slot"><span class="empty-note fill-item">empty</span></span>
+				</div>
+			</div>
+			<div class="zone zn-hand">
+				<span class="znlbl">your hand · max 7</span>
+				<div class="cards">
+					{HAND_FILL.map((k) => (
+						<span class="slot"><span class="card fill-item" style={`--cc:${k.c}`}>{k.g}</span></span>
+					))}
+				</div>
+			</div>
+		</div>
+		<div class="bottom-rows">
+			<div class="turn-row">
+				<span class="pill">your turn</span>
+				<span class="alt">⇄</span>
+				<span class="pill ghosted">their turn</span>
+				<span class="endnote">…until 3 token stacks run dry</span>
+			</div>
+			<div class="act-row">
+				{ACTIONS.map((a) => (
+					<span class="abtn">{a}</span>
+				))}
+			</div>
+		</div>
+	</div>
+
+	<div class="gmd-controls">
+		<button class="gmd-back" type="button">← Back</button>
+		<span class="gmd-count"></span>
+		<button class="gmd-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="gmd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.gmd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.filebar {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.5rem;
+	}
+	.fname {
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		font-size: 0.78rem;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+	}
+	.toc {
+		display: flex;
+		gap: 0.3rem;
+		flex-wrap: wrap;
+	}
+	.tab {
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		font-size: 0.72rem;
+		font-weight: 600;
+		padding: 0.25em 0.6em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 6px;
+		color: rgb(var(--gray));
+		background: #fff;
+		transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+	}
+	.gmd.on-comp .tab-comp,
+	.gmd.on-cont .tab-cont,
+	.gmd.on-setup .tab-setup,
+	.gmd.on-flow .tab-flow,
+	.gmd.on-act .tab-act {
+		color: var(--accent);
+		border-color: var(--accent);
+		background: #f1f5f9;
+	}
+	/* all code panes stack in one grid cell; tallest sets the height */
+	.codebox {
+		display: grid;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 10px;
+		background: #fafbfc;
+		overflow-x: auto;
+	}
+	.pane {
+		grid-area: 1 / 1;
+		margin: 0;
+		padding: 0.75em 0.9em;
+		font-size: 0.74rem;
+		line-height: 1.55;
+		transition: opacity 0.25s ease;
+		align-self: center;
+	}
+	.pane code {
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		color: rgb(var(--gray-dark));
+	}
+	.pane i {
+		font-style: normal;
+		color: rgb(var(--gray));
+	}
+	.gmd:not(.on-skel) .pane-skel,
+	.gmd:not(.on-comp) .pane-comp,
+	.gmd:not(.on-cont) .pane-cont,
+	.gmd:not(.on-setup) .pane-setup,
+	.gmd:not(.on-flow) .pane-flow,
+	.gmd:not(.on-act) .pane-act {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.table-view {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		margin-top: 0.8rem;
+	}
+	.zlbl {
+		display: block;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.cards {
+		display: flex;
+		gap: 0.3rem;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+	.card {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 3em;
+		padding: 0.4em 0.4em;
+		border-radius: 7px;
+		border: 1.5px solid var(--cc, rgb(var(--gray)));
+		background: color-mix(in srgb, var(--cc, #ccc) 14%, white);
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+	}
+	.card.back {
+		background: repeating-linear-gradient(45deg, #eef0f4, #eef0f4 4px, #e3e6ec 4px, #e3e6ec 8px);
+		border-color: rgb(var(--gray-light));
+		color: rgb(var(--gray));
+	}
+	.tok {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.9em;
+		height: 1.9em;
+		border-radius: 50%;
+		border: 1.5px solid #d9a441;
+		background: color-mix(in srgb, #d9a441 14%, white);
+		font-size: 0.74rem;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+	}
+	.zones {
+		display: grid;
+		grid-template-columns: minmax(6.5em, auto) 1fr;
+		gap: 0.45rem;
+	}
+	.zone {
+		border: 1.5px dashed rgb(var(--gray-light));
+		border-radius: 9px;
+		padding: 0.4em 0.55em 0.5em;
+	}
+	.znlbl {
+		display: block;
+		font-size: 0.68rem;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		margin-bottom: 0.25rem;
+	}
+	.slot {
+		display: inline-flex;
+		min-width: 3em;
+		min-height: 2em;
+		border-radius: 7px;
+	}
+	.empty-note {
+		font-size: 0.72rem;
+		color: rgb(var(--gray));
+		align-self: center;
+		padding: 0.4em 0.2em;
+	}
+	.bottom-rows {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+	}
+	.turn-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.pill {
+		font-size: 0.74rem;
+		font-weight: 700;
+		padding: 0.3em 0.8em;
+		border-radius: 999px;
+		border: 1.5px solid var(--accent);
+		color: var(--accent);
+	}
+	.pill.ghosted {
+		border-color: rgb(var(--gray-light));
+		color: rgb(var(--gray));
+		font-weight: 600;
+	}
+	.alt {
+		color: rgb(var(--gray));
+		font-size: 0.9rem;
+	}
+	.endnote {
+		font-size: 0.74rem;
+		color: rgb(var(--gray));
+	}
+	.act-row {
+		display: inline-flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.abtn {
+		font-size: 0.76rem;
+		font-weight: 600;
+		padding: 0.35em 0.75em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 8px;
+		color: rgb(var(--gray-dark));
+		background: #fff;
+	}
+	/* build-up: hide by reserving space so nothing shifts between steps */
+	.gmd:not(.show-box) .box-row,
+	.gmd:not(.show-zones) .zones,
+	.gmd:not(.show-turn) .turn-row,
+	.gmd:not(.show-acts) .act-row {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.box-row,
+	.zones,
+	.turn-row,
+	.act-row {
+		transition: opacity 0.3s ease;
+	}
+	.fill-item {
+		transition: opacity 0.3s ease;
+	}
+	.gmd:not(.show-fill) .fill-item {
+		opacity: 0;
+	}
+	.gmd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.gmd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.gmd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.gmd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.gmd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.gmd-caption {
+		min-height: 6em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'This is the entire implementation of Jaipur: one file, four top-level sections. There is no Jaipur-specific code anywhere in the engine; everything the game is lives in this file, and the engine reads it the way a person reads a rulebook. Step through what each part contributes.',
+			cls: ['on-skel'],
+		},
+		{
+			caption:
+				'components: is what comes in the box. Every card and token is declared as data: the six goods, the token values, the eleven camels. Even the "luxury" tag, which a selling rule will lean on later, is just a property on a card. Inventory, not code.',
+			cls: ['on-comp', 'show-box'],
+		},
+		{
+			caption:
+				'containers: is every place a piece can be. Table zones are shared (the deck, the market); player-area zones exist once per seat (each player gets their own hand and herd). Presets carry the sensible defaults, so declaring a zone a hand already means "visible only to its owner."',
+			cls: ['on-cont', 'show-box', 'show-zones'],
+		},
+		{
+			caption:
+				'Preparing the table is not a special mode; it is just the first phase inside flow, a script of the same generic steps used everywhere else: fill the deck, shuffle, put three camels in the market, deal five cards to each player. Run the phase and the opening position simply exists, dealt fresh every game.',
+			cls: ['on-setup', 'show-box', 'show-zones', 'show-fill'],
+		},
+		{
+			caption:
+				'The play phase is the shape of turns, and Jaipur has about the smallest one possible: alternate turns, one action per turn, round over the moment three token stacks are empty or the deck runs out. The engine checks end_when after every action; nobody writes a game loop.',
+			cls: ['on-flow', 'show-box', 'show-zones', 'show-fill', 'show-turn'],
+		},
+		{
+			caption:
+				'And inside that loop live the actions: what a player may actually do, each one a short list of steps: choose, move, take. The choose steps become questions posed at the table, and their constraints are the rules. Hold that thought, because the learner is going to live inside those questions.',
+			cls: ['on-act', 'show-box', 'show-zones', 'show-fill', 'show-turn', 'show-acts'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.gmd').forEach((root) => {
+		const caption = root.querySelector('.gmd-caption')!;
+		const count = root.querySelector('.gmd-count')!;
+		const back = root.querySelector<HTMLButtonElement>('.gmd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.gmd-next')!;
+		const ALL = [
+			'on-skel',
+			'on-comp',
+			'on-cont',
+			'on-setup',
+			'on-flow',
+			'on-act',
+			'show-box',
+			'show-zones',
+			'show-fill',
+			'show-turn',
+			'show-acts',
+		];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.toggle(c, s.cls.includes(c)));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>
