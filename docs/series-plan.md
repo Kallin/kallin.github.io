@@ -175,15 +175,22 @@ leave these dangling.
 
 | Planted in | The seed | Pays off in |
 |---|---|---|
-| Part 2, identical-cards paragraph | Collapsing identical options into one; "I don't think I've found the bottom of it yet" | **Post 4** — fungible-collapse in the action codec is the same idea, and half of Era 1's fix |
 | Part 2, count-only encoder | The learner plays Jaipur without knowing which cards are in the market; "a question I'm deliberately not thinking too hard about yet" | **Post 4** — encoder v2, information not capacity |
 | Part 2, seat advantage | 73% first-player in a mirror, caveated as possibly an artifact of a weak agent | Whenever a strong agent re-measures it |
 | Part 2, bigger brain | Null result, measured with instruments from inside the same small world | **Post 3** — the yardstick reveals why that comparison was blind |
 
-## Not yet planted, but should be
+## Deliberately NOT planted
 
-The **take-a-good** question is indexed per card *instance* in the market, which is the
-precise defect post 4 is about. Part 2's EncodeDemo walks the *sell* path, where the
-questions are naturally per-type, so it steps past the flaw without lying about it. If
-post 4 wants a harder landing, one honest clause in Part 2's interview paragraph could
-plant it.
+Two threads post 4 must introduce cold, because Part 2 cut them for length. Neither is
+a loss; both were judged off the critical path of Part 2's story.
+
+**Fungible collapse.** Part 2 once carried an identical-cards paragraph (selling two
+cloth from a hand of four enumerated the same choice six ways; collapsing them bought a
+60× speedup, commit `7a3e...`, 2026-03-10). It was cut in review. Post 4 introduces
+fungible-collapse from scratch rather than as a callback. The engine-level precedent is
+still true and still quotable if post 4 wants it.
+
+**Per-instance action indexing.** The **take-a-good** question is indexed per card
+*instance* in the market, which is the precise defect post 4 is about. Part 2's
+EncodeDemo walks the *sell* path, where the questions are naturally per-type, so it
+steps past the flaw without lying about it. Post 4 owns the full reveal.
