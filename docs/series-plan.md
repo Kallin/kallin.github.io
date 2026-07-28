@@ -5,8 +5,15 @@ Working outline for the `game-ai` series. Source material is the Grimoire repo's
 happened when. **Every factual claim in a post must be traceable to an era in that
 file, and must belong to the era the post is narrating.** See "Data provenance" below.
 
-Posts 1-2 are settled. Posts 3-5 are firm in shape. Posts 6+ are sketches; expect them
-to move as later eras get written up.
+Posts 1-2 are published. Post 3 and 4 are outlined against the primary sources and
+carry inline provenance. Posts 5+ are sketches; expect them to move as later eras get
+written up.
+
+**Outline before writing, from the archive, not from HISTORY's summary.** HISTORY is a
+compact index; the lab notebooks under `archive/` are where the actual story is, and
+they routinely contradict the shape you would guess. Outlining post 3 from HISTORY put
+the 18.5% figure in the wrong post and missed the Elo ladder entirely, which is the
+best material in the era.
 
 ---
 
@@ -104,30 +111,78 @@ Demos: GrimDemo, EncodeDemo, CreditDemo, PPODemo. Figures: jaipur-table, pipelin
 seat-advantage.
 
 ### 3. Beaten by an If-Statement — NEXT
-**Era 1, act one.** Inherits Part 2's cliffhanger directly.
+**Era 1, act one (2026-06-28).** Inherits Part 2's cliffhanger directly.
 
-Build the yardstick and get humiliated by it. A hand-written heuristic Jaipur bot is
-the fixed external reference; the net that beats random essentially every game **caps
-at 18.5% against it**. Then rule out the obvious explanations, one at a time: bigger
-nets (null), longer training (works but saturates per-game), throughput (the wall was
-`SubprocVecEnv` lockstep, *not* cores or GPU — a good engineering beat). Ends on: it is
-not the learner and it is not the compute, so it must be how I am talking to it.
+> Outline verified against `archive/training-performance.md:875-895` (the yardstick
+> entry), `:992-1006` (the AZ arc), and commit `e24fd7c6` (the heuristic itself).
+> Corrects an earlier sketch that put the 18.5% figure here; that number is a
+> *cloned* net and belongs to post 4.
 
-The positive content is methodology: what makes a yardstick honest, and why "beats its
-own previous version" never could be. This theme runs the whole series and peaks at
-era 25.
+**The build.** Part 2 promised a yardstick, so this post builds one, and it is more
+than a bot: `grimoire/ai/yardstick/` ships a hand-authored Jaipur heuristic (the "mid
+anchor"), an agent zoo, a Bradley-Terry **Elo ladder**, and an alpha-beta endgame
+solver meant to supply exact ground truth. The solver is a good beat on its own: it
+verifies on tic-tac-toe and is **intractable on Jaipur**, because `exchange` is
+combinatorially branchy, so every deck≤1 position blows the budget. No brute-force
+truth for this game. The heuristic (291 lines, commit `e24fd7c6`) is deliberately
+*not* optimal by its own docstring: sell sets for bonus tokens, grab high-value goods,
+keep camels for exchanges, dump leather, with named thresholds so it reads as intent
+(`_SET_NUDGE = 0.6`, "prefer goods we're already collecting").
+
+**The humiliation.** Full ladder, 50 games/pair, seat-balanced: heuristic Elo **1081**,
+search_m1 **648**, policy_v2 **591**, random **0**. Pairwise the heuristic beats
+policy_v2 **100% of games** and search_m1 92%. So the whole trained lineage sits ~490
+Elo below a few hundred lines of hand-written priorities, and every bit of Part 2's
+"progress" was real motion happening entirely below the floor of competent play. The
+Elo framing is what makes it land: 591 is genuinely far above random, and still
+nowhere.
+
+**The obvious fix, failing.** Then the AlphaZero move: wrap the net in search and let
+it teach itself. Search *is* a positive operator (search@128 27% vs greedy 17%) but it
+does not scale (search@512 ≈ 21%, inside noise) and the flywheel will not turn, because
+AZ needs search > policy and here search ≈ policy. Ends on: it is not the algorithm and
+it is not the compute. Something more basic is wrong.
+
+**Concept blocks needed:** Elo (a rating that is relative but anchored across a whole
+population, which is exactly what "beats its own previous version" never gave us).
+Possibly a second on why exact search dies on Jaipur.
+
+**Figure candidates:** the Elo ladder as a horizontal scale with random / policy_v2 /
+search_m1 / heuristic marked, which tells the whole story in one image.
 
 ### 4. The Net Couldn't Name Its Own Moves
-**Era 1, act two.** The payoff.
+**Era 1, act two (2026-06-28 → 06-29).** The payoff, and a genuine detective story.
 
-The gap was the **action codec**, not the learner. One policy slot per card *instance*,
-ordered by id, meant "take the diamond" had no stable slot to learn. Fungible-collapse
-(per-type actions) + the **pointer head** (score each candidate from its own features)
-reached **parity at 48.5%** with zero algorithm changes. Encoder v2 beat v1 60.3%:
-information, not capacity, was the ceiling. SB3 deleted for a hand-rolled PPO. The
-winner-orientation reward bug found and fixed (some games had been optimizing garbage).
+> Verified against `archive/training-performance.md:992-1039`.
 
-Pays off both of Part 2's plants (see below).
+**The clone.** If the net cannot beat the heuristic by learning, clone it: behavioural
+cloning on heuristic games. The clone is a *good* imitator (action 99.3%, good-type
+90.2%, count and stop near perfect) and still loses, laddering at **18.5%**, CI
+[16.9, 20.3] over 1000 seat-balanced games. A near-perfect mimic that reliably loses to
+its teacher is a great puzzle.
+
+**The localizing experiment** (the centrepiece): hybrid agent, clone's top-level action
+choice + heuristic's substep targeting = **51.2%**, versus clone-only 18.5%. One test
+proves the strategic brain already matches and the entire gap lives in substep
+targeting, specifically take-good.
+
+**The rule-outs**, each its own dead end: capacity (bigger nets plateau ~80% take
+accuracy), data (DAgger flat across 3 rounds, 545k decisions), representation (entity
+obs + transformer: 73.2% vs the flat clone's 73.0%, identical), distribution (not
+covariate shift), soft labels (value-distillation made it *worse*, 80% → 68.6%).
+
+**The cause.** The bug is the **per-instance action codec**: one policy slot per card
+*instance*, ordered by id, so "take the diamond" had no stable slot to learn. Fungible
+collapse (per-*type* with a count feature) plus the **pointer head** (score each
+candidate from its own features) reaches **parity, 48.5%**, CI [44.5, 52.6], with zero
+algorithm changes. Representation was the lever the whole time.
+
+Also here if it fits: encoder v2 beat v1 60.3% (information, not capacity, was the
+ceiling), and sb3 gets deleted for a hand-rolled PPO. The winner-orientation reward bug
+may be better held for post 6, where it is the headline.
+
+Pays off Part 2's count-only-encoder plant. Introduces fungible collapse cold (see
+"Deliberately NOT planted").
 
 ### 5. Thinking Before Moving
 **Era 2.** Search at inference: +7-10 points on the same net, the first real edge. The
