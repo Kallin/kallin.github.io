@@ -191,6 +191,17 @@ v3 → v6 with an exploitability gate at every promotion. Methodology hardening 
 in blood: seed-noise floors, read-the-tape-before-retraining, single-sourced reward
 currency, self-describing checkpoints. Jaipur declared saturated.
 
+**The ruler gets an upgrade, and it belongs here, not in post 3.** Era 1's ladder was
+dependency-free **Bradley-Terry Elo**, random anchored at 0
+(`archive/strength-program-spec.md:178-180`). **TrueSkill** arrives with the champion
+ladder in era 2 (`tools/round_robin.py`; every champion_v4 / az_g1 / az_g2 row in
+`experiments.md`). The reason it earns a beat rather than a footnote: TrueSkill carries
+a σ next to the μ, so it reports how confident it is, and the promotion rows read like
+"**TrueSkill tie, 22.03 vs 21.54 inside σ**" — a rating system refusing to call a
+winner. That is the same instrument-honesty theme post 3 opens (a rating is relative to
+its field) and era 25 ends on (never let a model grade its own counterfactual). Post 3
+deliberately says only "Elo", so this is the upgrade, not a correction.
+
 ### 6. One Pipeline, Every Game
 **Era 4.** The generalization sweep: which of 12 games actually learn. 5/6 learn past
 random *after* the reward/eval orientation fix, and the fix is the story — three broken
