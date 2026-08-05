@@ -5,9 +5,10 @@ Working outline for the `game-ai` series. Source material is the Grimoire repo's
 happened when. **Every factual claim in a post must be traceable to an era in that
 file, and must belong to the era the post is narrating.** See "Data provenance" below.
 
-Posts 1-2 are published. Post 3 and 4 are outlined against the primary sources and
-carry inline provenance. Posts 5+ are sketches; expect them to move as later eras get
-written up.
+Posts 1-2 are published. Post 3 is the merged flagship (previously planned as two
+posts), outlined against the primary sources with inline provenance; a partial draft
+of the pre-merge shape exists at `game-ai-beaten-by-an-if-statement.mdx` and gets
+restructured, not discarded. Posts 4+ range from outlined to sketch.
 
 **Outline before writing, from the archive, not from HISTORY's summary.** HISTORY is a
 compact index; the lab notebooks under `archive/` are where the actual story is, and
@@ -110,97 +111,93 @@ nothing. Ends on: every number is self-referential, so build a real yardstick.
 Demos: GrimDemo, EncodeDemo, CreditDemo, PPODemo. Figures: jaipur-table, pipeline, noop-loop,
 seat-advantage.
 
-### 3. Beaten by an If-Statement — NEXT
-**Era 1, act one (2026-06-28).** Inherits Part 2's cliffhanger directly.
+### 3. Beaten by an If-Statement — NEXT (the merged flagship)
+**Era 1 (2026-06-28 → 06-29).** One post, mystery to resolution. This absorbs what
+was previously planned as two posts; the split diluted the wow into a setup post and
+a payoff post, and two independent planning passes (the recovered old draft and this
+one) converged on the single-post shape.
 
-> Outline verified against `archive/training-performance.md:875-895` (the yardstick
-> entry), `:992-1006` (the AZ arc), and commit `e24fd7c6` (the heuristic itself).
-> Corrects an earlier sketch that put the 18.5% figure here; that number is a
-> *cloned* net and belongs to post 4.
+> Verified against `archive/training-performance.md:875-895` (yardstick),
+> `:992-1039` (clone → bisection → proxy → pointer), commit `e24fd7c6` (the
+> heuristic), `archive/strength-program-spec.md:157-180` (640/640 validation, oracle
+> omitted as too slow, Bradley-Terry). The 18.5% figure is the CLONE, not the
+> from-scratch net.
 
-**The build.** Part 2 promised a yardstick, so this post builds one, and it is more
-than a bot: `grimoire/ai/yardstick/` ships a hand-authored Jaipur heuristic (the "mid
-anchor"), an agent zoo, a Bradley-Terry **Elo ladder**, and an alpha-beta endgame
-solver meant to supply exact ground truth. The solver is a good beat on its own: it
-verifies on tic-tac-toe and is **intractable on Jaipur**, because `exchange` is
-combinatorially branchy, so every deck≤1 position blows the budget. No brute-force
-truth for this game. The heuristic (291 lines, commit `e24fd7c6`) is deliberately
-*not* optimal by its own docstring: sell sets for bonus tokens, grab high-value goods,
-keep camels for exchanges, dump leather, with named thresholds so it reads as intent
-(`_SET_NUDGE = 0.6`, "prefer goods we're already collecting").
+**Shape (novelty density rises monotonically):**
+1. *The yardstick, compressed* (~800 words): heuristic built and validated 640/640,
+   Elo Concept block + demo (KEEP whole — pedagogy is deliberate), the ladder:
+   heuristic **1081**, search_m1 648, policy_v2 591, random 0; **100%** vs the bare
+   net (same score as vs random); curve check 433 pts → 92.4% predicted vs 92%
+   observed. Solver/oracle failures compressed to a few sentences of color.
+2. *The obvious fixes, one paragraph each*: bigger net (post 2 callback), longer
+   training, search (helps ~10 pts, stalls far below the heuristic at any budget —
+   the FULL audit war story moves to post 5).
+3. *The clone paradox*: 99.3% action agreement, 90.2% good-type — and 18.5%
+   [16.9, 20.3] over 1000 games. A near-perfect mimic loses four in five.
+4. *Rule-out montage*: entity obs + transformer 73.2% vs flat 73.0% (the reader's
+   own hypothesis, killed), capacity plateau ~80%, DAgger flat, not covariate
+   shift, soft labels made it WORSE (80% → 68.6%).
+5. *The bisection*: clone's action + heuristic's targeting = **51.2%**. Entire gap
+   localized to substep targeting.
+6. *The reveal + moving-slots demo*: per-instance codec — "take the diamond" never
+   had a stable address.
+7. *The conviction*: crude per-type proxy on ONE decision → **46%** from 18.5%.
+8. *The fix, properly*: **pointer head** Concept block + candidate-scoring demo —
+   pays Part 1's attention plant ("a hand of cards is a set of things with
+   relationships"). Official parity **48.5/49.5%** on the 2000-game ladder, zero
+   algorithm changes.
+9. *Ending: parity isn't winning* (the recovered draft's framing). Level with a few
+   hundred if-statements is the floor, not a victory — and there is nothing left to
+   imitate. Hands post 5 its question.
 
-**The humiliation.** Full ladder, 50 games/pair, seat-balanced: heuristic Elo **1081**,
-search_m1 **648**, policy_v2 **591**, random **0**. Pairwise the heuristic beats
-policy_v2 **100% of games** and search_m1 92%. So the whole trained lineage sits ~490
-Elo below a few hundred lines of hand-written priorities, and every bit of Part 2's
-"progress" was real motion happening entirely below the floor of competent play. The
-Elo framing is what makes it land: 591 is genuinely far above random, and still
-nowhere.
+**Demos:** EloDemo (built), moving-slots codec demo (to build), candidate-scoring
+demo (to build). **Figures:** the Elo ladder (built), possibly an 18.5 → 46 → 48.5
+progression. ~4,500 words. This is the HN submission.
 
-**The obvious fix, failing.** Then the AlphaZero move: wrap the net in search and let
-it teach itself. Search *is* a positive operator (search@128 27% vs greedy 17%) but it
-does not scale (search@512 ≈ 21%, inside noise) and the flywheel will not turn, because
-AZ needs search > policy and here search ≈ policy. Ends on: it is not the algorithm and
-it is not the compute. Something more basic is wrong.
+### 4. What the Network Sees
+**Eras 1-2, the perception thread.** The pointer head fixed how the net SPEAKS; this
+post is about what it SEES, and the running discovery that information, not capacity,
+was always the ceiling.
 
-**Concept blocks needed:** Elo (a rating that is relative but anchored across a whole
-population, which is exactly what "beats its own previous version" never gave us).
-Possibly a second on why exact search dies on Jaipur.
-
-**Figure candidates:** the Elo ladder as a horizontal scale with random / policy_v2 /
-search_m1 / heuristic marked, which tells the whole story in one image.
-
-### 4. The Net Couldn't Name Its Own Moves
-**Era 1, act two (2026-06-28 → 06-29).** The payoff, and a genuine detective story.
-
-> Verified against `archive/training-performance.md:992-1039`.
-
-**The clone.** If the net cannot beat the heuristic by learning, clone it: behavioural
-cloning on heuristic games. The clone is a *good* imitator (action 99.3%, good-type
-90.2%, count and stop near perfect) and still loses, laddering at **18.5%**, CI
-[16.9, 20.3] over 1000 seat-balanced games. A near-perfect mimic that reliably loses to
-its teacher is a great puzzle.
-
-**The localizing experiment** (the centrepiece): hybrid agent, clone's top-level action
-choice + heuristic's substep targeting = **51.2%**, versus clone-only 18.5%. One test
-proves the strategic brain already matches and the entire gap lives in substep
-targeting, specifically take-good.
-
-**The rule-outs**, each its own dead end: capacity (bigger nets plateau ~80% take
-accuracy), data (DAgger flat across 3 rounds, 545k decisions), representation (entity
-obs + transformer: 73.2% vs the flat clone's 73.0%, identical), distribution (not
-covariate shift), soft labels (value-distillation made it *worse*, 80% → 68.6%).
-
-**The cause.** The bug is the **per-instance action codec**: one policy slot per card
-*instance*, ordered by id, so "take the diamond" had no stable slot to learn. Fungible
-collapse (per-*type* with a count feature) plus the **pointer head** (score each
-candidate from its own features) reaches **parity, 48.5%**, CI [44.5, 52.6], with zero
-algorithm changes. Representation was the lever the whole time.
-
-Also here if it fits: encoder v2 beat v1 60.3% (information, not capacity, was the
-ceiling), and sb3 gets deleted for a hand-rolled PPO. The winner-orientation reward bug
-may be better held for post 6, where it is the headline.
-
-Pays off Part 2's count-only-encoder plant. Introduces fungible collapse cold (see
-"Deliberately NOT planted").
+- The audit finding that is almost comic: the net was **blind to public opponent
+  state** — hand size, herd, banked tokens masked to −1 despite being open
+  information. It played a hidden-information game with more hidden from it than the
+  rules hide (`archive/training-performance.md:1010`, W0 audit).
+- Encoder v2 (per-container composition) beats v1 **60.3%** — pure information gain
+  (trace the 60.3% to its primary source before use; currently only in HISTORY).
+- Perfect recall (v3): tracking cards that were publicly seen entering hidden zones —
+  the opponent's hand is partially KNOWABLE, not just countable.
+- Value-sight (v4) and the champion lineage's encoder half.
+- REINFORCE on the take head hovers at parity (best 50.5%, CI includes 50) — the
+  heuristic's take rule is near-optimal, so there is *nothing left to imitate*
+  (`training-performance.md:1041`). Ends: seeing everything, speaking properly,
+  still level. Climbing needs something other than imitation.
 
 ### 5. Thinking Before Moving
-**Era 2.** Search at inference: +7-10 points on the same net, the first real edge. The
-AlphaZero ratchet (distill search back into the net, iterate). The champion lineage
-v3 → v6 with an exploitability gate at every promotion. Methodology hardening paid for
-in blood: seed-noise floors, read-the-tape-before-retraining, single-sourced reward
-currency, self-describing checkpoints. Jaipur declared saturated.
+**Era 2, the search post.** This is where the Part 1 promise lands: "lookahead in the
+minimax tradition and its modern randomized descendants get their own tinted block the
+moment we meet one properly."
 
-**The ruler gets an upgrade, and it belongs here, not in post 3.** Era 1's ladder was
-dependency-free **Bradley-Terry Elo**, random anchored at 0
-(`archive/strength-program-spec.md:178-180`). **TrueSkill** arrives with the champion
-ladder in era 2 (`tools/round_robin.py`; every champion_v4 / az_g1 / az_g2 row in
-`experiments.md`). The reason it earns a beat rather than a footnote: TrueSkill carries
-a σ next to the μ, so it reports how confident it is, and the promotion rows read like
-"**TrueSkill tie, 22.03 vs 21.54 inside σ**" — a rating system refusing to call a
-winner. That is the same instrument-honesty theme post 3 opens (a rating is relative to
-its field) and era 25 ends on (never let a model grade its own counterfactual). Post 3
-deliberately says only "Elo", so this is the upgrade, not a correction.
+- **Opens with the audit war story** (moved from post 3, stronger here): the first
+  time search wrapped the net it made a PERFECT prior worse (action agreement 100% →
+  83%); five audit lenses found zero bugs; the value was the culprit; the
+  score-margin value fixed it on the spot (100% → 100%) and produced the first
+  seed-improvement (20% → 29%); then 4× sims bought nothing. Search saturates below
+  the heuristic; the AZ flywheel needs search > policy and cannot get it here.
+- **Concept blocks owed:** PUCT/MCTS (explore vs exploit, visit counts, prior-guided
+  — MinimaxDemo's sequel), the AlphaZero ratchet (search as a policy-improvement
+  operator, distilled back), determinization (hidden info → sample worlds).
+- Search at inference: +7-10 pts, the one measured lever. The parity basin: PPO
+  self-play converges to a fixed point (G/H/I in the retrospective); only a distinct
+  weaker anchor ever produced an edge (champion_v4, 62.5% vs v2).
+- The champion lineage v3 → v6, exploitability gate at every promotion.
+- **Elo → TrueSkill.** Era 1's ladder was dependency-free Bradley-Terry
+  (`strength-program-spec.md:178-180`); TrueSkill arrives with `tools/round_robin.py`
+  and carries a σ, so promotion rows read "TrueSkill tie, 22.03 vs 21.54 inside σ" —
+  a rating system refusing to call a winner. Same instrument-honesty thread post 3
+  opens and era 25 closes. Gets its Concept block here.
+- Methodology hardened in blood: seed-noise floors, read-the-tape, single-sourced
+  reward currency, self-describing checkpoints. Jaipur declared saturated.
 
 ### 6. One Pipeline, Every Game
 **Era 4.** The generalization sweep: which of 12 games actually learn. 5/6 learn past
@@ -208,29 +205,73 @@ random *after* the reward/eval orientation fix, and the fix is the story — thr
 score shapes (winner-only, lower-is-better, 4-player) all traced to assuming Jaipur's
 shape. Checkers and Coup blocked. `ml2-first-curve.png` belongs here.
 
-### 7. Games on a GPU — the `.grim` → JAX compiler
-**Era 3** chronologically; may run after 6 for narrative reasons.
+### 7. A Thousand Times Faster (and where that wasn't enough)
+**The performance post** — reframed (user, 2026-08-05) from "the JAX post" to "where
+speed actually comes from," so it can carry the project's recurring lesson: the wall
+was never compute.
 
-The one the author most wants to write. A `.grim` file compiles to a JAX simulator:
-raw sim ~1000× the interpreted engine, fused searched self-play 488 games/s at
-sims=16 (514×), and a from-zero tensor-trained net beat the engine-substrate champion
-**for about a dollar**. Throughput and strength are coupled through the sims budget.
-Also carries the retrospective lesson: name whether an arc is answering an
-*infrastructure* question or a *capability* question, and keep validation guards as
-floors rather than frontiers.
+- The walls that were structure, not hardware: `SubprocVecEnv` lockstep (era 1); CFR
+  re-walking an unchanging tree (era 10 — export the EFG once, **~400×**, a ten-hour
+  solve becomes 90 s); per-ply Python dispatch (**4.8×** from `lax.fori_loop`
+  fusion); the exact solver's **7.7×**; profile-before-you-wait as the discipline
+  (the silent verbose flag that nearly cost a wrong scientific call).
+- The recent **non-JAX encoder optimizations** (user, 2026-08: "much faster without
+  JAX") — pull the numbers from the repo when drafting; they are the thesis in
+  miniature.
+- THEN the compiler as culmination: `.grim` → JAX, ~1000× raw, 488 games/s fused, a
+  champion beaten for ~$1; Jaipur on the generic tier at **4,331×** batched with the
+  25,505-slot head certified exact (era 26).
+- The honest coda: 4,331× batched bought **2.42×** on a sequential solver — batch
+  throughput and sequential latency are different currencies (era 26's audit-substrate
+  verdict). Infra-vs-capability lesson; guards as floors.
 
-Later JAX arcs (PPO-on-JAX for the low-hidden-info deck class, 674× CPU) may fold in
-here or get their own post.
+### 8-12. Sketches
+- **The Games That Refused** — Eras 5-6, the equilibrium pivot and CFR. PG-family
+  structurally capped on bluff-core (Leduc nash_conv 0.49 vs tabular 0.0137); Kuhn's
+  8.6× that did not replicate; `leduc.grim` == pyspiel digit-for-digit. Owes Concept
+  blocks: information sets, exploitability.
+- **Three at the Table** — Eras 8-10, n-player as the same formula (validated against
+  pyspiel's kuhn3), the position-keyed-rows correction.
+- **A Text File Goes In, an Expert Comes Out** — Era 11, equilibrium balance reports:
+  seat values, dead-rule flags, mixing as the bluff signal, gates to 2e-16. Post 1's
+  promise, kept.
+- **Ship Week** — Eras 12-18. Skull (the tool's first catch was OUR rules bug), Love
+  Letter, For Sale.
+- **The Blunder That Wasn't** — Eras 19-25. Never let a model grade its own
+  counterfactual. Strongest single story in the archive.
 
-### 8-10. Sketches only
-- **The games that refused** — Eras 5-6, the equilibrium pivot and CFR. Kuhn's 8.6×
-  win that did not replicate on Leduc. Why hidden information breaks the AlphaZero
-  recipe.
-- **A text file goes in, an expert comes out** — Eras 8-11, n-player tabular, balance
-  reports, the original motivation finally consuming the agents.
-- **The blunder that wasn't** — Eras 19-25. Five eras chasing a Jaipur sell "defect"
-  that turned out to be correct play, and the rule that cost: never let a model grade
-  its own counterfactual. Probably the strongest single story in the archive.
+### 13-15. The live log (none of this has happened yet)
+- **Race for the Galaxy** — the authoring arc (R1: 95 cards, one new primitive), then
+  the Keldon yardstick (see Standing re-evaluations below).
+- **Press the Button** — autonomy; every champion so far was hand-shepherded, and the
+  product is the unbuilt part.
+- **Nobody Writes YAML** — the designer surface; post 1's bridge-from-the-designer's-
+  side claim made true.
+
+---
+
+## Standing re-evaluations
+
+Later eras complicate earlier posts' conclusions. Field-notes tense means the earlier
+posts are never *corrected* — they claimed only what was measured — but these beats
+must land when their post arrives.
+
+**Keldon's bot vs the pointer head** (for the RFTG post). Keldon's expert-level RFTG
+AI is a ONE-hidden-layer ~50-unit MLP over ~600-1,800 *hand-crafted binary features*
+(`docs/ml/reference-keldon-rftg.md`). No pointer head, no attention, tiny capacity —
+and expert play. This does not refute era 1; it is the same lesson from the opposite
+direction: **capacity was never the lever, representation was.** Keldon supplied the
+representation by hand for one game; the pointer head is the attempt to DERIVE it for
+any game. State this outright when the post arrives — it is the project's thesis in
+one comparison.
+
+**The yardstick teaches** (same post). The outside reference does not just measure —
+it gets harvested: thermometer encoding is already a roadmap item
+(`ai-roadmap.md:1069`, "the one Keldon feature that IS an algorithm": counts as
+`[1,1,1,-1,…]` so "at least k" is one weight). Post 3's heuristic taught `_SET_NUDGE`;
+Keldon teaches encodings. The instrument keeps turning into curriculum. If thermometer
+encoding ships across the board, that is a measured re-evaluation of the encoder
+lineage and belongs in whichever post is current when it lands.
 
 ---
 
@@ -247,16 +288,16 @@ leave these dangling.
 
 ## Deliberately NOT planted
 
-Two threads post 4 must introduce cold, because Part 2 cut them for length. Neither is
+Two threads post 3 must introduce cold, because Part 2 cut them for length. Neither is
 a loss; both were judged off the critical path of Part 2's story.
 
 **Fungible collapse.** Part 2 once carried an identical-cards paragraph (selling two
 cloth from a hand of four enumerated the same choice six ways; collapsing them bought a
-60× speedup, commit `7a3e...`, 2026-03-10). It was cut in review. Post 4 introduces
+60× speedup, commit `7a3e...`, 2026-03-10). It was cut in review. Post 3 introduces
 fungible-collapse from scratch rather than as a callback. The engine-level precedent is
-still true and still quotable if post 4 wants it.
+still true and still quotable if post 3 wants it.
 
 **Per-instance action indexing.** The **take-a-good** question is indexed per card
-*instance* in the market, which is the precise defect post 4 is about. Part 2's
+*instance* in the market, which is the precise defect post 3 reveals. Part 2's
 EncodeDemo walks the *sell* path, where the questions are naturally per-type, so it
-steps past the flaw without lying about it. Post 4 owns the full reveal.
+steps past the flaw without lying about it. Post 3 owns the full reveal.
