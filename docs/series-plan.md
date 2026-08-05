@@ -48,6 +48,13 @@ space with `min-height`, hide with `visibility/opacity` not `display:none`). Ver
 with a Playwright loop measuring document-relative `getBoundingClientRect` at every
 step, and read the screenshots.
 
+**Verify legibility at 1:1, not inside a downscaled capture** *(learned 2026-08-05:
+the Elo curve shipped review rounds with ~8px axis text because it was only ever
+judged inside full-demo screenshots)*. For any region with small text (SVG charts
+especially), element-screenshot JUST that region at natural scale and read it. SVG
+text must land ≥12 physical px after the viewBox-to-rendered-width scaling — compute
+it, don't eyeball it: rendered px = css-font-size × (container width / viewBox width).
+
 **Demos must not contradict each other.** PPODemo originally showed a policy as
 context-free action frequencies while EncodeDemo correctly showed observation-in /
 per-option-scores-out. Two demos teaching incompatible mental models is worse than one
