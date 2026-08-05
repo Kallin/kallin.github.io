@@ -1,0 +1,144 @@
+---
+title: 'Beaten by an If-Statement'
+description: "Part 3: the agent that beat a random player every game loses every game to a few hundred lines of hand-written priorities. Stranger: a near-perfect imitation of those priorities still loses four games in five. The cause is not the learning, the data, or the network. It is how the network was allowed to answer."
+pubDate: '2026-08-05'
+tags: ['ai', 'ml', 'reinforcement-learning', 'games']
+draft: true
+series: 'game-ai'
+seriesOrder: 3
+---
+
+import Concept from '../../components/Concept.astro';
+import EloDemo from '../../components/EloDemo.astro';
+import CodecDemo from '../../components/CodecDemo.astro';
+import PointerDemo from '../../components/PointerDemo.astro';
+import StitchDemo from '../../components/StitchDemo.astro';
+import ZoomImage from '../../components/ZoomImage.astro';
+
+[Last time](/blog/game-ai-from-random-to-reasonable/) ended with a complaint about my own numbers. The agent beat a random player essentially every game, it beat its own previous versions, and none of that told me anything, because every opponent it had ever faced came from inside its own little world. I said the next job was a real yardstick, and that I had no idea what it would say.
+
+The yardstick said everything I had built plays below the level you reach by writing down the obvious rules of the game and following them. Finding out *why* took one long night: every likely explanation failed under test, one after another, until the actual cause surfaced somewhere I had never thought to look. This post is the whole hunt, from building the measuring stick to the bug at the bottom of it.
+
+## The yardstick
+
+First, what the old numbers actually were. Training produces a lineage: train the agent for a while, save a checkpoint, train further, save again. Version 3 beats version 2, version 2 beats version 1. Those comparisons are true, and all they do is order the family. They say nothing about where the family sits. So I need two things: an opponent from *outside* the family, one that does not move when my agents move, and a scale that turns a pile of pairwise results into distances.
+
+The opponent had to be hand-written, because nothing else was available. A few hundred lines of Python encoding what any human works out in their second game of Jaipur. I want to be precise about how unambitious it is, because that matters later. Its own docstring says so:
+
+> Not optimal, deliberately: it encodes the obvious Jaipur principles (sell sets for bonus tokens, grab high-value goods, keep camels for exchanges, dump leather) so that "beats this" means "at least decent."
+
+It is a priority list: sell when a set is ready, take the most valuable good on offer, grab camels when they pile up. One subtlety is worth flagging now, because it comes back later: when choosing which good to take, it leans slightly toward goods it already holds, building toward the three-plus-card sales that pay the bonus tokens that decide Jaipur games. Remember that lean.
+
+Before trusting the bot to judge anything, I checked it was worth trusting. It played 640 games against the random player and won all 640, without attempting a single illegal move. Keep that score in mind too.
+
+For the scale, the answer comes from chess.
+
+<Concept title="Elo: turning who-beat-whom into how-far-apart">
+A win rate is a fact about a pair. A rating is a fact about a population: one number per player, chosen so that the *differences* between them predict the results of every matchup at once. Step through how a ratings table falls out of a pile of game results:
+
+<EloDemo />
+</Concept>
+
+The property that matters is the one at the end: a rating only means something relative to the field it was measured in, so the entire value of the exercise depends on getting one genuinely competent outsider into the pool. That is the heuristic's job. Around it went an agent zoo, a round-robin harness playing every pair with seats balanced, and the ratings fit over the whole field at once.
+
+## The number
+
+The field played a small league: a round robin, every agent against every other, fifty games per pairing with the seats swapped halfway, and the ratings fit over all of it at once. Four entrants. The trained network from last post. The same network given time to think: before committing to each move, it plays out a few hundred ways the game could continue and picks the move whose futures look best. The hand-written heuristic. And the random player, pinned at zero to anchor the scale.
+
+<ZoomImage src="/images/posts/ml3-elo-ladder.png" alt="Elo ladder: random anchored at 0, the trained policy at 591, the same policy with search at 648, and the hand-written heuristic at 1081, with the 433-point gap between search and the heuristic marked" />
+
+The heuristic sits at 1081. The trained network sits at 591. The heuristic beat the searched agent in 92% of games, and the bare network in **100%** of them. Both seats. Not one loss.
+
+That is the same score it posted against the random bot.
+
+Everything last post celebrated was real. The network did build hands around one good, cluster its sales into sets, scoop camels when the market was thick with them; I did sit across a table from it and find an opponent there. And it cannot take one game off a few hundred lines of if-statements. Both are true at once: the learning happened, inside a band of play that a competent human leaves behind in their second game, and nothing I owned could see the ceiling above that band because every instrument I owned lived under it. That is what "beats random" had been hiding. Random is not a floor near the bottom of the interesting range. It is a floor far below it.
+
+The obvious responses go quickly. A bigger network changed nothing; last post covered that, and the yardstick now explains why that comparison was blind. Training longer stopped paying long ago: the win rate flattens early in a run, and piling on more games moves nothing. And the thinking-time entrant is right there on the ladder: search moved the network from 591 to 648, real but a twentieth of the distance, and the heuristic still won 92% of their games. Fifty-seven points of thinking against a 490-point problem.
+
+So the network cannot learn its way there and cannot think its way there. Fine. New plan: stop trying to beat the heuristic, and *copy* it.
+
+## The copy that couldn't
+
+Part 1's history called this the supervised shortcut: here is the position, here is what the master did, copy that. The formal name is behavioural cloning. Play the heuristic against itself for hundreds of games, record every decision, and train the network to predict the teacher's choice at each one. No reward, no exploration. The mountain-of-expert-games prerequisite that a designer's new game will never have is, for once, available, because I can generate it. As science this is a detour; as diagnosis it is the perfect instrument, because it separates two questions that training had tangled together. Forget whether the network can *discover* strong play. Can it even *represent* it?
+
+The clone came out looking excellent. On held-out games it picks the same top-level action as the heuristic 99.3% of the time. Choosing which good to sell, it agrees 98%. Counts, near perfect. Its weakest skill is choosing which good to *take* from the market, and even there it lands around 80%.
+
+Then it played its teacher: **18.5%**, over two thousand seat-balanced games. Three hundred and seventy wins out of two thousand.
+
+A student that gives the teacher's own answer nine times out of ten loses four games in five. Part of that is compounding: a game is a few hundred decisions, so even a small disagreement rate per decision guarantees several defections every game, and evidently those few defections are the decisions that settle it. But the sharper clue was that improving the imitation did not help. Nudging that weakest skill, the market take, from bad to pretty good moved the win rate not at all; every variant sat at the same 18% regardless. The payoff for copying this teacher apparently arrives only at the very end of the accuracy scale, all at once. *Almost right about which card to take was worth nothing.* Whatever lived in that last twenty percent, the takes the clone kept missing no matter what, was where every game was being decided.
+
+## Hunting the last twenty percent
+
+The dead ends first, in the order they died.
+
+**It can't see the cards.** The leading theory. The observation is a flat vector of counts, a hand is a *set of things*, so surely the flattening is the crime. The observation got rebuilt properly: one token per card, a transformer over the set, the architecture Part 1 called tantalizing for card games. On the take decision the rebuilt version scored 73.2% and the flat one 73.0%. Identical, and slightly worse overall. The network can see everything it needs.
+
+**Everything else died faster.** A network four times wider moved take-accuracy from 75% to 80% and stopped. Half a million decisions relabelled by the teacher along the clone's own trajectories moved nothing, so it is not a data problem. Feeding each good's current token value straight into the observation moved nothing; the network had already inferred it from the stacks. Softening the labels from the teacher's single choice to its full preference ranking made things worse. Capacity, data, distribution, richer inputs, richer labels: five alibis.
+
+Meanwhile a different experiment pointed at where to dig. Build hybrids: keep the clone, but hand one kind of decision at a time back to the teacher, and see which handover matters.
+
+<ZoomImage src="/images/posts/ml3-levers.png" alt="Bar chart of hybrid agents against the teacher: the clone alone wins 15%, handing exchange targeting to the teacher 14.9%, sell targeting 17.3%, the market take alone jumps to 43.5%, and all three together 49.5%, right at parity" />
+
+Sell targeting does nothing. Exchange targeting does nothing. The market take, alone, is nearly the whole distance. The entire catastrophe lives inside a single question: *which good do I take?*
+
+The network sat at 80% on that question and would not move. One more experiment, then. Train a *second* network, from scratch, that does nothing else: the same observation goes in, but its entire output is six choices, diamond, gold, silver, cloth, spice, leather. It is not attached to the clone and knows nothing about the rest of the game. It is a probe, built to measure one thing: is this function even learnable from this observation? Which good does the teacher take?
+
+**96%.**
+
+The same observation that capped at 80% through the network's own output answers at 96% through a six-way one. It even learned the subtle part: a baseline that always takes the highest-value good scores 84%, so the classifier picked up the heuristic's lean, the take-toward-your-bonus-set behaviour flagged at the start, from counts alone. Nothing was wrong with what the network could see, and nothing was wrong with what it could learn. Something was wrong with *how it was allowed to answer*.
+
+## The bug
+
+Here is how the agent's answers were wired.
+
+<Concept title="Action codecs: how a move becomes a number">
+A network's output is a fixed row of scores, so somebody has to decide, ahead of time, which entry of that row means which move. That mapping is the action codec, and mine contained a landmine. Step through it:
+
+<CodecDemo />
+</Concept>
+
+Every legal "take" was enumerated per physical card, in id order: take card #14, take card #33, take card #41. Which slot a card landed in depended on which other cards happened to be on the table. So the concept "take the diamond" had no home. In one game the diamond was slot 2; in the next, slot 4; the credit from a won game pulled slot 2 toward diamonds on Monday and toward cloth on Tuesday. The network was not failing to learn the lesson. The lesson was being delivered to a different address every time.
+
+And the fix is not even a neural network idea. It is the same idea the engine itself discovered in week one, back in Part 2, when identical cards were bloating the legality enumeration: interchangeable things should be one choice, not many. Collapse the codec to one entry per *kind* of move. "Take a diamond," not "take card #33."
+
+The conviction test: put that probe on the ladder, riding beside the clone. Step through how the pair plays a game together:
+
+<StitchDemo />
+
+From 18.5% to statistical parity with the teacher, by changing nothing about the learning and everything about the addressing.
+
+One honest confession belongs here, because this series promised its dead ends. In the middle of that night I tested something close to this fix and measured "no effect," and wrote it down as ruled out. The test was wrong, not the idea: I had grafted the collapse onto a network *trained* under the old addressing, and of course it changed nothing, the damage was in the training. The correct version, trained under the new addressing from the start, is the breakthrough. I nearly filed the answer in the bin it eventually came from.
+
+## Naming moves properly
+
+Two words of network anatomy, because from here on the series needs them. The layers that read the input and build up an understanding of the position are the network's body, usually called the **trunk**. The final layer that turns that understanding into the required answer format is the **head**. It is a useful split precisely because the two can fail independently, and everything this night uncovered was a head problem: the trunk understood the game fine, and the head, a fixed row of per-card slots, kept garbling what the trunk knew. The six-way probe was, in this language, nothing but a better head.
+
+One trunk can also feed several heads, and this network has had two since Part 2, something I glossed over there. Alongside the policy head that picks a move, a **value head** answers a different question from the same understanding: how is this game going to end from here? PPO has been quietly relying on it the whole time. Rather than judge a decision by the raw result, it compares the result against what the value head expected, so credit tracks surprise instead of luck: winning a game you were already winning teaches very little. That second head plays no part in tonight's story, which is entirely about how moves are named. It becomes the main character of the next one.
+
+But the probe was a proof, not an architecture. It fixes one decision in one game by hand, and this project is not allowed hand-fixes: whatever replaces the codec has to work for any decision in any game a designer might write. The head that generalizes is one that stops giving moves *positions* at all, and scores them by *content*.
+
+<Concept title="The pointer head: score the move, not the slot">
+Instead of a fixed row of outputs, the network reads the position into a summary, then takes each legal move as a bundle of features describing what that move *is*, and scores every candidate with one shared judgment. Part 1 planted this: a hand of cards is a set of things with relationships, which is exactly what attention models. This is that idea arriving. Step through it:
+
+<PointerDemo />
+</Concept>
+
+To be precise about the machinery, because the word "attention" gets used loosely: the version built here is the idea's original, humbler form, where the compatibility test is a small shared network rather than the dot product that transformers standardized. The literature calls the overall design a [pointer network](https://arxiv.org/abs/1506.03134), and the family resemblance to a language model is real but specific. Same skeleton, one query against many candidates; different muscle doing the comparing; and the softmax spent on choosing rather than blending. None of the feed-forward story from the earlier posts is revoked. The trunk is still that machine. It just stopped being forced to end in a row of labeled boxes.
+
+And one boundary worth drawing, because it confused me until I drew it: Part 2's interview, the decomposition of big actions into a sequence of typed questions, is not part of the network and never was. The engine runs the interview; the network gets called once per question, sees which question is pending as part of its observation, and answers. That was true of the old row-of-slots head and it is true of the pointer head. The cascade was never the bug, and the fix never touched it.
+
+One network, every decision type, no fixed slots anywhere. Trained by the same behavioural cloning as before, nothing else changed: take-accuracy 95.4%, right where the six-way probe said the ceiling was. On the full official ladder, two thousand seat-balanced games: **49.5%**, confidence interval [47.3, 51.6]. Statistical parity with the teacher, as one end-to-end net, thirty-one points above where the night began.
+
+## Parity isn't winning
+
+I want to be precise about what was and was not achieved, because the temptation to end this post on a victory is strong and the numbers do not support it.
+
+What was achieved: the network can now *represent* everything the heuristic knows. The gap between them, which every instinct said was about learning, turned out to be about addressing, and with the addressing fixed, imitation reaches its natural ceiling, which is the teacher.
+
+What was not achieved: a win. Parity with the teacher is the *ceiling* of copying, definitionally, because a perfect copy of the teacher can only ever split games with the teacher. 49.5% is the sound of imitation completing. And the teacher is still a few hundred lines of if-statements that a decent player beats after a week with the game, which means the strongest agent this project has ever produced is now exactly as good as the floor of competent play, and no better.
+
+There is also nothing left to copy. That road ends here by construction.
+
+So the next question is not "how do I imitate better." It is the question this whole project was supposed to be about, the one that TD-Gammon and AlphaZero answered for their games and that Part 1 promised from the start: how does an agent climb *above* every teacher it has, using nothing but the outcomes of its own games? I have a parity-strength agent, an honest yardstick, and a measured ten points of thinking-time sitting unclaimed on the table.
+
+Time to find out what they buy.

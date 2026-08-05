@@ -1,0 +1,337 @@
+---
+// The action-codec bug: per-instance slots give "take the diamond" a different
+// address in every deal, so training signal smears across meanings. Two deals of
+// the same market, the same network output row, and the collapse that fixes it.
+const CARD_COLORS: Record<string, string> = {
+	diamond: '#7aa7d4',
+	gold: '#d9a441',
+	silver: '#9aa5b1',
+	cloth: '#b06fa0',
+	spice: '#c96f4a',
+	leather: '#9b8360',
+	camel: '#c2a171',
+};
+
+// Two deals. Cards carry engine ids; take-candidates are enumerated in id order.
+const DEAL_A = [
+	{ id: 14, g: 'cloth' },
+	{ id: 27, g: 'diamond' },
+	{ id: 33, g: 'spice' },
+	{ id: 41, g: 'cloth' },
+	{ id: 52, g: 'camel' },
+];
+const DEAL_B = [
+	{ id: 8, g: 'leather' },
+	{ id: 19, g: 'gold' },
+	{ id: 22, g: 'spice' },
+	{ id: 45, g: 'diamond' },
+	{ id: 57, g: 'camel' },
+];
+// Slot rows (camels are a separate action, not take-good candidates).
+const SLOTS_A = DEAL_A.filter((c) => c.g !== 'camel');
+const SLOTS_B = DEAL_B.filter((c) => c.g !== 'camel');
+
+const TYPES = ['diamond', 'gold', 'silver', 'cloth', 'spice', 'leather'];
+---
+
+<figure class="cdc">
+	<div class="deal deal-a">
+		<span class="dlbl">deal one</span>
+		<span class="cards">
+			{DEAL_A.map((c) => (
+				<span class="card" style={`--cc:${CARD_COLORS[c.g]}`}>
+					{c.g}
+					<i>#{c.id}</i>
+				</span>
+			))}
+		</span>
+	</div>
+
+	<div class="slots slots-a">
+		<span class="slbl">the network's answer row, "take a good" (deal one)</span>
+		<span class="row">
+			{SLOTS_A.map((c, i) => (
+				<span class={`slot ${c.g === 'diamond' ? 'dia' : ''}`}>
+					<b>slot {i + 1}</b>
+					<span class="chip" style={`--cc:${CARD_COLORS[c.g]}`}>take #{c.id} ({c.g})</span>
+				</span>
+			))}
+		</span>
+	</div>
+
+	<div class="deal deal-b">
+		<span class="dlbl">deal two</span>
+		<span class="cards">
+			{DEAL_B.map((c) => (
+				<span class="card" style={`--cc:${CARD_COLORS[c.g]}`}>
+					{c.g}
+					<i>#{c.id}</i>
+				</span>
+			))}
+		</span>
+	</div>
+
+	<div class="slots slots-b">
+		<span class="slbl">the same answer row (deal two)</span>
+		<span class="row">
+			{SLOTS_B.map((c, i) => (
+				<span class={`slot ${c.g === 'diamond' ? 'dia' : ''}`}>
+					<b>slot {i + 1}</b>
+					<span class="chip" style={`--cc:${CARD_COLORS[c.g]}`}>take #{c.id} ({c.g})</span>
+				</span>
+			))}
+		</span>
+	</div>
+
+	<div class="verdictline">
+		"take the diamond" lives at <em>slot 2</em> in deal one and <em>slot 4</em> in deal two.
+		The +1 from a won game trains the slot, not the meaning.
+	</div>
+
+	<div class="slots slots-fix">
+		<span class="slbl">the collapsed codec: one slot per KIND of move</span>
+		<span class="row">
+			{TYPES.map((t) => (
+				<span class={`slot ${t === 'diamond' ? 'dia' : ''}`}>
+					<b>{t}</b>
+					<span class="chip" style={`--cc:${CARD_COLORS[t]}`}>take a {t}</span>
+				</span>
+			))}
+		</span>
+	</div>
+
+	<div class="cdc-controls">
+		<button class="cdc-back" type="button">← Back</button>
+		<span class="cdc-count"></span>
+		<button class="cdc-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="cdc-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.cdc {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.deal,
+	.slots,
+	.verdictline {
+		transition: opacity 0.4s ease;
+	}
+	.deal {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		margin-bottom: 0.5rem;
+	}
+	.dlbl,
+	.slbl {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		white-space: nowrap;
+	}
+	.slbl {
+		display: block;
+		margin-bottom: 0.3rem;
+	}
+	.cards {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+	.card {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		min-width: 4.1em;
+		padding: 0.3em 0.45em;
+		border-radius: 7px;
+		border: 1.5px solid var(--cc);
+		background: color-mix(in srgb, var(--cc) 14%, white);
+		font-size: 0.76rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		line-height: 1.25;
+	}
+	.card i {
+		font-style: normal;
+		font-size: 0.64rem;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+	.slots {
+		margin-bottom: 0.75rem;
+	}
+	.row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+	.slot {
+		display: inline-flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.3em 0.4em;
+		border: 1.5px solid rgb(var(--gray-light));
+		border-radius: 8px;
+		transition: border-color 0.35s ease, background 0.35s ease;
+	}
+	.slot b {
+		font-size: 0.62rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		font-weight: 700;
+	}
+	.chip {
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		padding: 0.12em 0.4em;
+		border-radius: 5px;
+		border: 1.5px solid var(--cc);
+		background: color-mix(in srgb, var(--cc) 14%, white);
+		white-space: nowrap;
+	}
+	.cdc.hl .slot.dia {
+		border-color: #b4341f;
+		background: #faf1ee;
+	}
+	.cdc.hl .slot.dia b {
+		color: #b4341f;
+	}
+	.verdictline {
+		font-size: 0.85rem;
+		color: rgb(var(--gray-dark));
+		text-align: center;
+		margin: 0.15rem 0 0.75rem;
+	}
+	.verdictline em {
+		font-style: normal;
+		font-weight: 700;
+		color: #b4341f;
+	}
+	/* staged visibility: space reserved, faded until the step arrives */
+	.deal-b,
+	.slots-b,
+	.verdictline,
+	.slots-fix {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.cdc.s2 .deal-b,
+	.cdc.s2 .slots-b {
+		visibility: visible;
+		opacity: 1;
+	}
+	.cdc.s3 .verdictline {
+		visibility: visible;
+		opacity: 1;
+	}
+	.cdc.s4 .slots-fix {
+		visibility: visible;
+		opacity: 1;
+	}
+	.cdc-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.cdc-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.cdc-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.cdc-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.cdc-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.cdc-caption {
+		min-height: 8em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'A take decision from the machine side. Every card in the engine has an id, and the codec lists the legal takes in id order: slot 1 is "take card #14", slot 2 is "take card #27", and so on. The network\'s job is to put a score in each slot. So far, merely bureaucratic.',
+			cls: [],
+		},
+		{
+			caption:
+				'A different deal, the same machinery. New cards, new ids, and the id-ordered list assigns everything a fresh position. Look at where the diamond ended up.',
+			cls: ['s2'],
+		},
+		{
+			caption:
+				'There is the bug. "Take the diamond" has no address of its own; it inherits whatever slot the deal happens to give it. The backward stamp from a won game pulls slot 2 toward diamonds in one game and toward something else entirely in the next. The network is not failing to learn the lesson. The lesson is being delivered to a different address every time, and slot 2\'s dials end up holding the smeared average of every meaning that ever passed through.',
+			cls: ['s2', 's3', 'hl'],
+		},
+		{
+			caption:
+				'The fix: collapse the codec to one slot per KIND of move. "Take a diamond", not "take card #33". Six stable addresses that mean the same thing in every game ever played, so every stamp about diamonds lands on the diamond dial. Nothing about the network changed. Only the addressing did.',
+			cls: ['s2', 's3', 's4'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.cdc').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.cdc-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.cdc-next')!;
+		const count = root.querySelector('.cdc-count')!;
+		const caption = root.querySelector('.cdc-caption')!;
+		const ALL = ['s2', 's3', 's4', 'hl'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

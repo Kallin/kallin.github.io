@@ -1,0 +1,306 @@
+---
+// The stitched agent: two separately-trained networks, a router between them.
+// Step 1 routes a take decision to the probe; step 2 routes anything else to
+// the clone; step 3 shows the pair on the ladder. DOM layout, no drawn elbows:
+// arrows are glyphs, so nothing can collide at any zoom.
+---
+
+<figure class="stc">
+	<div class="lane lane-top">
+		<span class="route">
+			<i class="rlabel">every other decision</i>
+			<b class="glyph">→</b>
+		</span>
+		<span class="net net-clone">
+			<b>the clone</b>
+			<i>the 99% imitator,<br />capped at 80% on takes</i>
+		</span>
+		<span class="ans ans-clone">"sell the cloth set"</span>
+	</div>
+
+	<div class="lane lane-src">
+		<span class="src">
+			<b>a decision arrives</b>
+			<i>the same observation<br />goes to both networks</i>
+		</span>
+	</div>
+
+	<div class="lane lane-bot">
+		<span class="route">
+			<i class="rlabel">which good to take?</i>
+			<b class="glyph">→</b>
+		</span>
+		<span class="net net-probe">
+			<b>the probe</b>
+			<i>six outputs, one job,<br />trained separately</i>
+		</span>
+		<span class="ans ans-probe">"a diamond" → a legal diamond card</span>
+	</div>
+
+	<div class="verdict">
+		Neither network retrained. Together on the ladder: <b>48.5%</b>, statistical parity with the teacher.
+	</div>
+
+	<div class="stc-controls">
+		<button class="stc-back" type="button">← Back</button>
+		<span class="stc-count"></span>
+		<button class="stc-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="stc-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.stc {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.lane {
+		display: grid;
+		grid-template-columns: 200px 236px 1fr;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 0.55rem;
+	}
+	.lane-src {
+		grid-template-columns: 1fr;
+		justify-items: start;
+		margin: 0.1rem 0 0.65rem;
+	}
+	.src,
+	.net {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 0.15rem;
+		padding: 0.55em 0.8em;
+		border: 2px solid rgb(var(--gray-light));
+		border-radius: 11px;
+		background: #fff;
+		transition: border-color 0.3s ease, background 0.3s ease, opacity 0.3s ease;
+	}
+	.src {
+		border-color: var(--accent);
+		background: #eef1ff;
+	}
+	.src b,
+	.net b {
+		font-size: 0.9rem;
+		color: rgb(var(--gray-dark));
+	}
+	.src i,
+	.net i {
+		font-style: normal;
+		font-size: 0.72rem;
+		line-height: 1.35;
+		color: rgb(var(--gray));
+	}
+	.route {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.05rem;
+		justify-self: end;
+		padding-right: 0.2rem;
+	}
+	.rlabel {
+		font-style: normal;
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		white-space: nowrap;
+		transition: color 0.3s ease;
+	}
+	.glyph {
+		font-size: 1.5rem;
+		line-height: 1;
+		color: rgb(var(--gray-light));
+		transition: color 0.3s ease;
+	}
+	.ans {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		visibility: hidden;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	/* step states */
+	.lane-top .net,
+	.lane-bot .net {
+		opacity: 0.55;
+	}
+	.stc.hl-top .lane-top .net,
+	.stc.hl-bot .lane-bot .net,
+	.stc.hl-both .lane-top .net,
+	.stc.hl-both .lane-bot .net {
+		opacity: 1;
+	}
+	.stc.hl-top .lane-top .net {
+		border-color: var(--accent);
+		background: #eef1ff;
+	}
+	.stc.hl-bot .lane-bot .net,
+	.stc.hl-both .lane-bot .net {
+		border-color: #b4341f;
+		background: #faf1ee;
+	}
+	.stc.hl-both .lane-top .net {
+		border-color: var(--accent);
+		background: #eef1ff;
+	}
+	.stc.hl-top .lane-top .glyph {
+		color: var(--accent);
+	}
+	.stc.hl-bot .lane-bot .glyph,
+	.stc.hl-both .lane-bot .glyph {
+		color: #b4341f;
+	}
+	.stc.hl-both .lane-top .glyph {
+		color: var(--accent);
+	}
+	.stc.hl-top .lane-top .rlabel {
+		color: var(--accent);
+	}
+	.stc.hl-bot .lane-bot .rlabel,
+	.stc.hl-both .lane-bot .rlabel {
+		color: #b4341f;
+	}
+	.stc.hl-both .lane-top .rlabel {
+		color: var(--accent);
+	}
+	.stc.hl-top .ans-clone,
+	.stc.hl-both .ans-clone {
+		visibility: visible;
+		opacity: 1;
+	}
+	.stc.hl-bot .ans-probe,
+	.stc.hl-both .ans-probe {
+		visibility: visible;
+		opacity: 1;
+	}
+	.verdict {
+		font-size: 0.86rem;
+		color: rgb(var(--gray-dark));
+		text-align: center;
+		margin-top: 0.4rem;
+		visibility: hidden;
+		opacity: 0;
+		transition: opacity 0.35s ease;
+	}
+	.stc.show-verdict .verdict {
+		visibility: visible;
+		opacity: 1;
+	}
+	.stc-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.stc-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.stc-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.stc-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.stc-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.stc-caption {
+		min-height: 6.5em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+	@media (max-width: 560px) {
+		.lane {
+			grid-template-columns: 1fr;
+			justify-items: start;
+		}
+		.route {
+			justify-self: start;
+			flex-direction: row;
+			gap: 0.4rem;
+		}
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'The rig. One box on the left produces decisions; two separately-trained networks wait on the right; a one-line router in between sends each decision to one of them based on nothing but its type.',
+			cls: [],
+		},
+		{
+			caption:
+				'A market take arrives. The router hands it to the probe, the probe picks a good, and the answer is mapped onto a legal card of that good. The clone never sees the question.',
+			cls: ['hl-bot'],
+		},
+		{
+			caption:
+				'Any other decision, and the clone answers exactly as it always did: which action to play, what to sell, how many. The probe never sees these.',
+			cls: ['hl-top'],
+		},
+		{
+			caption:
+				'Neither network was retrained. The only change is who gets asked which question, and the pair scores 48.5% against the teacher, confidence interval spanning 50, reproduced on two more seeds. From 18.5% to statistical parity by rewiring one decision.',
+			cls: ['hl-both', 'show-verdict'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.stc').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.stc-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.stc-next')!;
+		const count = root.querySelector('.stc-count')!;
+		const caption = root.querySelector('.stc-caption')!;
+		const ALL = ['hl-top', 'hl-bot', 'hl-both', 'show-verdict'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

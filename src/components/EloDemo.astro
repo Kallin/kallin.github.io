@@ -1,0 +1,429 @@
+---
+// Elo: pairwise results become one number per player, and the punchline the post
+// needs — a rating is only meaningful relative to the field it was measured in.
+// Steps 1-4 zoom in on a family of three; step 5 zooms out when an outsider joins
+// and the family collapses into a cluster.
+const PLAYERS = [
+	{ key: 'v1', label: 'version 1', elo: 1200, pa: 25, pb: 11 },
+	{ key: 'v2', label: 'version 2', elo: 1300, pa: 50, pb: 22 },
+	{ key: 'v3', label: 'version 3', elo: 1400, pa: 75, pb: 33 },
+];
+const OUTSIDER = { key: 'out', label: 'the outsider', elo: 1900, pb: 89 };
+
+const RESULTS = [
+	{ key: 'r1', a: 'version 3', b: 'version 2', pct: '64%', gap: '100 apart', pred: '64%' },
+	{ key: 'r2', a: 'version 2', b: 'version 1', pct: '64%', gap: '100 apart', pred: '64%' },
+	{ key: 'r3', a: 'version 3', b: 'version 1', pct: '76%', gap: '200 apart', pred: '76%' },
+];
+
+// The logistic every rating system shares: a gap of D points predicts a score of
+// 1 / (1 + 10^(-D/400)). Sampled here so the curve is drawn, not asserted.
+const CW = 460;
+const CH = 168;
+const DMAX = 500;
+const expected = (d: number) => 1 / (1 + Math.pow(10, -d / 400));
+const cx = (d: number) => ((d + DMAX) / (2 * DMAX)) * CW;
+const cy = (e: number) => CH - e * CH;
+const PATH = Array.from({ length: 101 }, (_, i) => {
+	const d = -DMAX + (i / 100) * 2 * DMAX;
+	return `${i === 0 ? 'M' : 'L'}${cx(d).toFixed(1)},${cy(expected(d)).toFixed(1)}`;
+}).join(' ');
+const MARKS = [
+	{ d: -400, lbl: '9%' },
+	{ d: 0, lbl: '50%' },
+	{ d: 100, lbl: '64%' },
+	{ d: 200, lbl: '76%' },
+	{ d: 400, lbl: '91%' },
+];
+---
+
+<figure class="elo">
+	<div class="scale-wrap">
+		<span class="scalelbl">rating</span>
+		<div class="ticks ticks-a" aria-hidden="true">
+			<span>1100</span><span>1200</span><span>1300</span><span>1400</span><span>1500</span>
+		</div>
+		<div class="ticks ticks-b" aria-hidden="true">
+			<span>1100</span><span>1400</span><span>1700</span><span>2000</span>
+		</div>
+		<div class="track">
+			{PLAYERS.map((p) => (
+				<span class={`mk mk-${p.key}`} style={`--pa:${p.pa}%;--pb:${p.pb}%`}>
+					<span class="dot"></span>
+					<span class="mlbl">{p.label}</span>
+					<span class="melo">{p.elo}</span>
+				</span>
+			))}
+			<span class={`mk mk-out`} style={`--pa:${OUTSIDER.pb}%;--pb:${OUTSIDER.pb}%`}>
+				<span class="dot out"></span>
+				<span class="mlbl">{OUTSIDER.label}</span>
+				<span class="melo">{OUTSIDER.elo}</span>
+			</span>
+		</div>
+	</div>
+
+	<div class="results">
+		{RESULTS.map((r) => (
+			<div class={`row row-${r.key}`}>
+				<span class="ra">{r.a}</span>
+				<span class="rbeat">beat</span>
+				<span class="rb">{r.b}</span>
+				<span class="rpct">{r.pct}</span>
+				<span class="rgap">{r.gap}</span>
+				<span class="rpred">predicts {r.pred}</span>
+			</div>
+		))}
+		<div class="row row-out">
+			<span class="ra">the outsider</span>
+			<span class="rbeat">beat</span>
+			<span class="rb">all three</span>
+			<span class="rpct">97%</span>
+			<span class="rgap">500+ apart</span>
+			<span class="rpred">predicts 95%+</span>
+		</div>
+	</div>
+
+	<div class="curve">
+		<span class="clbl">a gap of D points predicts a score of 1 / (1 + 10<sup>−D/<b>400</b></sup>)</span>
+		<svg viewBox={`-88 -14 ${CW + 112} ${CH + 56}`} role="img"
+			aria-label="The logistic curve converting a rating gap into a chance of winning. At the same rating it is 50%, 400 points above is 91%, and 400 points below is 9%; it flattens toward 100% and 0% at the ends.">
+			<line x1="0" y1={CH} x2={CW} y2={CH} class="ax" />
+			<line x1={cx(0)} y1="0" x2={cx(0)} y2={CH} class="ax dash" />
+			<line x1="0" y1={cy(0.5)} x2={CW} y2={cy(0.5)} class="ax dash" />
+			<text x="-8" y={cy(1) + 4} class="ay">100%</text>
+			<text x="-8" y={cy(0.5) + 4} class="ay">50%</text>
+			<text x="-8" y={cy(0) + 4} class="ay">0%</text>
+			<text transform={`translate(-64 ${CH / 2}) rotate(-90)`} class="axl" text-anchor="middle">chance you win</text>
+			<path d={PATH} class="cpath" />
+			{MARKS.map((m) => (
+				<g class={`cm`}>
+					<circle cx={cx(m.d)} cy={cy(expected(m.d))} r="5.5" />
+					<text x={cx(m.d)} y={cy(expected(m.d)) - 13} class="cmt">{m.lbl}</text>
+				</g>
+			))}
+			<text x={cx(-DMAX)} y={CH + 22} class="axl" text-anchor="start">−500</text>
+			<text x={cx(0)} y={CH + 22} class="axl" text-anchor="middle">same rating</text>
+			<text x={cx(DMAX)} y={CH + 22} class="axl" text-anchor="end">+500</text>
+			<text x={cx(0)} y={CH + 40} class="axl" text-anchor="middle">your rating minus theirs</text>
+		</svg>
+	</div>
+
+	<div class="elo-controls">
+		<button class="elo-back" type="button">← Back</button>
+		<span class="elo-count"></span>
+		<button class="elo-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="elo-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.elo {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.scale-wrap {
+		padding: 0 0.5rem;
+		margin-bottom: 1.1rem;
+	}
+	.scalelbl {
+		display: block;
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.ticks {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.66rem;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray));
+		margin-bottom: 0.85rem;
+		height: 1em;
+	}
+	.ticks-b {
+		display: none;
+	}
+	.elo.wide .ticks-a {
+		display: none;
+	}
+	.elo.wide .ticks-b {
+		display: flex;
+	}
+	.track {
+		position: relative;
+		height: 74px;
+		border-top: 2px solid rgb(var(--gray-light));
+	}
+	.mk {
+		position: absolute;
+		top: -6px;
+		left: var(--pa);
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		transition: left 0.55s ease, opacity 0.4s ease;
+	}
+	.elo.wide .mk {
+		left: var(--pb);
+	}
+	.dot {
+		width: 11px;
+		height: 11px;
+		border-radius: 50%;
+		background: var(--accent);
+		border: 2px solid #fff;
+		box-shadow: 0 0 0 1.5px var(--accent);
+	}
+	.dot.out {
+		background: #b4341f;
+		box-shadow: 0 0 0 1.5px #b4341f;
+	}
+	.mlbl {
+		margin-top: 0.35rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		white-space: nowrap;
+	}
+	.melo {
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		font-weight: 700;
+		color: rgb(var(--gray));
+	}
+	.mk-out {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.elo.show-out .mk-out {
+		visibility: visible;
+		opacity: 1;
+	}
+	.mk .melo {
+		visibility: hidden;
+	}
+	.elo.show-elo .mk .melo {
+		visibility: visible;
+	}
+
+	.results {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin-bottom: 0.2rem;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: 6.6em 2.2em 6.6em 3em 6em 8em;
+		align-items: baseline;
+		gap: 0.4em;
+		font-size: 0.78rem;
+		color: rgb(var(--gray-dark));
+	}
+	.ra,
+	.rb {
+		font-weight: 600;
+	}
+	.rb,
+	.rbeat {
+		color: rgb(var(--gray));
+	}
+	.rpct {
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+	.rgap,
+	.rpred {
+		color: rgb(var(--gray));
+		visibility: hidden;
+	}
+	.elo.show-gap .rgap {
+		visibility: visible;
+	}
+	.elo.show-pred .rpred {
+		visibility: visible;
+	}
+	.row-out {
+		visibility: hidden;
+		opacity: 0;
+		transition: opacity 0.4s ease;
+	}
+	.elo.show-out .row-out {
+		visibility: visible;
+		opacity: 1;
+	}
+	.elo.show-out .row-out .ra {
+		color: #b4341f;
+	}
+
+	.curve {
+		visibility: hidden;
+		opacity: 0;
+		transition: opacity 0.45s ease;
+		margin-top: 0.9rem;
+		text-align: center;
+	}
+	.elo.show-gap .curve {
+		visibility: visible;
+		opacity: 1;
+	}
+	.clbl {
+		display: block;
+		font-size: 0.82rem;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.clbl sup {
+		font-size: 0.62rem;
+	}
+	.clbl b {
+		color: rgb(var(--gray-dark));
+		font-size: 0.72rem;
+	}
+	.curve svg {
+		width: 100%;
+		max-width: 600px;
+		height: auto;
+		overflow: visible;
+	}
+	.ax {
+		stroke: rgb(var(--gray-light));
+		stroke-width: 1.5;
+	}
+	.ax.dash {
+		stroke-dasharray: 3 4;
+	}
+	.ay,
+	.axl {
+		font-size: 12px;
+		fill: rgb(var(--gray));
+	}
+	.ay {
+		text-anchor: end;
+	}
+	.cpath {
+		fill: none;
+		stroke: var(--accent);
+		stroke-width: 2.2;
+		stroke-linecap: round;
+	}
+	.cm circle {
+		fill: #fff;
+		stroke: var(--accent);
+		stroke-width: 2;
+	}
+	.cmt {
+		font-size: 12.5px;
+		font-weight: 700;
+		fill: rgb(var(--gray-dark));
+		text-anchor: middle;
+	}
+	.elo-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.elo-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.elo-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.elo-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.elo-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.elo-caption {
+		min-height: 11.6em;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'Three saved checkpoints of one trained agent, an early one, a later one, and the latest, with every pairing played out. Version 3 beats version 2 in 64% of games, version 2 beats version 1 in 64%, version 3 beats version 1 in 76%. Useful, but awkward: win rates are facts about pairs, so with more agents this becomes a grid that grows as the square of the field and still tells you nothing about distances.',
+			cls: [],
+		},
+		{
+			caption:
+				'So give each player one number instead: a rating. The absolute values mean nothing; add a thousand to all three and nothing changes, and where zero sits is a free choice, so a ladder usually just pins one reference player and measures everyone from it. What ratings are FOR is their differences: not "version 3 is good" but "version 3 sits 100 points above version 2, and 200 above version 1." Three numbers now carry everything the grid of results carried.',
+			cls: ['show-elo'],
+		},
+		{
+			caption:
+				'And a difference converts straight back into an expected result, through one fixed curve that chess has used since the 1960s. Its one constant, the 400 dividing the gap, sets the scale: every 400 points of gap multiplies the odds by another ten, without limit. But odds and win rate are different currencies, and that is why the curve flattens. A 400-point gap is odds of 10 to 1, a 91% win rate; 800 points is 100 to 1, which is 99%. The odds grew tenfold while the curve barely moved, because a win rate has nowhere left to go. And the left half is the same curve from the underdog seat: sit 400 points below someone and your chance is the mirror-image 9%.',
+			cls: ['show-elo', 'show-gap'],
+		},
+		{
+			caption:
+				'Which makes the ratings falsifiable. Each gap predicts a win rate, and here every prediction matches what actually happened, so this assignment of numbers is a fair summary of the field. If a pairing had disagreed, the numbers would be wrong and would need nudging until it stopped disagreeing. Chess does that nudging one game at a time; with a full round robin in hand you can instead fit every rating at once, which is the cleaner measurement when you can afford it.',
+			cls: ['show-elo', 'show-gap', 'show-pred'],
+		},
+		{
+			caption:
+				'Now the catch, and it is the whole reason to bother. Bring in a player from outside the family. It beats all three about 97% of the time, which puts it 500 points clear, and the axis has to zoom out to fit it. The three versions I was so carefully ranking are now a cluster. Every gap between them is real, and every one of them is small. A rating only means something relative to the field it was measured in, so a field made entirely of your own agents can tell you the order and never the altitude.',
+			cls: ['show-elo', 'show-gap', 'show-pred', 'show-out', 'wide'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.elo').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.elo-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.elo-next')!;
+		const count = root.querySelector('.elo-count')!;
+		const caption = root.querySelector('.elo-caption')!;
+		const ALL = ['show-elo', 'show-gap', 'show-pred', 'show-out', 'wide'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>
