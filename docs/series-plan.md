@@ -63,6 +63,16 @@ demo missing.
 **Reference well-known games** when reaching for an analogy. The reader knows chess,
 poker, and Monopoly; they do not know Jaipur until Part 2 teaches it.
 
+**Diagrams are DOM components; matplotlib is for data graphics only** *(user
+direction, 2026-08-05, after the stitched-networks PNG shipped label/line collisions
+twice)*. Anything made of boxes, arrows, routes, or flows becomes an Astro component
+(stepped where a sequence helps, static DOM otherwise): the browser lays out the text,
+so nothing collides and everything stays crisp under the ZoomImage lightbox.
+Matplotlib stills remain for genuinely data-shaped figures — bar charts, curves,
+scales (the Elo ladder, the lever-isolation bars). Review figures at BOTH sizes: 720px
+for legibility, full resolution for geometry, because zoom is a first-class viewing
+mode on this blog.
+
 **Figures in the house matplotlib style.** Helvetica; INK `#1f2d3d`, MUTED `#6b7684`,
 BLUE `#2e5f8b`, BLUE_FILL `#eaf1f7`, RED `#b4341f`, GRAY `#9aa5b1`, GRAY_FILL
 `#f4f5f7`. Card colors: diamond `#7aa7d4`, gold `#d9a441`, silver `#9aa5b1`, cloth
