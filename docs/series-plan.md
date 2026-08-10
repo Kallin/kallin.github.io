@@ -267,6 +267,23 @@ was never compute.
 
 ---
 
+## Debts from published posts
+
+Things an earlier post left out or simplified, which a later post must square. Not
+corrections to the record (field-notes voice means a post claims only what it knew) —
+just gaps that will otherwise compound.
+
+**The value head, glossed in Part 2.** Part 2 taught PPO as "stamp the outcome
+backward and nudge," which is the REINFORCE-shaped story; PPO is actor-critic, and
+sb3's MaskablePPO was computing advantages from a value head on every update the whole
+time. Part 2 never names it (an earlier CreditDemo caption did, and the caption was
+lost in a redesign). **Post 3 pays this off** in its trunk/head anatomy paragraph: one
+trunk, two heads, and PPO judging results against what the value head expected so
+credit tracks surprise rather than luck. Post 5 then makes the value head the main
+character, since a weak one is exactly what made search degrade a perfect policy.
+Watch for the same failure mode elsewhere: a simplification that is fine in isolation
+becomes a hole once a later post needs the machinery.
+
 ## Standing re-evaluations
 
 Later eras complicate earlier posts' conclusions. Field-notes tense means the earlier
