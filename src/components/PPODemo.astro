@@ -257,7 +257,7 @@ const ROWS = [
 		text-align: center;
 	}
 	.ppd-caption {
-		min-height: 7.5em;
+		min-height: 9.1em;
 		margin-top: 0.6rem;
 		font-size: 0.95rem;
 		line-height: 1.45;
@@ -295,6 +295,12 @@ const ROWS = [
 		{
 			caption:
 				'The fix is a seatbelt: every nudge is clipped to a small step (the red bar). That is most of what the name means. Proximal Policy Optimization, stay proximal, stay near the judgment you already have. The probabilities recorded in the ledger are what make that measurable: proximal means near what the policy believed when it played. Evidence moves you; no single fluke yanks you.',
+			cls: ['show-games', 'show-ghost', 'show-clip'],
+			rows: { a: { fill: 31 }, b: { fill: 31, ghost: 58, clipAt: 31 }, c: { fill: 24 }, d: { fill: 19 } },
+		},
+		{
+			caption:
+				'One refinement, because the network is quietly learning a second thing. Rather than judge a decision by the raw result, PPO compares the result against how it expected that position to turn out, and nudges by the difference. Winning a game you were already winning teaches almost nothing; winning one you were losing teaches a lot. That expectation comes from a second output growing alongside the opinions, predicting the eventual result from a position, and it will matter more later than it does here.',
 			cls: ['show-games', 'show-ghost', 'show-clip'],
 			rows: { a: { fill: 31 }, b: { fill: 31, ghost: 58, clipAt: 31 }, c: { fill: 24 }, d: { fill: 19 } },
 		},
