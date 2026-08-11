@@ -16,9 +16,21 @@ The series plan, post outlines, era mapping, and full conventions live in
 [`docs/series-plan.md`](docs/series-plan.md) — read it before touching any
 `game-ai-*` post. The non-negotiables, distilled:
 
-- **Field-notes voice.** Each post narrates from inside its moment. No knowledge from
-  later eras ("it turned out", "I would later learn"), no presumed audience ("people
-  usually ask"), no cadence promises ("see you next week").
+- **Field-notes voice.** Each post narrates from inside its moment, and the narrator
+  does not know what happens next. This bans two shapes, not one:
+  - *Backward leaks* — knowledge from later eras. "It turned out", "I would later
+    learn", "in hindsight".
+  - *Forward teases* — promises about what future work or future posts will show.
+    "This becomes important later", "the main character of the next post", "you'll
+    see why in part 5". Tempting because they feel like good serial writing; they
+    are the narrator claiming to have read ahead.
+  - Legitimate and encouraged: in-the-moment **speculation** ("I suspect this is
+    bigger than a performance fix", "seems like a useful thing to have lying
+    around") and **in-post signposting** whose payoff lands in the same piece
+    ("remember that lean"). The test is whether the narrator could honestly say it
+    on the day.
+- Also banned: presumed audience ("people usually ask"), cadence promises ("see you
+  next week").
 - **No em-dashes, no curly quotes in post/demo source.** Grep before shipping.
 - **Every claim traces to the Grimoire repo's records**
   (`../grimoire/docs/ml/HISTORY.md` is the index; the lab notebooks under

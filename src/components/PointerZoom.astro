@@ -1,0 +1,426 @@
+---
+// The zoom into the scorer: two different questions through the same machinery.
+// The load-bearing visual is the shared row template — one layout for every
+// candidate type, irrelevant sections zeroed — stacked into a matrix and pushed
+// through the weights once per QUESTION, not once per candidate.
+const HVEC = ['0.8', '-1.2', '0.1', '2.3'];
+
+const ACTIONS = [
+	{ label: 'sell goods', pct: '0.44', w: 46 },
+	{ label: 'take a good', pct: '0.31', w: 33 },
+	{ label: 'take camels', pct: '0.19', w: 20 },
+	{ label: 'exchange', pct: '0.06', w: 7 },
+];
+const SELLS = [
+	{ label: 'cloth', c: '#b06fa0', sub: 'top: 5 · hold: 3', pct: '0.71', w: 74 },
+	{ label: 'spice', c: '#c96f4a', sub: 'top: 3 · hold: 1', pct: '0.29', w: 30 },
+];
+---
+
+<figure class="pzm">
+	<div class="hband">
+		<span class="plbl">h arrives from the trunk</span>
+		<span class="hstrip">
+			{HVEC.map((n) => <b>{n}</b>)}
+			<i>… 128 numbers</i>
+		</span>
+	</div>
+
+	<div class="tband">
+		<span class="plbl">every candidate is written into one shared row template</span>
+		<span class="template">
+			<span class="seg seg-h">h · 128</span>
+			<span class="seg seg-act">action fields</span>
+			<span class="seg seg-card">card fields</span>
+			<span class="seg seg-count">count</span>
+			<span class="seg seg-done">done</span>
+		</span>
+		<span class="tnote">sections that do not apply to a candidate stay at zero</span>
+	</div>
+
+	<div class="qband">
+		<span class="q q-a">the question: <b>which action do you play?</b></span>
+		<span class="q q-b">the question: <b>sell which good?</b></span>
+	</div>
+
+	<div class="rowsets">
+		<div class="rowset rs-a">
+			{ACTIONS.map((a) => (
+				<div class="prow">
+					<span class="rbar">
+						<span class="seg seg-h on">h</span>
+						<span class="seg seg-act on">{a.label}</span>
+						<span class="seg seg-card z">0 … 0</span>
+						<span class="seg seg-count z">0</span>
+						<span class="seg seg-done z">0</span>
+					</span>
+					<span class="sc"><span class="strack"><span class="sfill" style={`--w:${a.w}%`}></span></span><b>{a.pct}</b></span>
+				</div>
+			))}
+		</div>
+		<div class="rowset rs-b">
+			{SELLS.map((s) => (
+				<div class="prow">
+					<span class="rbar">
+						<span class="seg seg-h on">h</span>
+						<span class="seg seg-act z">0 … 0</span>
+						<span class="seg seg-card on" style={`--cc:${s.c}`}>{s.label} · {s.sub}</span>
+						<span class="seg seg-count z">0</span>
+						<span class="seg seg-done z">0</span>
+					</span>
+					<span class="sc"><span class="strack"><span class="sfill" style={`--w:${s.w}%`}></span></span><b>{s.pct}</b></span>
+				</div>
+			))}
+		</div>
+	</div>
+
+	<div class="mband">
+		<span class="mnote">the rows stack into one matrix → <b>× the scorer weights, once</b> → a column of scores → softmax</span>
+	</div>
+
+	<div class="shband">
+		<span class="shrow">
+			<span class="shchip">4 × template width</span>
+			<span class="sharr">× weights →</span>
+			<span class="shchip">4 × 128</span>
+			<span class="sharr">× weights →</span>
+			<span class="shchip last">4 × 1</span>
+		</span>
+		<span class="shnote">the row count rides straight through both multiplies; only the rows get narrower</span>
+	</div>
+
+	<div class="pzm-controls">
+		<button class="pzm-back" type="button">← Back</button>
+		<span class="pzm-count"></span>
+		<button class="pzm-next" type="button">Next →</button>
+	</div>
+
+	<figcaption class="pzm-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.pzm {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.plbl {
+		display: block;
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.hband,
+	.tband,
+	.qband,
+	.rowsets,
+	.mband {
+		transition: opacity 0.35s ease;
+	}
+	.hstrip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.hstrip b {
+		min-width: 2.2em;
+		text-align: center;
+		padding: 0.2em 0.3em;
+		border: 1.5px solid var(--accent);
+		border-radius: 6px;
+		background: #eef1ff;
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+	}
+	.hstrip i {
+		font-style: normal;
+		font-size: 0.72rem;
+		color: rgb(var(--gray));
+	}
+	.tband {
+		margin-top: 0.8rem;
+	}
+	.template,
+	.rbar {
+		display: flex;
+		width: 100%;
+		border-radius: 7px;
+		overflow: hidden;
+	}
+	.seg {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.66rem;
+		font-weight: 700;
+		padding: 0.3em 0.2em;
+		border: 1.5px solid rgb(var(--gray-light));
+		color: rgb(var(--gray-dark));
+		background: #fff;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.seg + .seg {
+		border-left-width: 0;
+	}
+	.seg-h { flex: 0 0 20%; }
+	.seg-act { flex: 0 0 26%; }
+	.seg-card { flex: 1 1 auto; }
+	.seg-count { flex: 0 0 12%; }
+	.seg-done { flex: 0 0 10%; }
+	.template .seg-h { background: #eef1ff; border-color: var(--accent); color: rgb(var(--gray-dark)); }
+	.tnote {
+		display: block;
+		margin-top: 0.25rem;
+		font-size: 0.72rem;
+		color: rgb(var(--gray));
+	}
+	.qband {
+		display: grid;
+		margin: 0.8rem 0 0.35rem;
+	}
+	.q {
+		grid-area: 1 / 1;
+		font-size: 0.8rem;
+		color: rgb(var(--gray));
+		visibility: hidden;
+	}
+	.q b {
+		color: rgb(var(--gray-dark));
+	}
+	.rowsets {
+		display: grid;
+	}
+	.rowset {
+		grid-area: 1 / 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		align-self: start;
+		visibility: hidden;
+	}
+	.prow {
+		display: grid;
+		grid-template-columns: 1fr 150px;
+		align-items: center;
+		gap: 0.5em;
+	}
+	.rbar .seg.on {
+		background: #eef1ff;
+		border-color: var(--accent);
+	}
+	.rbar .seg-act.on {
+		background: #eaf4ee;
+		border-color: #177a4c;
+	}
+	.rbar .seg-card.on {
+		background: color-mix(in srgb, var(--cc, #999) 14%, white);
+		border-color: var(--cc, #999);
+	}
+	.rbar .seg.z {
+		color: rgb(var(--gray-light));
+		font-weight: 600;
+	}
+	.sc {
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+		visibility: hidden;
+	}
+	.strack {
+		position: relative;
+		flex: 1;
+		height: 8px;
+		background: rgb(var(--gray-light));
+		border-radius: 3px;
+	}
+	.sfill {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: var(--w);
+		background: var(--accent);
+		border-radius: 3px;
+	}
+	.sc b {
+		font-size: 0.7rem;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+		min-width: 2.3em;
+		text-align: right;
+	}
+	.mband {
+		margin-top: 0.55rem;
+		visibility: hidden;
+	}
+	.mnote {
+		display: block;
+		text-align: center;
+		font-size: 0.78rem;
+		color: rgb(var(--gray-dark));
+	}
+	.shband {
+		margin-top: 0.45rem;
+		visibility: hidden;
+	}
+	.shrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.shchip {
+		padding: 0.22em 0.55em;
+		border: 1.5px solid var(--accent);
+		border-radius: 6px;
+		background: #eef1ff;
+		font-size: 0.72rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+		white-space: nowrap;
+	}
+	.shchip.last {
+		border-color: #b4341f;
+		background: #faf1ee;
+	}
+	.sharr {
+		font-size: 0.7rem;
+		color: rgb(var(--gray));
+		white-space: nowrap;
+	}
+	.shnote {
+		display: block;
+		margin-top: 0.25rem;
+		text-align: center;
+		font-size: 0.72rem;
+		color: rgb(var(--gray));
+	}
+	.pzm.s4b .shband { visibility: visible; }
+	/* staging */
+	.pzm:not(.s2) .tband { opacity: 0.25; }
+	.pzm:not(.s2) .tnote { visibility: hidden; }
+	.pzm.s3:not(.s5) .q-a { visibility: visible; }
+	.pzm.s3:not(.s5) .rs-a { visibility: visible; }
+	.pzm.s5 .q-b { visibility: visible; }
+	.pzm.s5 .rs-b { visibility: visible; }
+	.pzm.s4:not(.s5) .rs-a .sc { visibility: visible; }
+	.pzm.s6 .rs-b .sc { visibility: visible; }
+	.pzm.s4 .mband { visibility: visible; }
+	.pzm-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.pzm-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.pzm-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.pzm-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.pzm-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.pzm-caption {
+		min-height: 156px;
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'Zooming into the scorer side of the blueprint. The trunk has already done its work: h, the 128-number summary of the position, arrives here as plain data. It will be copied, not multiplied; the only multiplication in this machine is against the scorer weights, so whatever comparing happens between situation and move is something the weights learn.',
+			cls: [],
+		},
+		{
+			caption:
+				'Before any candidates appear, the template. Every candidate, whatever kind of question it answers, is written into this one shared layout: h first, then fields for actions, fields for cards, a count, a done flag. Sections that do not apply stay at zero. The layout must be shared, because every row is about to meet the same fixed weight rectangle.',
+			cls: ['s2'],
+		},
+		{
+			caption:
+				'First question: which action do you play? Four legal answers, four rows. Each row is h plus that candidate written into the ACTION section of the template; the card fields, count, and done flag sit at zero. Notice the rows are identical in the h section: same situation, four different propositions.',
+			cls: ['s2', 's3'],
+		},
+		{
+			caption:
+				'The four rows stack into a matrix and hit the scorer weights once: one multiply for all four, a column of four scores out, softmax across the column, and selling wins at 0.44. Not a loop, not four separate passes. The whole question is answered in one operation.',
+			cls: ['s2', 's3', 's4'],
+		},
+		{
+			caption:
+				'Follow the shapes. A matrix multiply never changes how many rows pass through it: 4 rows in, 4 scores out, and on a turn with ten legal moves it would be 10 and 10. What each multiply changes is the rows themselves, narrowing every one from full template width to 128 numbers and then to a single score, the same squeeze the trunk applied to the position. That is why the zero-filled sections matter: they make every row ARRIVE at the same width, and the weights take it from there.',
+			cls: ['s2', 's3', 's4', 's4b'],
+		},
+		{
+			caption:
+				'A different question now: the agent chose to sell, and the engine asks which good. Same template, same weights, and look at which sections light up: the CARD fields carry the candidates this time (which good, what its tokens pay, how many are held), and the action fields sit at zero. Two legal answers means two rows. That is the entire difference between decision types: which part of the template is filled in.',
+			cls: ['s2', 's5'],
+		},
+		{
+			caption:
+				'Same two multiplies, a column of two, softmax, and cloth wins at 0.71. What the weights learn about the card fields serves every card question in the game; what they learn about the action fields serves every action question. One scorer, one template, and "all candidates" always means the same thing: the legal answers to whatever is being asked right now.',
+			cls: ['s2', 's5', 's6', 's4'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.pzm').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.pzm-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.pzm-next')!;
+		const count = root.querySelector('.pzm-count')!;
+		const caption = root.querySelector('.pzm-caption')!;
+		const ALL = ['s2', 's3', 's4', 's4b', 's5', 's6'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

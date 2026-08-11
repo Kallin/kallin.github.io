@@ -1,0 +1,202 @@
+---
+// The architecture BEFORE the fix, in the same blueprint grammar as the
+// pointer version later in the post: identical trunk, identical value head,
+// and a policy head that is one wide fixed row of slots. The diff between the
+// two blueprints is exactly one column.
+---
+
+<figure class="onb">
+	<div class="spine">
+		<span class="lyr in"><b>the position</b><i>78 numbers</i></span>
+		<span class="wire"><i>weights: 78 × 128</i></span>
+		<span class="lyr"><b>trunk layer 1</b><i>128 activations</i></span>
+		<span class="wire"><i>weights: 128 × 128</i></span>
+		<span class="lyr h"><b>trunk layer 2</b><i>128 activations</i><em>the trunk's read of the position</em></span>
+	</div>
+
+	<div class="split">
+		<div class="side">
+			<span class="slbl">value head · runs once</span>
+			<span class="wire"><i>weights: 128 × 64</i></span>
+			<span class="lyr sm"><b>64 activations</b></span>
+			<span class="wire"><i>weights: 64 × 1</i></span>
+			<span class="lyr out"><b>1 number</b><i>how this game likely ends</i></span>
+		</div>
+		<div class="side">
+			<span class="slbl">policy head · one fixed row, ~390 slots</span>
+			<span class="wire"><i>weights: 128 × ~390, one column of dials per slot</i></span>
+			<span class="rowbar">
+				<span class="rseg"><b>which action</b><i>4</i></span>
+				<span class="rseg bad"><b>take</b><i>one slot per card</i></span>
+				<span class="rseg"><b>sell</b><i>6</i></span>
+				<span class="rseg"><b>count</b><i>5</i></span>
+				<span class="rseg"><b>…</b><i></i></span>
+			</span>
+			<span class="soft">mask everything but the live question → softmax over what remains</span>
+		</div>
+	</div>
+
+	<figcaption class="onb-note">
+		Every slot owns its own column of dials, and a slot means whatever the codec says
+		it means. The sections for every question are all always present, masked down to
+		the one being asked. Keep this picture; the repair further down changes exactly
+		one column of it.
+	</figcaption>
+</figure>
+
+<style>
+	.onb {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.spine {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-bottom: 0.9rem;
+	}
+	.lyr {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 0.08rem;
+		min-width: 220px;
+		padding: 0.4em 0.9em;
+		border: 2px solid rgb(var(--gray-light));
+		border-radius: 9px;
+		background: #fff;
+	}
+	.lyr b {
+		font-size: 0.82rem;
+		color: rgb(var(--gray-dark));
+	}
+	.lyr i {
+		font-style: normal;
+		font-size: 0.7rem;
+		color: rgb(var(--gray));
+	}
+	.lyr em {
+		font-style: normal;
+		font-size: 0.68rem;
+		color: var(--accent);
+	}
+	.lyr.in {
+		border-style: dashed;
+	}
+	.lyr.h {
+		border-color: var(--accent);
+		background: #eef1ff;
+	}
+	.lyr.sm {
+		min-width: 160px;
+	}
+	.lyr.out {
+		border-color: #177a4c;
+		background: #eaf4ee;
+	}
+	.wire {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.1rem 0;
+	}
+	.wire::before,
+	.wire::after {
+		content: "";
+		width: 2px;
+		height: 7px;
+		background: rgb(var(--gray-light));
+	}
+	.wire i {
+		font-style: normal;
+		font-size: 0.66rem;
+		color: rgb(var(--gray));
+		padding: 0.05rem 0.4rem;
+		text-align: center;
+	}
+	.split {
+		display: grid;
+		grid-template-columns: 1fr 1.4fr;
+		gap: 1rem;
+		align-items: start;
+		padding-top: 0.8rem;
+		border-top: 1px dashed rgb(var(--gray-light));
+	}
+	.side {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.slbl {
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.35rem;
+		text-align: center;
+	}
+	.rowbar {
+		display: flex;
+		width: 100%;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.rseg {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.05rem;
+		padding: 0.35em 0.2em;
+		border: 2px solid #b4341f;
+		background: #faf1ee;
+		overflow: hidden;
+	}
+	.rseg + .rseg {
+		border-left-width: 0;
+	}
+	.rseg b {
+		font-size: 0.66rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: rgb(var(--gray-dark));
+		white-space: nowrap;
+	}
+	.rseg i {
+		font-style: normal;
+		font-size: 0.62rem;
+		color: rgb(var(--gray));
+		white-space: nowrap;
+	}
+	.rseg:nth-child(1) { flex: 0 0 22%; }
+	.rseg.bad { flex: 1 1 auto; background: #f6dcd5; }
+	.rseg.bad b { color: #b4341f; }
+	.rseg:nth-child(3) { flex: 0 0 14%; }
+	.rseg:nth-child(4) { flex: 0 0 14%; }
+	.rseg:nth-child(5) { flex: 0 0 8%; }
+	.soft {
+		margin-top: 0.45rem;
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		text-align: center;
+	}
+	.onb-note {
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: rgb(var(--gray));
+	}
+	@media (max-width: 560px) {
+		.split {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

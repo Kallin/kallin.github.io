@@ -257,7 +257,9 @@ const ROWS = [
 		text-align: center;
 	}
 	.ppd-caption {
-		min-height: 9.1em;
+		/* 7 lines at the 22.04px computed line-height, measured; px so em rounding
+		   cannot drift it back under the tallest caption */
+		min-height: 156px;
 		margin-top: 0.6rem;
 		font-size: 0.95rem;
 		line-height: 1.45;
@@ -300,7 +302,7 @@ const ROWS = [
 		},
 		{
 			caption:
-				'One refinement, because the network is quietly learning a second thing. Rather than judge a decision by the raw result, PPO compares the result against how it expected that position to turn out, and nudges by the difference. Winning a game you were already winning teaches almost nothing; winning one you were losing teaches a lot. That expectation comes from a second output growing alongside the opinions, predicting the eventual result from a position, and it will matter more later than it does here.',
+				'One refinement, because the network is quietly learning a second thing. Rather than judge a decision by the raw result, PPO compares the result against how it expected that position to turn out, and nudges by the difference. Winning a game you were already winning teaches almost nothing; winning one you were losing teaches a lot. That expectation comes from a second output growing alongside the opinions, predicting the eventual result from a position. Right now it is only there to steady the nudges, but a network with an opinion about who is winning seems like a useful thing to have lying around.',
 			cls: ['show-games', 'show-ghost', 'show-clip'],
 			rows: { a: { fill: 31 }, b: { fill: 31, ghost: 58, clipAt: 31 }, c: { fill: 24 }, d: { fill: 19 } },
 		},

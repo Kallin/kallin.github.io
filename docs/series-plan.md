@@ -24,10 +24,32 @@ These were established during Parts 1-2 review and are not up for renegotiation
 per-post.
 
 **Voice: field notes, written from inside the moment.** The narrator does not know
-what happens next. Banned constructions: "it turned out to be", "I would later
-discover", "in hindsight", "much later". Speculation about the future is fine and
-encouraged ("I have a nagging feeling this is bigger than a performance fix"); reports
-*from* the future are not.
+what happens next. Two banned shapes, and the second one keeps slipping through:
+
+- *Backward leaks*: "it turned out to be", "I would later discover", "in hindsight",
+  "much later".
+- *Forward teases*: "this becomes important later", "the main character of the next
+  post", "it will matter more than it does here". These read as good serial craft,
+  which is exactly why they survive review, but they are the narrator claiming to
+  have read ahead. Caught twice on 2026-08-10, in a PPODemo caption and post 3's
+  anatomy paragraph, by the user rather than by the sweep.
+
+Fine and encouraged: **speculation** ("I have a nagging feeling this is bigger than a
+performance fix", "a network with an opinion about who is winning seems like a useful
+thing to have lying around") and **in-post signposting** whose payoff lands in the
+same piece ("remember that lean", "because that matters later" where later is four
+paragraphs down). The test: could the narrator honestly say this on the day?
+
+Sweep before shipping, over posts AND demo captions:
+
+```
+will matter | becomes? the main character | in the next post | the next one
+later in this series | will turn out | will become | you will see | we will see
+turned out | I would later | in hindsight | eventually | people usually | see you next
+```
+
+Expect in-post signposting to appear in the results; read each hit rather than
+deleting on sight.
 
 **No presumed audience.** Nobody has seen this project, asked questions about it, or
 formed opinions on it. Banned: "the two questions people usually ask", "as you'd
