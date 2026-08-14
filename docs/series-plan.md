@@ -256,13 +256,54 @@ moment we meet one properly."
 - Methodology hardened in blood: seed-noise floors, read-the-tape, single-sourced
   reward currency, self-describing checkpoints. Jaipur declared saturated.
 
-### 6. One Pipeline, Every Game
+### 6. The Vocabulary of Board Games — for designers, not engineers
+**The change-of-pace post** (user, 2026-08-14). Two heavy technical posts in a row
+(perception, search) earn a break, and the primitive catalog is ready to carry it.
+Audience: the game-design community (BGG design forum, r/tabletopgamedesign, Ludology
+listeners) — people who care what the atoms of a game ARE, not how a net encodes them.
+Little to no ML content; this post must stand alone for a reader who skipped 1-5.
+
+**The claim, and it is a real one:** every board game we have shipped is written from a
+finite vocabulary, and the vocabulary is small. Measured from `grimoire/primitives.py`
++ `primitives_usage.py` on 2026-08-14: **161 primitives, 11 families, 21 games**.
+
+- **Nine primitives appear in all 21 games**: containers, components, phase, loop,
+  turns, action, stock, determine_winner, expressions. That is the irreducible core —
+  places, pieces, phases, a loop, turns, things you may do, a starting arrangement, and
+  a way to decide who won. State it as the finding it is.
+- **Sixty-five appear in exactly one game.** Each one is a game that demanded something:
+  Checkers wanted `is_forward` / `midpoint` / `diagonal_distance`; Coup wanted `poll`
+  (the challenge/block window) and `__poll_responder__`; For Sale wanted
+  `resolve_by_rank`; Jaipur wanted `no_shared_property`. The long tail IS the design
+  history — you can read which mechanic forced which word into the language.
+- **Only two primitives are unused by any shipped game**, which is the honest measure of
+  whether the vocabulary was designed or discovered. (It was discovered: grow-primitives-
+  organically is a CLAUDE.md rule, and the catalog is its receipt.)
+- The most-written verbs are mundane and that is the point: `adjust_resource` (410 uses,
+  16 games), `count(...)` (378), `move` (281), `if` (208).
+
+**The hook to test-drive:** "I catalogued every rule a board game can have. There are
+about 160." Follow with the nine universals as a list a designer can check their own
+design against.
+
+**Shape:** the catalog UI is already built (`viewer/pages/primitives.vue`, screenshots in
+`screenshots/primitives/`) and is the natural centrepiece — a browsable palette with per-
+primitive usage counts and worked examples pulled from real games. Consider embedding a
+trimmed interactive version rather than screenshots. A one-game teardown (Jaipur or For
+Sale, whole game named primitive by primitive) is the obvious closer. Zipf-ish usage
+curve = legitimate matplotlib data graphic.
+
+**Cross-link, do not lean on:** the series' AI thread is what MEASURES the vocabulary
+(a game the pipeline can learn is a game the vocabulary expressed correctly), and post 7
+picks that up directly. One paragraph, not a section.
+
+### 7. One Pipeline, Every Game
 **Era 4.** The generalization sweep: which of 12 games actually learn. 5/6 learn past
 random *after* the reward/eval orientation fix, and the fix is the story — three broken
 score shapes (winner-only, lower-is-better, 4-player) all traced to assuming Jaipur's
 shape. Checkers and Coup blocked. `ml2-first-curve.png` belongs here.
 
-### 7. A Thousand Times Faster (and where that wasn't enough)
+### 8. A Thousand Times Faster (and where that wasn't enough)
 **The performance post** — reframed (user, 2026-08-05) from "the JAX post" to "where
 speed actually comes from," so it can carry the project's recurring lesson: the wall
 was never compute.
@@ -282,7 +323,7 @@ was never compute.
   throughput and sequential latency are different currencies (era 26's audit-substrate
   verdict). Infra-vs-capability lesson; guards as floors.
 
-### 8-12. Sketches
+### 9-13. Sketches
 - **The Games That Refused** — Eras 5-6, the equilibrium pivot and CFR. PG-family
   structurally capped on bluff-core (Leduc nash_conv 0.49 vs tabular 0.0137); Kuhn's
   8.6× that did not replicate; `leduc.grim` == pyspiel digit-for-digit. Owes Concept
@@ -297,7 +338,7 @@ was never compute.
 - **The Blunder That Wasn't** — Eras 19-25. Never let a model grade its own
   counterfactual. Strongest single story in the archive.
 
-### 13-15. The live log (none of this has happened yet)
+### 14-16. The live log (none of this has happened yet)
 - **Race for the Galaxy** — the authoring arc (R1: 95 cards, one new primitive), then
   the Keldon yardstick (see Standing re-evaluations below).
 - **Press the Button** — autonomy; every champion so far was hand-shepherded, and the
