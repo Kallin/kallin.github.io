@@ -225,6 +225,40 @@ was always the ceiling.
 - Perfect recall (v3): tracking cards that were publicly seen entering hidden zones —
   the opponent's hand is partially KNOWABLE, not just countable.
 - Value-sight (v4) and the champion lineage's encoder half.
+
+**MAKE THE VISIBILITY MODEL A HEADLINE SECTION** (user, 2026-08-14): "how to track
+visibility intelligently — a card moves from a public container to a hidden one and you
+still know it's there." This is the most designer-legible idea in the post and it
+generalizes past Jaipur, so it deserves its own Concept block and demo rather than a
+bullet. The material is already built and mostly written up in `docs/ml/README.md`:
+
+- **A hidden zone is not an opaque zone.** Visibility is a property of the *container*,
+  but knowledge is a property of the *history*. Counting what is in an opponent's hand
+  is the naive read; tracking what you WATCHED go in is the correct one. Same container,
+  strictly more knowledge, no cheating.
+- **The two-line model** (the generic mechanism): the engine carries
+  `GameState.public_line` (what a spectator saw — action names always, a chosen card
+  only when chosen face-up, a face-down pick records `?`) plus per-seat
+  `private_lines`. The information-set key is observation + public line. Concrete
+  payoff: Leduc keys to 936 information sets with the public line and 576 without —
+  and the 576 version is *silently imperfect-recall*, i.e. a game that has forgotten
+  something it saw. That number pair is the whole argument in one line.
+- **Reveal-to-one** (era 13): Love Letter's Priest peek appends to the RECEIVING seat's
+  private line and nothing public, so a peek splits the peeker's information sets and
+  nobody else's. This is the exact primitive a designer means by "I looked at your
+  hand." Every reveal-free game keys byte-identically to before the channel existed.
+- **The counter-story, and it is a good one: the ACTION SPACE can leak.** The gap-5
+  tripwire (`masking.legal_codec_names`) fails loud when a component choice would offer
+  an option the chooser cannot see, because naming a face-down card by its true template
+  would leak the hidden face into the list of legal moves — the Skull clairvoyant-flip
+  bug (era 12). Post 3 was about the action space having the wrong NAMES; this is the
+  action space knowing too MUCH. Nice symmetry, use it.
+- **Where honesty required refusal:** games whose public line cannot be keyed honestly
+  are refused at the adapter door (`assert_public_line_is_sound`) — sealed bids (For
+  Sale), simultaneous-move loops (Incan Gold, where the engine serializes and the line
+  would hand a later seat an earlier seat's choice). Refusing to model something you
+  cannot model honestly belongs in the same instrument-honesty thread as post 3's
+  yardstick and post 5's TrueSkill σ.
 - REINFORCE on the take head hovers at parity (best 50.5%, CI includes 50) — the
   heuristic's take rule is near-optimal, so there is *nothing left to imitate*
   (`training-performance.md:1041`). Ends: seeing everything, speaking properly,
