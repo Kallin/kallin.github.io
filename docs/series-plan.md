@@ -216,49 +216,116 @@ by how you let it answer") is what earns a repost.
 post is about what it SEES, and the running discovery that information, not capacity,
 was always the ceiling.
 
-- The audit finding that is almost comic: the net was **blind to public opponent
-  state** — hand size, herd, banked tokens masked to −1 despite being open
-  information. It played a hidden-information game with more hidden from it than the
-  rules hide (`archive/training-performance.md:1010`, W0 audit).
-- Encoder v2 (per-container composition) beats v1 **60.3%** — pure information gain
-  (trace the 60.3% to its primary source before use; currently only in HISTORY).
-- Perfect recall (v3): tracking cards that were publicly seen entering hidden zones —
-  the opponent's hand is partially KNOWABLE, not just countable.
-- Value-sight (v4) and the champion lineage's encoder half.
+**THE SPINE — two fixes to the same seven lines, three days apart.** The whole post can
+hang off one function: `project_visibility`'s "OWNER, but not yours" branch
+(`grimoire/engine.py:919-937`). It got the COUNTS fix on 2026-06-29 and the IDENTITIES
+fix on 2026-07-02, and today it carries both, stacked, with a comment paragraph for
+each. Two different kinds of public knowledge the machine had been throwing away.
 
-**MAKE THE VISIBILITY MODEL A HEADLINE SECTION** (user, 2026-08-14): "how to track
-visibility intelligently — a card moves from a public container to a hidden one and you
-still know it's there." This is the most designer-legible idea in the post and it
-generalizes past Jaipur, so it deserves its own Concept block and demo rather than a
-bullet. The material is already built and mostly written up in `docs/ml/README.md`:
+**Fix one — the counts (W0 audit, `archive/training-performance.md:1010`).** The net was
+blind to *public* opponent state: hand size, herd/camel count, banked tokens all read
+−1 despite being open information at any real table. It played a hidden-information game
+with more hidden from it than the rules hide. Sharpen the irony with the audit's own
+observation: the heuristic it kept losing to is opponent-BLIND, so "a net that sees the
+opponent is the clearest exploit path — right now no method can, starving all of them."
+Fixed 20 minutes later (`:1012`, commit `4d17a2af`, obs width unchanged, identities still
+redacted, 38 perspective tests green). The code comment at `engine.py:919-937` is the
+best quote in the codebase for this post: the count of an owner-private zone "is public
+in essentially every card game — exposing it lets the net read opponent tempo and race
+them," and the leak guard "only forbids leaking identities; it explicitly treats the
+count as public."
 
-- **A hidden zone is not an opaque zone.** Visibility is a property of the *container*,
-  but knowledge is a property of the *history*. Counting what is in an opponent's hand
-  is the naive read; tracking what you WATCHED go in is the correct one. Same container,
-  strictly more knowledge, no cheating.
-- **The two-line model** (the generic mechanism): the engine carries
-  `GameState.public_line` (what a spectator saw — action names always, a chosen card
-  only when chosen face-up, a face-down pick records `?`) plus per-seat
-  `private_lines`. The information-set key is observation + public line. Concrete
-  payoff: Leduc keys to 936 information sets with the public line and 576 without —
-  and the 576 version is *silently imperfect-recall*, i.e. a game that has forgotten
-  something it saw. That number pair is the whole argument in one line.
-- **Reveal-to-one** (era 13): Love Letter's Priest peek appends to the RECEIVING seat's
-  private line and nothing public, so a peek splits the peeker's information sets and
-  nobody else's. This is the exact primitive a designer means by "I looked at your
-  hand." Every reveal-free game keys byte-identically to before the channel existed.
-- **The counter-story, and it is a good one: the ACTION SPACE can leak.** The gap-5
-  tripwire (`masking.legal_codec_names`) fails loud when a component choice would offer
-  an option the chooser cannot see, because naming a face-down card by its true template
-  would leak the hidden face into the list of legal moves — the Skull clairvoyant-flip
-  bug (era 12). Post 3 was about the action space having the wrong NAMES; this is the
-  action space knowing too MUCH. Nice symmetry, use it.
-- **Where honesty required refusal:** games whose public line cannot be keyed honestly
-  are refused at the adapter door (`assert_public_line_is_sound`) — sealed bids (For
-  Sale), simultaneous-move loops (Incan Gold, where the engine serializes and the line
-  would hand a later seat an earlier seat's choice). Refusing to model something you
-  cannot model honestly belongs in the same instrument-honesty thread as post 3's
-  yardstick and post 5's TrueSkill σ.
+**Fix two — the identities (encoder v3, perfect recall).** The mechanism is
+`GameState.revealed`, a frozenset of component ids whose identity is public knowledge
+(`grimoire/models.py:3389-3396`; classification in `move_component`, `:3501-3531`).
+
+- **The asymmetry is the whole idea, and it is beautifully intuitive:** PUBLIC → OWNER
+  *keeps* the identity, PUBLIC → HIDDEN *destroys* it. You remember the card you watched
+  go into a rival's hand; you forget the card you watched go into the deck. Say it in
+  exactly those terms — it is the rare implementation detail that matches how a person
+  at a table actually thinks.
+- **Forgetting is deliberate and conservative.** A shuffle drops membership
+  (`models.py:527-540`), a round reset wipes it (`:1681-1684`), setup recomputes it from
+  scratch. The comment states the safety argument: "forgetting a still-knowable public
+  card is safe; falsely remembering one leaks."
+- **Measured** (`archive/training-performance.md:183-215`): v3 beats a matched v2 control
+  trained on an identical recipe **55.0%** [51.9, 58.1], and beats the reigning
+  champion_v1 **59.3%** [56.1, 62.3] over 1000 games. Best colour detail: v3 takes MORE
+  goods (29% vs 25%), "consistent with racing/denying now that it can see the opponent's
+  collection." The behaviour changed, not just the score.
+- **Tests exist and are quotable** (`tests/test_perfect_recall.py`): the invariant test
+  asserts `seen == revealed ∩ hand` exactly, and the payoff test shows v2 reading a hand
+  as all-hidden where v3 reads real counts plus an explicit unknown-remainder.
+
+**THE COUNTER-RESULT — the best beat in the post, do not cut it.** Knowing more made
+search WORSE. Pinning the *true* opponent hand into IS-MCTS on an untrained clone scored
+**46.5%** [42.4, 50.5] against the heuristic, while the genuinely blind agent scored
+**52.1%** [48.0, 56.1] (`archive/training-performance.md:486-499`). Roughly 5.6 points
+*below* blind, because pinning any hidden zone to truth collapses the ensemble diversity
+that makes sampled search work. The verdict written at the time was "do not build an
+opponent-take tracker for strength" (`:508-510`) — and then three days later the same
+information, *trained into the encoder* rather than pinned at search time, won by 5
+points. The one-line synthesis is already in the repo
+(`docs/ml/training-techniques.md:115`): **"Value must be trained in, not pinned."** This
+is a genuine surprise, it has a clean control, and it resolves — everything the series'
+voice is for. It also stacks: search on top of v3 was worth +10.5 points, more than the
++7 it was worth on v2, so perfect recall did not eat the ensemble diversity after all.
+
+**A SECOND, SEPARATE MECHANISM — do not conflate it with `revealed`.** For the tabular /
+CFR side the engine carries `GameState.public_line` (what a spectator saw; a face-down
+pick records `?`) plus per-seat `private_lines`, and the information-set key is
+observation + public line. Leduc keys to **936** information sets with the public line
+and **576** without, and the 576 version is silently imperfect-recall — a game that has
+forgotten something it watched happen. **Reveal-to-one** (era 13) rides the private line:
+Love Letter's Priest peek splits the peeker's information sets and nobody else's, and
+every reveal-free game keys byte-identically to before the channel existed. These are two
+different systems solving the same problem for two different consumers (neural encoder
+vs solver); the post may cover both, but it must not imply the Priest peek uses
+`revealed`. It does not.
+
+**Where honesty required refusal:** games whose public line cannot be keyed honestly are
+refused at the adapter door (`assert_public_line_is_sound`) — sealed bids (For Sale),
+simultaneous-move loops (Incan Gold, where the engine serializes and the line would hand
+a later seat an earlier seat's choice). Same instrument-honesty thread as post 3's
+yardstick and post 5's TrueSkill σ.
+
+**The mirror of post 3: the ACTION SPACE can leak.** The gap-5 tripwire
+(`grimoire/ai/masking.py:410-442`) fails loud when a component choice would offer an
+option the chooser cannot see, because naming a face-down card by its true template would
+leak the hidden face into the list of legal moves — the Skull clairvoyant-flip bug (era
+12). Post 3 was the action space having the wrong NAMES; this is the action space knowing
+too MUCH. Use the symmetry.
+
+**The rest of the perception arc:**
+- Encoder v2 (per-container composition) beats v1 **60.3%** [57.5, 63.1] over 1200
+  seat-balanced games — primary source `archive/training-performance.md:751-770`, in the
+  three-row isolation table where bigger net = null, more training = null, richer
+  observation = +10 points. The quotable line is there verbatim: "capacity wasn't the
+  ceiling, optimization wasn't the ceiling — information was." Carry its honesty caveats
+  too: +10 points is real but not a transformation, and a single 120-game head-to-head
+  swung 52→67% across seeds, so trust the aggregate.
+- The version ladder is append-only so old checkpoints keep loading: v1 counts (41
+  features) → v2 composition (78) → v3 perfect recall (85) → v4 container value (113) →
+  v5 spatial → v6 stack-slot marginals. v5 carries a hard gate that refuses to compile if
+  a sited container is non-public, since site occupancy would bypass the per-seat
+  projection.
+
+**CITATION HAZARDS — verified 2026-08-14, do not copy blind:**
+- Visibility has FOUR levels and none of them is "none": PUBLIC, HIDDEN, OWNER,
+  TOP_ONLY (`grimoire/models.py:216-220`).
+- There is no `perspective.py`. The engine decides what a seat sees
+  (`project_visibility`); `masking.py` only guards the action space.
+- `training-techniques.md` cites `training-performance.md:579-599` for the 60.3% figure.
+  That range is a literature sweep. The real source is `:751-770`.
+- Several repo docs claim perfect recall "generalizes for free to Coup / Star Realms."
+  Per the actual `.grim` files it does not: neither has a public→owner edge that survives
+  a shuffle. Jaipur is the canonical and only measured case; For Sale and Ticket to Ride
+  are structurally eligible but unmeasured.
+- No isolated v3→v4 head-to-head exists. Do not imply v4 was measured the way v2 and v3
+  were.
+- The v1/v2-era checkpoints behind the 60.3% are likely unloadable today after a 2026-08
+  encoder-width break. The result stands as recorded; do not imply it is re-runnable.
+
 - REINFORCE on the take head hovers at parity (best 50.5%, CI includes 50) — the
   heuristic's take rule is near-optimal, so there is *nothing left to imitate*
   (`training-performance.md:1041`). Ends: seeing everything, speaking properly,
@@ -308,15 +375,102 @@ approximate beliefs we can simply enumerate.
 
 **The thread that makes the survey land, not just enumerate** (user's own observation,
 2026-08-14, from the live RFTG arc): *a value-only search is beating us.* Keldon's RFTG
-bot is a 704 → 50 → 2 value-only net, TD self-play over 30,002 games, inside a **2-ply
-full-width expectimax** — no policy head anywhere (`rftg-parity-curve.md:1-6`). Our
-AZ-shaped agent loses to it. The honest reading: the policy prior in PUCT is a
-*sampling device for branching factors you cannot afford to enumerate* (Go's ~250), and
-where the branching is modest, full-width shallow lookahead over a good value function
-can spend the same compute better. AlphaZero is one point in the design space, not the
-top of a ladder. The post should say this plainly — it is the same
-representation-beats-capacity lesson post 3 ends on, arriving from the search side.
-Check the arc's state before drafting; it is live and the numbers will move.
+bot is a 704 → 50 → 2 value-only net, TD self-play over ~30,000 games, inside a 2-ply
+expectimax — no policy prior anywhere (`reference-keldon-rftg.md:11-26`,
+`rftg-parity-curve.md:1-6`). **And the repo has already worked out WHY, arithmetically**
+(`docs/specs/rftg-from-scratch-spec.md:507-522`):
+
+| shape | leaf evals per decision | how it covers the moves |
+|---|---|---|
+| our PUCT at 16 sims | 16 | **samples** |
+| full-width 2-ply at branching 5.3 | ~28 | **enumerates exhaustively** |
+
+with the verdict written in-doc: *"This was predictable from the branching factor before
+the run, and it is why Keldon has no policy prior and still reaches expert."* Say it
+plainly: **a policy prior is a sampling device for branching factors you cannot afford
+to enumerate.** Go's ~250 needs one. A game branching 3 to 5 does not, and paying for
+one there buys a worse-covered tree at the same cost. AlphaZero is a point in a design
+space, not the top of a ladder — the same representation-beats-capacity lesson post 3
+ends on, arriving from the search side. **We built the value-only search too**
+(`grimoire/ai/search/fullwidth.py:24-28`, "VALUE ONLY, DELIBERATELY... priors are
+ignored by design, not by omission"), so this is a comparison we own both sides of.
+
+**The branching table is the post's best single figure** (`fullwidth.py:10-16`, measured
+by playing each game): ticket-to-ride 10.5 mean / 38 p90 / 79 max, othello 4.8, rftg
+3.3, jaipur 3.2, cant-stop 1.5, **monopoly 1.0 — "search is pointless."** It answers
+"where can lookahead possibly help?" before any algorithm is named, and it is measured
+rather than argued.
+
+**THE NUMBER TO BUILD THE HIDDEN-INFO SECTION AROUND** (`experiments.md:1384-1390`): the
+*same* rollout agent on RFTG scores **0.150** when it determinizes honestly and **0.9850**
+when handed the true state. The doc's own reading is the quotable one — *"the 0.985 is
+not a search result at all; it is a measurement of what perfect information is worth in
+RFTG, and the answer is: nearly the whole game."* That single pair does more work than a
+paragraph of theory about strategy fusion, and it sets up why our determinizer is
+fail-loud by contract (`determinize.py:73-110`: any identity-hidden container with no
+resampling strategy raises rather than silently searching the truth — both leak bugs to
+date were silent "no strategy, keep truth" defaults).
+
+**WHAT IS A PLY? — the sleeper section, and it is genuinely novel material.** Every
+search result depends on a unit nobody defines. On RFTG, **51.8% of decisions offer
+exactly one legal move**, and one seat's consecutive real choices sit **4.10 prompts
+apart** (`fullwidth.py:438-458`), so "depth 2" measured in prompts is not depth 2 in any
+sense a player would recognise. Keldon's unit is the **round**: one ply fixes both seats'
+action combos and runs every phase to completion before evaluating
+(`rftg-search-parity-spec.md:56-90`, read off his C source). When we fixed our leaf to
+evaluate at a round boundary instead of mid-prompt, search went from worthless to
+**0.8950 over 200 games against no-search with identical weights**
+(`rftg-s1-respec.md:93-98`). Nothing about the algorithm changed; only where it was
+allowed to stop and look. Pairs with post 3's "the interface was the ceiling" thesis.
+
+**The honest negatives, which the post needs to stay credible:**
+- The S1a bake-off (`experiments.md:1343-1420`) tested every search shape on RFTG against
+  the bare policy and concluded **"No search shape tested beats the bare policy"** and
+  **"RECOMMENDATION: serve BARE, search nothing."** RFTG is served bare today.
+- Othello on the tensor substrate saturates: sims 16/32/64/128 → 6.0 / 12.7 / 36.3 /
+  **37.0%** vs v1, never reaching the 45% bar, and the throughput and strength budgets are
+  mutually exclusive (`experiments.md:185-190`, `:458-463`).
+- Keldon's own opponent-role net does not earn its keep: swapping it for a uniform
+  opponent model scores **0.5112 [0.4868, 0.5357]** against a 0.5067 control
+  (`rftg-search-parity-spec.md:121-143`). A component of the reference implementation,
+  measured and found inert. Note the stated caveat (uniform also defeats his pruning
+  cutoff) rather than overclaiming.
+
+**The positive result the post must not bury — Can't Stop.** The one searched seat we
+actually serve, and it works: an *exact* expectation over the 4d6 chance space (126
+weighted multisets ≡ all 1296 outcomes) on top of a separately-fit win-probability head
+beats the raw champion **0.586 [0.564, 0.607]** and Rule-of-28 **0.850**, and the
+solitaire variant reaches **7.94 turns against Glenn & Aloi's published 9.05**
+(`cantstop_search.py`, `ai-roadmap.md:351-362`). This is where the survey's axes pay off
+concretely: chance modelled exactly rather than sampled, no policy prior on the press
+decision, and a value head trained for that decision specifically. Also the deep-pairing
+result that **reversed** an earlier null (+7.5pp) once the search went under the pairing
+choice instead of over it — an instrument-depth lesson, shipped behind a flag.
+
+**Rollout policy improvement deserves its own beat** (era 19): 1-ply rollouts of the raw
+policy improve *every* raw MMD bot, most where the bot is weakest — For Sale **0.9125
+[0.8302, 0.957]** against three raw copies. And it **cannot be distilled back**: naive
+imitation plateaus at raw parity, because "the improvement comes from LOOKAHEAD, which is
+NOT in the static observation" (`ai-roadmap.md:920-933`). That is the cleanest statement
+in the whole archive of what search actually adds, and it is the anti-AlphaZero-ratchet
+result — the distillation step the AZ flywheel depends on is exactly what fails here.
+
+**DATA HAZARDS — verified 2026-08-14, do not copy blind:**
+- Sushi Go rollout-improve "~0.58" (`ai-roadmap.md:936`) has **no source**; the data file
+  records it SKIPPED (timed out). Do not use it.
+- For Sale rollout-improve: use the firmed **0.9125 (n=80)**, not 0.925 (n=40).
+- Incan Gold 0.52's CI includes 0.44, so it beats the 0.25 fair share, not 0.50.
+- The often-repeated "our PUCT needs 64×4 to beat bare" mixes two different nets; the
+  clean within-net pair is 8×1 = 0.4605 and 32×2 = 0.5165
+  (`rftg-from-scratch-spec.md:1838-1858`).
+- `round_scoped=True` is **inert on RFTG** (no mid-game round boundary), so every RFTG
+  search number on record was match-scoped whatever the flag said
+  (`experiments.md:1402-1405`).
+- GT-CFR / ReBeL / Student of Games are **proposed only** — a memo, explicitly not a build
+  commitment. Its own paper concedes ~1170 Elo below AlphaZero on Go at comparable budget
+  (`gtcfr-exploration.md:48-52`). Present it as the principled unification, not as
+  something we run.
+- The RFTG arc is LIVE. Re-check its numbers at drafting time.
 - Search at inference: +7-10 pts, the one measured lever. The parity basin: PPO
   self-play converges to a fixed point (G/H/I in the retrospective); only a distinct
   weaker anchor ever produced an edge (champion_v4, 62.5% vs v2).
