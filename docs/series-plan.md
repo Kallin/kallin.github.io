@@ -139,8 +139,9 @@ Every system plays a handful of hand-integrated games. GDL / Ludii / OpenSpiel b
 the bridge from the algorithms' side. The bet is to build it from the designer's side.
 Demos: MinimaxDemo, NeuralNetDemo, RegretDemo, RLDemo.
 
-### 2. From Random to Reasonable — IN REVIEW
-`game-ai-from-random-to-reasonable.mdx` · **Era 0**
+### 2. From Random to Reasonable — LIVE
+`game-ai-from-random-to-reasonable.mdx` · published 2026-07-28 · **Era 0**
+(amended 2026-08-14: PPODemo gained a value-head step, paying the debt below.)
 
 The engine, the format, Jaipur, and the first learning agent. Immutability + legal-move
 enumeration as the two day-one bets. `.grim` anatomy. Observations and action masks.
@@ -150,7 +151,8 @@ nothing. Ends on: every number is self-referential, so build a real yardstick.
 Demos: GrimDemo, EncodeDemo, CreditDemo, PPODemo. Figures: jaipur-table, pipeline, noop-loop,
 seat-advantage.
 
-### 3. Beaten by an If-Statement — NEXT (the merged flagship)
+### 3. Beaten by an If-Statement — LIVE (the merged flagship)
+`game-ai-beaten-by-an-if-statement.mdx` · published 2026-08-14 · ~2,600 words
 **Era 1 (2026-06-28 → 06-29).** One post, mystery to resolution. This absorbs what
 was previously planned as two posts; the split diluted the wow into a setup post and
 a payoff post, and two independent planning passes (the recovered old draft and this
@@ -189,11 +191,27 @@ one) converged on the single-post shape.
    hundred if-statements is the floor, not a victory — and there is nothing left to
    imitate. Hands post 5 its question.
 
-**Demos:** EloDemo (built), moving-slots codec demo (to build), candidate-scoring
-demo (to build). **Figures:** the Elo ladder (built), possibly an 18.5 → 46 → 48.5
-progression. ~4,500 words. This is the HN submission.
+**As shipped:** the draft came in at ~2,600 words, not 4,500 — the mis-step montage
+compressed into a levers figure and the search-audit war story moved wholesale to post
+5. Demos: EloDemo, CodecDemo, StitchDemo, PointerZoom, plus two static blueprints
+(OldNetBlueprint, NetBlueprint). Figures: ml3-elo-ladder, ml3-levers.
 
-### 4. What the Network Sees
+**The visual grammar this post established** (reuse it): every architecture claim gets
+a *blueprint* (layers, weight shapes, branch points), and every mechanism gets a *zoom*
+into one band of that blueprint, stepped. Old and new architectures are drawn in the
+SAME grammar so the diff reads as one column. Rewriting a caption is cheaper than
+adding prose, but when a caption starts doing three jobs, split the step instead — the
+matrix-shape strip (`4 × template width → 4 × 128 → 4 × 1`) exists because a caption
+tried to carry padding, row-count invariance, and width narrowing at once.
+
+**LinkedIn distribution (the recipe that worked):** capture a demo's steps with
+reserved-space bands collapsed, assemble in Pillow with 150 ms cross-fades, ~660 px,
+3–5 s holds. The composer rejects all scripted media attachment (isTrusted), so the
+file gets dragged in by hand. Frame the post on the *upset and the general lesson*, not
+on "here is a bug I found" — the transferable claim ("what a model can learn is capped
+by how you let it answer") is what earns a repost.
+
+### 4. What the Network Sees — NEXT
 **Eras 1-2, the perception thread.** The pointer head fixed how the net SPEAKS; this
 post is about what it SEES, and the running discovery that information, not capacity,
 was always the ceiling.
