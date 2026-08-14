@@ -244,6 +244,45 @@ moment we meet one properly."
 - **Concept blocks owed:** PUCT/MCTS (explore vs exploit, visit counts, prior-guided
   — MinimaxDemo's sequel), the AlphaZero ratchet (search as a policy-improvement
   operator, distilled back), determinization (hidden info → sample worlds).
+
+**SURVEY THE FIELD, do not just describe ours** (user, 2026-08-14). The user wants a
+clear map of what searches exist and how the flavours differ — this is a headline
+requirement for the post, not a sidebar. Structure the survey on the axes that actually
+separate the algorithms, so a reader can place any new one they meet:
+
+1. **What happens at a leaf?** Hand-written eval / rollout to the end / a value net.
+2. **What decides where to look?** Full width / alpha-beta pruning / UCB statistics /
+   a learned policy prior (PUCT).
+3. **How is uncertainty handled?** Max nodes only (minimax) / chance nodes
+   (expectimax) / sampled worlds (determinization) / beliefs carried explicitly
+   (ReBeL, GT-CFR).
+4. **What is backed up?** Max, average, or regret.
+
+The families to place on that grid, all of which the repo has met: minimax +
+alpha-beta; **expectimax** (Keldon's 2-ply); plain **UCT** with random rollouts;
+**PUCT / AlphaZero**; **rollout policy improvement** (era 19: cheap 1-ply beats every
+raw MMD bot, and it is servable); **determinization / PIMC** with its
+**strategy-fusion pathology** (`strategy-fusion-explained.md` has the worked Jaipur
+example and the toy P/Q table — lift it, it is already near-blog voice; Long et al.
+2010 for why PIMC is safe for trick-taking and pathological for bluffing);
+**ISMCTS-BR** as the exploitability instrument (arXiv:2004.09677); and the
+**CFR family** as the thing that is NOT play-time search but a solver, with **GT-CFR /
+Student of Games** (`gtcfr-exploration.md`) as the principled unification of the two
+halves. Cite the frontier survey (`docs/ml/frontier-lit-survey-2026-07-16.md`) for the
+"tiny enumerable hidden state" argument: most celebrated belief machinery exists to
+approximate beliefs we can simply enumerate.
+
+**The thread that makes the survey land, not just enumerate** (user's own observation,
+2026-08-14, from the live RFTG arc): *a value-only search is beating us.* Keldon's RFTG
+bot is a 704 → 50 → 2 value-only net, TD self-play over 30,002 games, inside a **2-ply
+full-width expectimax** — no policy head anywhere (`rftg-parity-curve.md:1-6`). Our
+AZ-shaped agent loses to it. The honest reading: the policy prior in PUCT is a
+*sampling device for branching factors you cannot afford to enumerate* (Go's ~250), and
+where the branching is modest, full-width shallow lookahead over a good value function
+can spend the same compute better. AlphaZero is one point in the design space, not the
+top of a ladder. The post should say this plainly — it is the same
+representation-beats-capacity lesson post 3 ends on, arriving from the search side.
+Check the arc's state before drafting; it is live and the numbers will move.
 - Search at inference: +7-10 pts, the one measured lever. The parity basin: PPO
   self-play converges to a fixed point (G/H/I in the retrospective); only a distinct
   weaker anchor ever produced an edge (champion_v4, 62.5% vs v2).
