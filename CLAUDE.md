@@ -48,8 +48,11 @@ The series plan, post outlines, era mapping, and full conventions live in
 
 ## Do not commit
 
-`src/content/blog/game-ai-is-it-actually-good.mdx` and
-`game-ai-one-pipeline-every-game.mdx` are stale drafts from a superseded plan (kept
-locally as salvage material), and `public/images/posts/ml1-*.png` belong to them.
+The stale drafts from the superseded plan now live OUTSIDE the content collection, in
+`docs/stale-drafts/` (they are salvage material; they were moved out of
+`src/content/blog/` on 2026-08-25 because Astro rendered them in dev, where their
+seriesOrder collided with the real posts 4 and 5 and duplicated the series-nav
+badges). Do not move them back, and do not commit them. `public/images/posts/ml1-*.png`
+belong to them.
 `ml2-first-curve.png` is unused by design — it is reserved for the post that narrates
 its actual era (see the series plan's data-provenance section).
