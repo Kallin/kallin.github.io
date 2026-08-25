@@ -271,6 +271,13 @@ is a genuine surprise, it has a clean control, and it resolves — everything th
 voice is for. It also stacks: search on top of v3 was worth +10.5 points, more than the
 +7 it was worth on v2, so perfect recall did not eat the ensemble diversity after all.
 
+**MOVED OUT AT DRAFTING (2026-08-25): the two-line model, reveal-to-one, gap-5, and the
+adapter-door refusals are era 10-13 material and post 4 narrates eras 1-2 — including
+them would have the narrator knowing the future. They move to the equilibrium/CFR-era
+posts ("The Games That Refused" and after), where information sets are the subject and
+the Leduc 936/576 pair lands with full force. The paragraphs below are preserved for
+that post's drafting.**
+
 **A SECOND, SEPARATE MECHANISM — do not conflate it with `revealed`.** For the tabular /
 CFR side the engine carries `GameState.public_line` (what a spectator saw; a face-down
 pick records `?`) plus per-seat `private_lines`, and the information-set key is
