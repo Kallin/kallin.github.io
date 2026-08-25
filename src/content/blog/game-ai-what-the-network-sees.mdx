@@ -1,0 +1,214 @@
+---
+title: 'What the Network Sees'
+description: "Part 4: the agent that reached parity with the if-statements turns out to have been playing half blind. Restoring its sight is a ladder of experiments with one repeated verdict: the ceiling was never the network's brain. It was the network's eyes. And the strangest result of all: handing it the truth made it worse."
+pubDate: '2026-08-26'
+tags: ['ai', 'ml', 'reinforcement-learning', 'games']
+draft: true
+series: 'game-ai'
+seriesOrder: 4
+---
+
+import Concept from '../../components/Concept.astro';
+import BlindfoldDemo from '../../components/BlindfoldDemo.astro';
+import RecallDemo from '../../components/RecallDemo.astro';
+import ZoomImage from '../../components/ZoomImage.astro';
+
+The last post ended at parity. The pointer head fixed how the network answers, the
+ladder read 49.5% against the heuristic, and the obvious question was where the next
+points were hiding. I had two suspects left: what the network computes, and what the
+network is given to compute with. The first suspect had already been cleared once, so
+this post is about the second, and about the strangest experimental result this
+project has produced so far.
+
+It starts with an audit.
+
+## An overnight audit, and an embarrassing finding
+
+Before launching another expensive training run, I pointed a swarm of review agents
+at the whole pipeline: the environment wrapper, the reward plumbing, the encoder,
+the works. Fifteen confirmed findings came back. Three of them gated everything, and
+one of those three is the subject of this post.
+
+The network was blind to its opponent.
+
+Not to the opponent's secrets. To the opponent's *public* state. In Jaipur, your
+rival's hand size, their herd of camels, and the tokens they have banked are all
+open information: they are sitting on the table, and any human player glances at
+them constantly. The encoder reported every one of those numbers as the hidden
+sentinel, negative one. The network was playing a hidden-information game with more
+hidden from it than the rules hide.
+
+<Concept title="Who sees what: visibility as an engine contract">
+
+Every zone in a game declares who may see its contents: **public** (the market, the
+discard pile), **owner** (your hand: you see it, others do not), or **hidden** (the
+deck: nobody sees it, including its owner). When the engine builds an observation
+for a seat, a projection walks every zone and decides what that seat gets: full
+contents, count only, or nothing.
+
+The subtle part is that "count only" and "nothing" are different answers. An
+opponent's hand hides its *identities*, but its *count* is public in essentially
+every card game ever printed. The bug was answering "nothing" where the rules say
+"count only."
+
+<BlindfoldDemo />
+
+</Concept>
+
+The bitter comedy is that the heuristic the network keeps losing to does not look
+at the opponent either. Those few hundred lines of if-statements sell the moment a
+set forms and never once consider the other player. An agent that could see the
+opponent could, in principle, race it: hold goods it is about to want, time sales
+against its tempo. That was the clearest path to actually beating it, and no
+trainable agent could take that path, because the encoder was feeding every method
+the same blindfold.
+
+The fix took twenty minutes. The observation did not even change width; the slots
+existed and held the sentinel. Twenty minutes, against weeks of architecture work.
+Keep that ratio in mind, because this post repeats it.
+
+## Three levers, one variable each
+
+The blindfold was not the first hint of this pattern. It was the newest instance of
+a suspicion that had been building for weeks: maybe the agent was never short on
+brainpower. Maybe it was short on information. The suspicion had already been put
+to a clean test once, with the experiment design I trust most: isolate one lever at
+a time and pull.
+
+Lever one, capacity: train the same agent with a network four times larger. Result:
+nothing. Lever two, optimization: train the same agent considerably longer, against
+a league of past versions. Result: nothing. Lever three, information: keep the
+network and the training identical, and change only what the agent sees. Instead of
+reporting each zone as a count of cards, the encoder now reports the *composition*
+of every zone it is entitled to see: not "the market holds five cards" but "the
+market holds two cloth, a diamond, a spice, and a camel."
+
+Result: the new agent beat the old champion in 60.3% of 1,200 seat-balanced games,
+confidence interval 57.5 to 63.1. Two nulls and a hit.
+
+<ZoomImage src="/images/posts/ml4-levers.png" alt="Bar chart of three experiments: a bigger network and more training both land on the 50% line (null), while the richer v2 observation wins 60.3% with a confidence interval of 57.5 to 63.1." caption="Same network, same training recipe in every arm. Only the third arm changed what the agent could see." />
+
+I want to be precise about what surprised me here, because "more information helps"
+sounds obvious. What surprised me is what *failed* to help. A bigger brain is the
+default reflex of this entire field, and it did nothing. Watching the table more
+carefully was worth ten points. The ceiling was not the network's capacity to think.
+It was the quality of what it was given to think about.
+
+## Remembering what you watched
+
+The composition encoder sees everything it is entitled to see at this instant. The
+next rung on the ladder is subtler: some knowledge is not visible *anywhere* on the
+table right now, and is still legitimately yours, because you watched it happen.
+
+Play Jaipur against a person and take the diamond from the market. Your hand is
+hidden, but your opponent knows the diamond is in it. They saw you take it. Nobody
+calls this cheating; it is called paying attention, and every competent card player
+does it. The count encoder cannot do it. The moment a card crosses into a hidden
+zone, its identity is gone from the observation, because identity was stored on the
+zone, and the zone says hidden.
+
+<Concept title="Perfect recall: knowledge belongs to the history, not the zone">
+
+The engine keeps a running set of card identities that are public knowledge. A card
+entering a public zone joins the set. A card taken from public view into a player's
+hand *stays* in the set, because everyone watched where it went. A card that enters
+the deck, or gets caught in a shuffle, leaves the set: after that, no honest
+observer could still track it.
+
+The observation then reports an opponent's hand as what it honestly is to you: the
+cards you watched arrive, plus a count of the rest. Not "five unknown cards" but
+"the diamond, and four unknown cards."
+
+<RecallDemo />
+
+</Concept>
+
+The design question that took actual care is when to *forget*. The engine's rule is
+deliberately conservative in one direction: any passage through a hidden pile or a
+shuffle erases a card from the record, even in corner cases where a sharp player
+might still infer something. Forgetting a still-knowable card merely plays a little
+cautiously. The reverse mistake, remembering a card that is no longer knowable, is
+an information leak, and leaks are the one thing an honest game engine cannot have.
+The test suite pins the exact invariant: the set of cards the observation claims to
+know in a hidden hand equals the recorded public knowledge intersected with that
+hand, no more, no less.
+
+Trained head to head against a control with the identical recipe and only the
+encoder changed, the perfect-recall agent won 55.0% of games, interval 51.9 to
+58.1. Against the reigning champion, 59.3%. And the win came with a visible change
+in style: the new agent takes more goods than its predecessor, which is what
+racing looks like. It is not just scoring its own hand anymore; it can see what the
+opponent is collecting, and it has started denying.
+
+## The trick that should have worked
+
+Here is where the story turns. Because there is a much cheaper way to hand an agent
+knowledge of hidden cards, and I tried it first.
+
+Since the codec work, the strongest agent in the stable wraps the network in
+search. The search deals with hidden zones the only way it can: it deals out a
+guess. Before thinking, it fills in the opponent's hand and the deck with a random
+arrangement consistent with everything public, thinks in that imagined world, then
+repeats with fresh guesses and averages. Each guess is called a determinization,
+and the averaging over many of them is what keeps the search honest about what it
+does not know.
+
+Which suggests an obvious shortcut. In a self-play harness I control both seats, so
+I can skip the guessing and pin the *true* opponent hand into every imagined world.
+No training, no new encoder: just stop lying to the search about the one zone that
+matters most. Strictly more accurate information at zero cost. It has to help.
+
+It lost five and a half points.
+
+<ZoomImage src="/images/posts/ml4-pinned.png" alt="Two-panel bar chart. Left: search agents given the true deck or true opponent hand score below the genuinely blind agent (46.5% and 48.9% vs 52.1%). Right: the same knowledge trained into the encoder beats a matched control 55.0%." caption="The same knowledge, delivered two ways. Injected into the search's imagined worlds, it subtracts; learned by the network, it adds." />
+
+The genuinely blind searcher won 52.1% of its games against the heuristic. Handed
+the true opponent hand, the same searcher won 46.5%. Handed the true deck order
+instead, 48.9%. Every flavor of truth made it worse, and the opponent's hand, the
+most valuable-looking secret at the table, made it worst of all.
+
+The mechanism took a while to believe. The strength of a determinizing search
+*lives in the variety of its guesses*. Averaging over many imagined worlds forces
+the agent toward moves that are good against the whole cloud of hands the opponent
+might hold, which is another way of saying it hedges. Pin one world as the truth
+and the hedge collapses: the search happily commits to lines that exploit that
+exact hand, played by a network that never learned what to do with such
+certainty. The averaging was not a workaround for missing information. It was
+load-bearing.
+
+So the same knowledge, delivered two ways, is worth minus five points or plus five
+points. Injected into the search's imagination, it breaks the machinery. Baked
+into the network's observation, where thousands of training games can shape what
+to *do* with it, it is the biggest single gain since the pointer head. That night's
+note in the journal reads: value must be trained in, not pinned. It is the closest
+thing to a moral this project has.
+
+## Nothing left to imitate
+
+One experiment from the audit night completes the picture. Back when the clone
+work localized the whole gap to card targeting, the natural follow-up was to stop
+imitating and let reinforcement learning improve the take decision directly:
+freeze everything else, warm-start from the imitation head, and train the take
+choice against the heuristic with a win-or-lose reward.
+
+Forty iterations of REINFORCE oscillated around parity and never left: best
+checkpoint 50.5%, interval 44.8 to 56.3, straddling fifty. The heuristic's take
+rule, one line of arithmetic trading token value against held cards, appears to be
+close to optimal. There was no headroom to learn, because there was nothing left
+to imitate or improve *in that decision*.
+
+That flat line and this post's two wins are the same finding, seen from opposite
+sides. Where the agent already saw everything that mattered, learning bought
+nothing at all. Where its view was poor, fixing the view bought ten points, and
+fixing its memory bought five more. Every point this project has earned since the
+yardstick arrived has come from the interface: how the agent speaks, and now how
+it sees.
+
+So here is where things stand. The network sees every number a human at the table
+sees. It remembers what it watched, forgets what it could not honestly know, and
+names its moves properly. It races, it denies, it is measurably better than every
+version before it.
+
+And against a few hundred lines of if-statements, the ladder still reads level.
+Seeing was worth points. Speaking was worth points. Whatever is left is not about
+either.

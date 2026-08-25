@@ -1,0 +1,292 @@
+---
+// Perfect recall as a stepped scene: watch a card leave the public market and
+// enter a hidden hand, then compare what the two encoders read. The layout is
+// fully reserved (visibility toggles, no reflow); the strip contrasts the v2
+// count-only read against the v3 known-plus-unknown read.
+const CARD_COLORS: Record<string, string> = {
+	diamond: '#7aa7d4',
+	gold: '#d9a441',
+	cloth: '#b06fa0',
+	spice: '#c96f4a',
+	camel: '#c2a171',
+};
+const MARKET = ['diamond', 'gold', 'cloth', 'spice', 'camel'];
+---
+
+<figure class="rcd">
+	<div class="zone">
+		<span class="zlbl">the market, face up</span>
+		<span class="row">
+			{MARKET.map((g) => (
+				<span class={`card mk-${g}`} style={`--cc:${CARD_COLORS[g]}`}>{g}</span>
+			))}
+		</span>
+	</div>
+
+	<div class="zone">
+		<span class="zlbl">opponent's hand, face down</span>
+		<span class="row">
+			{[0, 1, 2, 3].map(() => <span class="back"></span>)}
+			<span class="back taken">
+				<span class="known" style={`--cc:${CARD_COLORS.diamond}`}>diamond</span>
+			</span>
+		</span>
+	</div>
+
+	<div class="strips">
+		<div class="strip strip-v2">
+			<span class="slbl">what the count encoder reads</span>
+			<span class="chips">
+				<span class="chip dim v2n4">cards: 4</span>
+				<span class="chip dim v2n5">cards: 5</span>
+			</span>
+		</div>
+		<div class="strip strip-v3">
+			<span class="slbl">what the perfect-recall encoder reads</span>
+			<span class="chips">
+				<span class="chip known-chip" style={`--cc:${CARD_COLORS.diamond}`}>diamond: 1</span>
+				<span class="chip dim">unknown: 4</span>
+			</span>
+		</div>
+	</div>
+
+	<div class="forget">
+		the forgetting rule: a known card swept into the deck or a shuffle is dropped
+		from the record. Forgetting a still-knowable card is safe; falsely remembering
+		one leaks.
+	</div>
+
+	<div class="rcd-controls">
+		<button class="rcd-back" type="button">&larr; Back</button>
+		<span class="rcd-count"></span>
+		<button class="rcd-next" type="button">Next &rarr;</button>
+	</div>
+
+	<figcaption class="rcd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.rcd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.zone {
+		margin-bottom: 0.7rem;
+	}
+	.zlbl,
+	.slbl {
+		display: block;
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.card {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 4.2em;
+		padding: 0.34em 0.4em;
+		border-radius: 7px;
+		border: 1.5px solid var(--cc);
+		background: color-mix(in srgb, var(--cc) 14%, white);
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		transition: opacity 0.35s ease;
+	}
+	.rcd.s2 .mk-diamond {
+		opacity: 0.18;
+	}
+	.back {
+		position: relative;
+		width: 1.7em;
+		height: 2.4em;
+		border-radius: 5px;
+		border: 1.5px solid #8a93b8;
+		background: repeating-linear-gradient(45deg, #dfe4f2, #dfe4f2 3px, #cdd4ea 3px, #cdd4ea 6px);
+	}
+	.back.taken {
+		visibility: hidden;
+	}
+	.rcd.s2 .back.taken {
+		visibility: visible;
+	}
+	.known {
+		position: absolute;
+		left: 50%;
+		bottom: -0.55em;
+		transform: translateX(-50%);
+		padding: 0.08em 0.45em;
+		border-radius: 999px;
+		border: 1.5px solid var(--cc);
+		background: color-mix(in srgb, var(--cc) 20%, white);
+		font-size: 0.58rem;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		white-space: nowrap;
+		visibility: hidden;
+	}
+	.rcd.s2 .known {
+		visibility: visible;
+	}
+	.strips {
+		display: grid;
+		gap: 0.55rem;
+		padding-top: 0.65rem;
+		border-top: 1px dashed rgb(var(--gray-light));
+	}
+	.strip {
+		visibility: hidden;
+	}
+	.rcd.s3 .strip-v2 { visibility: visible; }
+	.rcd.s4 .strip-v3 { visibility: visible; }
+	.chips {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.chip {
+		padding: 0.28em 0.6em;
+		border-radius: 7px;
+		border: 1.5px solid rgb(var(--gray-light));
+		background: #fff;
+		font-size: 0.74rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+	}
+	.chip.dim {
+		color: rgb(var(--gray));
+		font-weight: 600;
+	}
+	.strip-v2 .v2n4 { display: inline-block; }
+	.strip-v2 .v2n5 { display: none; }
+	.rcd.s2 .strip-v2 .v2n4 { display: none; }
+	.rcd.s2 .strip-v2 .v2n5 { display: inline-block; }
+	.chip.known-chip {
+		border-color: var(--cc);
+		background: color-mix(in srgb, var(--cc) 16%, white);
+	}
+	.forget {
+		margin-top: 0.65rem;
+		padding: 0.5em 0.7em;
+		border-radius: 8px;
+		border: 1px dashed rgb(var(--gray-light));
+		font-size: 0.78rem;
+		color: rgb(var(--gray));
+		visibility: hidden;
+	}
+	.rcd.s5 .forget {
+		visibility: visible;
+	}
+	.rcd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.rcd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.rcd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.rcd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.rcd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.rcd-caption {
+		min-height: 120px; /* measured: tallest caption at 1280 and 800; re-measure if captions change */
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'Your opponent holds four cards, face down. You have watched none of them arrive, so all four are genuinely unknown: any card not visible elsewhere could be back there. This is the honest baseline, and both encoders agree on it.',
+			cls: [],
+		},
+		{
+			caption:
+				'Your opponent takes the diamond. The take happens in the open: the card leaves the public market and slides into the hidden hand while everyone watches. Ask any human at the table what is in that hand now and they will tell you: the diamond, and four cards I do not know.',
+			cls: ['s2'],
+		},
+		{
+			caption:
+				'The count encoder\'s read: five cards. That is all it can say. The moment the diamond crossed the border into a hidden zone, its identity was gone, because identity was stored on the ZONE, and the zone says hidden. The encoder is not wrong. It is just forgetting something it watched happen.',
+			cls: ['s2', 's3'],
+		},
+		{
+			caption:
+				'The perfect-recall read: diamond 1, unknown 4. The engine keeps a running set of cards whose identity is public knowledge. Landing in a public zone adds a card to the set; being taken into a hand REMOVES NOTHING, because everyone saw where it went. Knowledge is a property of the history, not of the zone the card happens to sit in.',
+			cls: ['s2', 's3', 's4'],
+		},
+		{
+			caption:
+				'The other half of the design is when to forget. A card swept into the deck, or caught in a shuffle, leaves the set, even when a sharp player could sometimes still track it. The asymmetry is deliberate: forgetting a still-knowable card just plays a little conservatively. Remembering a card that is no longer knowable is an information leak wearing a memory\'s uniform.',
+			cls: ['s2', 's3', 's4', 's5'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.rcd').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.rcd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.rcd-next')!;
+		const count = root.querySelector('.rcd-count')!;
+		const caption = root.querySelector('.rcd-caption')!;
+		const ALL = ['s2', 's3', 's4', 's5'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>
