@@ -211,7 +211,21 @@ file gets dragged in by hand. Frame the post on the *upset and the general lesso
 on "here is a bug I found" — the transferable claim ("what a model can learn is capped
 by how you let it answer") is what earns a repost.
 
-### 4. What the Network Sees — NEXT
+### 4. Exactly What a Player Knows — DRAFTED, awaiting the user's read
+**Reframed 2026-09-03.** The first two drafts (as "What the Network Sees", then "The
+Answers Made It Worse") had no point of their own: half restated post 3's
+representation-over-capacity thesis, half previewed post 5's search mechanics, and the
+user could not find the point. The reframe gives the material the one thesis neither
+neighbour makes: **an agent should know exactly what a player at the table knows, no
+less and no more, and both directions were measured.** Too little (count-only encoder
+−10, forgotten watched cards −5), too much (true hand pinned into search −5.6), and the
+forgetting rule as the line drawn in code. The −1 sentinel audit finding was CUT at the
+user's request ("it's a bug, not surprising, makes me look sloppy"); the visibility
+Concept block kept its demo by becoming a three-chairs perspective demo instead.
+Components: PerspectiveDemo, RecallDemo. Figures: ml4-levers, ml4-pinned. ~1,600 words.
+Original planning notes follow.
+
+### 4. (planning notes) What the Network Sees
 **Eras 1-2, the perception thread.** The pointer head fixed how the net SPEAKS; this
 post is about what it SEES, and the running discovery that information, not capacity,
 was always the ceiling.

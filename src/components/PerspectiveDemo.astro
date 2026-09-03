@@ -1,0 +1,319 @@
+---
+// The visibility contract as a stepped scene: one Jaipur table rendered from
+// your chair, from the opponent's chair, and as the public layer both share.
+// No bug story here; this is the boundary the post is about, drawn in code.
+// Both hand variants (faces / backs) are rendered and overlaid so the layout
+// never reflows between steps.
+const CARD_COLORS: Record<string, string> = {
+	diamond: '#7aa7d4',
+	gold: '#d9a441',
+	silver: '#9aa5b1',
+	cloth: '#b06fa0',
+	spice: '#c96f4a',
+	leather: '#9b8360',
+	camel: '#c2a171',
+};
+const MARKET = ['diamond', 'gold', 'cloth', 'spice', 'camel'];
+const YOU = ['gold', 'cloth', 'cloth', 'spice', 'leather'];
+const OPP = ['diamond', 'diamond', 'silver', 'leather', 'spice'];
+const OPP_STATS = [
+	{ v: '5', label: 'cards in hand' },
+	{ v: '3', label: 'camels in herd' },
+	{ v: '4', label: 'tokens banked' },
+];
+const YOU_STATS = [
+	{ v: '5', label: 'cards in hand' },
+	{ v: '1', label: 'camel in herd' },
+	{ v: '6', label: 'tokens banked' },
+];
+---
+
+<figure class="psd">
+	<div class="zone">
+		<span class="zlbl"><span class="l-you">across the table</span><span class="l-opp">your hand, from the other chair</span><span class="l-pub">seat two</span></span>
+		<span class="row">
+			{OPP_STATS.map((s) => (
+				<span class="stat"><b>{s.v}</b><i>{s.label}</i></span>
+			))}
+			<span class="hand">
+				<span class="variant backs opp-backs">
+					{OPP.map(() => <span class="back"></span>)}
+				</span>
+				<span class="variant faces opp-faces">
+					{OPP.map((g) => (
+						<span class="card" style={`--cc:${CARD_COLORS[g]}`}>{g}</span>
+					))}
+				</span>
+			</span>
+		</span>
+	</div>
+
+	<div class="zone mkt">
+		<span class="zlbl">the market, face up</span>
+		<span class="row">
+			{MARKET.map((g) => (
+				<span class="card" style={`--cc:${CARD_COLORS[g]}`}>{g}</span>
+			))}
+		</span>
+	</div>
+
+	<div class="zone">
+		<span class="zlbl"><span class="l-you">your hand</span><span class="l-opp">across the table</span><span class="l-pub">seat one</span></span>
+		<span class="row">
+			{YOU_STATS.map((s) => (
+				<span class="stat"><b>{s.v}</b><i>{s.label}</i></span>
+			))}
+			<span class="hand">
+				<span class="variant backs you-backs">
+					{YOU.map(() => <span class="back"></span>)}
+				</span>
+				<span class="variant faces you-faces">
+					{YOU.map((g) => (
+						<span class="card" style={`--cc:${CARD_COLORS[g]}`}>{g}</span>
+					))}
+				</span>
+			</span>
+		</span>
+	</div>
+
+	<div class="legend">
+		<span class="leg"><b>public</b> zones: everyone sees contents and count</span>
+		<span class="leg"><b>owner</b> zones: the owner sees contents, everyone sees the count</span>
+		<span class="leg"><b>hidden</b> zones: nobody sees contents, everyone sees the count</span>
+	</div>
+
+	<div class="psd-controls">
+		<button class="psd-back" type="button">&larr; Back</button>
+		<span class="psd-count"></span>
+		<button class="psd-next" type="button">Next &rarr;</button>
+	</div>
+
+	<figcaption class="psd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.psd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.zone {
+		margin-bottom: 0.7rem;
+	}
+	.zlbl {
+		display: grid;
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		margin-bottom: 0.3rem;
+	}
+	.zlbl > span {
+		grid-area: 1 / 1;
+		visibility: hidden;
+	}
+	.psd:not(.seat2):not(.pub) .l-you,
+	.psd.seat2 .l-opp,
+	.psd.pub .l-pub {
+		visibility: visible;
+	}
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.stat {
+		display: inline-grid;
+		justify-items: center;
+		gap: 0.08rem;
+		min-width: 6.2em;
+		padding: 0.3em 0.5em;
+		border: 1.5px solid rgb(var(--gray-light));
+		border-radius: 8px;
+		background: #fff;
+		transition: border-color 0.35s ease, background 0.35s ease;
+	}
+	.stat b {
+		font-size: 0.95rem;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+	}
+	.stat i {
+		font-style: normal;
+		font-size: 0.62rem;
+		color: rgb(var(--gray));
+		white-space: nowrap;
+	}
+	.psd.pub .stat {
+		border-color: var(--accent);
+		background: #eef1ff;
+	}
+	.hand {
+		display: grid;
+		align-items: center;
+		margin-left: 0.3rem;
+	}
+	.variant {
+		grid-area: 1 / 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.28rem;
+		visibility: hidden;
+	}
+	.back {
+		width: 1.5em;
+		height: 2.1em;
+		border-radius: 5px;
+		border: 1.5px solid #8a93b8;
+		background: repeating-linear-gradient(45deg, #dfe4f2, #dfe4f2 3px, #cdd4ea 3px, #cdd4ea 6px);
+	}
+	.card {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 4.2em;
+		padding: 0.34em 0.4em;
+		border-radius: 7px;
+		border: 1.5px solid var(--cc);
+		background: color-mix(in srgb, var(--cc) 14%, white);
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+	}
+	/* step 1: your seat */
+	.psd:not(.seat2):not(.pub) .opp-backs,
+	.psd:not(.seat2):not(.pub) .you-faces {
+		visibility: visible;
+	}
+	/* step 2: the opponent's seat */
+	.psd.seat2 .opp-faces,
+	.psd.seat2 .you-backs {
+		visibility: visible;
+	}
+	/* step 3+: the public layer */
+	.psd.pub .opp-backs,
+	.psd.pub .you-backs {
+		visibility: visible;
+	}
+	.legend {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding-top: 0.55rem;
+		border-top: 1px dashed rgb(var(--gray-light));
+		visibility: hidden;
+	}
+	.psd.legend-on .legend {
+		visibility: visible;
+	}
+	.leg {
+		font-size: 0.74rem;
+		color: rgb(var(--gray));
+	}
+	.leg b {
+		color: rgb(var(--gray-dark));
+		font-weight: 700;
+		text-transform: uppercase;
+		font-size: 0.68rem;
+		letter-spacing: 0.04em;
+	}
+	.psd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.psd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.psd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.psd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.psd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.psd-caption {
+		min-height: 120px; /* measured: tallest caption at 1280 and 800; re-measure if captions change */
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'A Jaipur table from your chair. You see your own cards, the market, and, across the table, a row of card backs. But not only backs: you also see how many cards your opponent holds, how many camels they have gathered, how many tokens they have banked. Those numbers are not secrets. They are sitting in plain view.',
+			cls: [],
+		},
+		{
+			caption:
+				'The same table from the other chair. Everything flips: their cards are faces now and yours are backs. Notice what did not flip. The market, both sets of counts, both token piles: the middle of the table looks identical from either seat.',
+			cls: ['seat2'],
+		},
+		{
+			caption:
+				'That unchanging middle is the public layer, and it is what a spectator sees: every count, every token, every face-up card, and no hand identities at all. A hidden-information game is exactly two private views laid over one shared one. The whole question of "what should the agent know" is the question of where each seat\'s private view ends.',
+			cls: ['pub'],
+		},
+		{
+			caption:
+				'The engine draws that line with a contract. Every zone declares who may see its contents. A projection then builds each seat\'s observation by walking the zones: full contents where that seat is entitled, count only where it is not. Counts are public everywhere, in every card game ever printed. Identities are the game.',
+			cls: ['pub', 'legend-on'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.psd').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.psd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.psd-next')!;
+		const count = root.querySelector('.psd-count')!;
+		const caption = root.querySelector('.psd-caption')!;
+		const ALL = ['seat2', 'pub', 'legend-on'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>
