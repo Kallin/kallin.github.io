@@ -1,6 +1,6 @@
 ---
-title: 'What the Network Sees'
-description: "Part 4: the agent that reached parity with the if-statements turns out to have been playing half blind. Restoring its sight is a ladder of experiments with one repeated verdict: the ceiling was never the network's brain. It was the network's eyes. And the strangest result of all: handing it the truth made it worse."
+title: 'The Answers Made It Worse'
+description: "Part 4: I handed my agent the true hidden cards and it played worse. Explaining why took an audit that caught it playing half blind, three experiments that cleared its brain of the blame, and a memory that made the same knowledge worth plus five points instead of minus five."
 pubDate: '2026-08-26'
 tags: ['ai', 'ml', 'reinforcement-learning', 'games']
 socialImage: '../../assets/game-ai-4-og.png'
@@ -14,21 +14,37 @@ import BlindfoldDemo from '../../components/BlindfoldDemo.astro';
 import RecallDemo from '../../components/RecallDemo.astro';
 import ZoomImage from '../../components/ZoomImage.astro';
 
-The last post ended at parity. The pointer head fixed how the network answers, the
-ladder read 49.5% against the heuristic, and the obvious question was where the next
-points were hiding. I had two suspects left: what the network computes, and what the
-network is given to compute with. The first suspect had already been cleared once, so
-this post is about the second, and about the strangest experimental result this
-project has produced so far.
+In early July I handed my Jaipur agent the answers, and it played worse.
 
-It starts with an audit.
+By then the strongest agent in the stable wrapped the network in search, and the
+search dealt with hidden cards the only way it could: by guessing. Before thinking,
+it filled in the opponent's hand and the deck with a random arrangement consistent
+with everything public, thought in that imagined world, then repeated with fresh
+guesses and averaged. Each guess is called a determinization, and the averaging is
+what keeps the search honest about what it does not know.
 
-## An overnight audit, and an embarrassing finding
+In a self-play harness I control both seats, which suggested an obvious shortcut.
+Skip the guessing. Pin the *true* opponent hand into every imagined world. No
+training, no new machinery: just stop lying to the search about the one zone that
+matters most. Strictly more accurate information, at zero cost. It has to help.
+
+The genuinely blind searcher won 52.1% of its games against the heuristic. Handed
+the true opponent hand, the same searcher won 46.5%. Handed the true deck order
+instead, 48.9%. Every flavor of truth made it worse, and the opponent's hand, the
+most valuable-looking secret at the table, made it worst of all.
+
+It took a while to believe. Explaining it took longer, and the explanation needed
+the whole thread this post follows: an audit that caught the agent playing half
+blind, three experiments that cleared its brain of the blame, and a memory that
+made the same knowledge worth plus five points instead of minus five. So start
+where the thread started, a few days earlier, with a blindfold.
+
+## The blindfold
 
 Before launching another expensive training run, I pointed a swarm of review agents
 at the whole pipeline: the environment wrapper, the reward plumbing, the encoder,
 the works. Fifteen confirmed findings came back. Three of them gated everything, and
-one of those three is the subject of this post.
+one of those three is where this post's thread begins.
 
 The network was blind to its opponent.
 
@@ -95,6 +111,10 @@ default reflex of this entire field, and it did nothing. Watching the table more
 carefully was worth ten points. The ceiling was not the network's capacity to think.
 It was the quality of what it was given to think about.
 
+Which is what made the pinned-hand result so hard to accept. Information had just
+proven to be the only lever that moved. Then the purest information I could give
+it, the literal truth, moved it backward.
+
 ## Remembering what you watched
 
 The composition encoder sees everything it is entitled to see at this instant. The
@@ -134,6 +154,12 @@ The test suite pins the exact invariant: the set of cards the observation claims
 know in a hidden hand equals the recorded public knowledge intersected with that
 hand, no more, no less.
 
+This is the same knowledge that had just broken the search. Not the whole truth
+this time, only the part a human at the table would legitimately have, and
+delivered a different way: not pinned into the search's imagination, but written
+into the observation, where thousands of training games could shape what to do
+with it.
+
 Trained head to head against a control with the identical recipe and only the
 encoder changed, the perfect-recall agent won 55.0% of games, interval 51.9 to
 58.1. Against the reigning champion, 59.3%. And the win came with a visible change
@@ -141,48 +167,31 @@ in style: the new agent takes more goods than its predecessor, which is what
 racing looks like. It is not just scoring its own hand anymore; it can see what the
 opponent is collecting, and it has started denying.
 
-## The trick that should have worked
+## Why the answers made it worse
 
-Here is where the story turns. Because there is a much cheaper way to hand an agent
-knowledge of hidden cards, and I tried it first.
-
-Since the codec work, the strongest agent in the stable wraps the network in
-search. The search deals with hidden zones the only way it can: it deals out a
-guess. Before thinking, it fills in the opponent's hand and the deck with a random
-arrangement consistent with everything public, thinks in that imagined world, then
-repeats with fresh guesses and averages. Each guess is called a determinization,
-and the averaging over many of them is what keeps the search honest about what it
-does not know.
-
-Which suggests an obvious shortcut. In a self-play harness I control both seats, so
-I can skip the guessing and pin the *true* opponent hand into every imagined world.
-No training, no new encoder: just stop lying to the search about the one zone that
-matters most. Strictly more accurate information at zero cost. It has to help.
-
-It lost five and a half points.
+So the same knowledge, delivered two ways, is worth minus five points or plus five
+points. Here is the mechanism, which took a while to believe.
 
 <ZoomImage src="/images/posts/ml4-pinned.png" alt="Two-panel bar chart. Left: search agents given the true deck or true opponent hand score below the genuinely blind agent (46.5% and 48.9% vs 52.1%). Right: the same knowledge trained into the encoder beats a matched control 55.0%." caption="The same knowledge, delivered two ways. Injected into the search's imagined worlds, it subtracts; learned by the network, it adds." />
 
-The genuinely blind searcher won 52.1% of its games against the heuristic. Handed
-the true opponent hand, the same searcher won 46.5%. Handed the true deck order
-instead, 48.9%. Every flavor of truth made it worse, and the opponent's hand, the
-most valuable-looking secret at the table, made it worst of all.
+The strength of a determinizing search *lives in the variety of its guesses*.
+Averaging over many imagined worlds forces the agent toward moves that are good
+against the whole cloud of hands the opponent might hold, which is another way of
+saying it hedges. Pin one world as the truth and the hedge collapses: the search
+happily commits to lines that exploit that exact hand, played by a network that
+never learned what to do with such certainty. Its every judgment about a position
+was formed under uncertainty; handed certainty, it is off the edge of its own
+experience, confidently wrong in a direction it was never trained to recognize.
+The averaging was not a workaround for missing information. It was load-bearing.
 
-The mechanism took a while to believe. The strength of a determinizing search
-*lives in the variety of its guesses*. Averaging over many imagined worlds forces
-the agent toward moves that are good against the whole cloud of hands the opponent
-might hold, which is another way of saying it hedges. Pin one world as the truth
-and the hedge collapses: the search happily commits to lines that exploit that
-exact hand, played by a network that never learned what to do with such
-certainty. The averaging was not a workaround for missing information. It was
-load-bearing.
-
-So the same knowledge, delivered two ways, is worth minus five points or plus five
-points. Injected into the search's imagination, it breaks the machinery. Baked
-into the network's observation, where thousands of training games can shape what
-to *do* with it, it is the biggest single gain since the pointer head. That night's
-note in the journal reads: value must be trained in, not pinned. It is the closest
-thing to a moral this project has.
+Written into the observation, the knowledge meets a network that is *trained on
+it*. Thousands of games teach the value head what a known diamond in the
+opponent's hand is worth, and teach the policy when to race and when to hold. The
+knowledge shapes judgment instead of overriding it. That night's note in the
+journal reads: value must be trained in, not pinned. It is the closest thing to a
+moral this project has, and I suspect it is not specific to card games. Anyone
+who has bolted an oracle onto a learned system, and watched it get worse, has run
+this experiment.
 
 ## Nothing left to imitate
 
