@@ -1,0 +1,260 @@
+---
+// The observation, three versions: the same table encoded by the count
+// encoder (v1), the composition encoder (v2), and perfect recall (v3). Every
+// variant is rendered and overlaid so the rows never reflow; the width band
+// carries the real Jaipur observation widths (41 / 78 / 85).
+const CARD_COLORS: Record<string, string> = {
+	diamond: '#7aa7d4',
+	gold: '#d9a441',
+	cloth: '#b06fa0',
+	spice: '#c96f4a',
+	leather: '#9b8360',
+	camel: '#c2a171',
+};
+const MARKET_KINDS = [['diamond', 1], ['gold', 1], ['cloth', 1], ['spice', 1], ['camel', 1]] as const;
+const HAND_KINDS = [['gold', 1], ['cloth', 2], ['spice', 1], ['leather', 1]] as const;
+const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3], ['your tokens', 6], ['their tokens', 4]] as const;
+---
+
+<figure class="obd">
+	<div class="orow">
+		<span class="olbl">the market</span>
+		<span class="cell">
+			<span class="variant v1"><span class="chip">cards: 5</span></span>
+			<span class="variant v2">
+				{MARKET_KINDS.map(([k, n]) => (
+					<span class="chip kind" style={`--cc:${CARD_COLORS[k]}`}>{k}: {n}</span>
+				))}
+			</span>
+		</span>
+	</div>
+
+	<div class="orow">
+		<span class="olbl">your hand</span>
+		<span class="cell">
+			<span class="variant v1"><span class="chip">cards: 5</span></span>
+			<span class="variant v2">
+				{HAND_KINDS.map(([k, n]) => (
+					<span class="chip kind" style={`--cc:${CARD_COLORS[k]}`}>{k}: {n}</span>
+				))}
+			</span>
+		</span>
+	</div>
+
+	<div class="orow">
+		<span class="olbl">their hand</span>
+		<span class="cell">
+			<span class="variant v1 v2only"><span class="chip dim">cards: 5</span></span>
+			<span class="variant v3">
+				<span class="chip kind" style={`--cc:${CARD_COLORS.diamond}`}>diamond: 1</span>
+				<span class="chip dim">unknown: 4</span>
+			</span>
+		</span>
+	</div>
+
+	<div class="orow rest">
+		<span class="olbl">the rest</span>
+		<span class="cell">
+			<span class="variant on">
+				{REST.map(([k, n]) => (
+					<span class="chip dim">{k}: {n}</span>
+				))}
+			</span>
+		</span>
+	</div>
+
+	<div class="wband">
+		<span class="wchip w1">41 numbers</span>
+		<span class="wchip w2">78 numbers</span>
+		<span class="wchip w3">85 numbers</span>
+	</div>
+
+	<div class="obd-controls">
+		<button class="obd-back" type="button">&larr; Back</button>
+		<span class="obd-count"></span>
+		<button class="obd-next" type="button">Next &rarr;</button>
+	</div>
+
+	<figcaption class="obd-caption" aria-live="polite"></figcaption>
+</figure>
+
+<style>
+	.obd {
+		margin: 1.5rem 0 0.5rem;
+		padding: 1.2rem 1.2rem 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+	}
+	.orow {
+		display: grid;
+		grid-template-columns: 6.2em 1fr;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.35rem 0;
+		border-bottom: 1px dashed rgb(var(--gray-light));
+	}
+	.orow.rest {
+		border-bottom: none;
+	}
+	.olbl {
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+	}
+	.cell {
+		display: grid;
+		align-items: center;
+		min-height: 2.6em;
+	}
+	.variant {
+		grid-area: 1 / 1;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+		visibility: hidden;
+	}
+	.variant.on {
+		visibility: visible;
+	}
+	.chip {
+		padding: 0.26em 0.55em;
+		border-radius: 7px;
+		border: 1.5px solid rgb(var(--gray-light));
+		background: #fff;
+		font-size: 0.72rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: rgb(var(--gray-dark));
+		white-space: nowrap;
+	}
+	.chip.dim {
+		color: rgb(var(--gray));
+		font-weight: 600;
+	}
+	.chip.kind {
+		border-color: var(--cc);
+		background: color-mix(in srgb, var(--cc) 14%, white);
+	}
+	/* step 1: counts everywhere */
+	.obd:not(.s2):not(.s3) .variant.v1 { visibility: visible; }
+	/* step 2: composition for zones you may see; their hand still a count */
+	.obd.s2 .variant.v2 { visibility: visible; }
+	.obd.s2 .variant.v2only { visibility: visible; }
+	/* step 3: perfect recall on their hand */
+	.obd.s3 .variant.v2 { visibility: visible; }
+	.obd.s3 .variant.v3 { visibility: visible; }
+	.wband {
+		display: grid;
+		margin-top: 0.7rem;
+		justify-items: center;
+	}
+	.wchip {
+		grid-area: 1 / 1;
+		padding: 0.3em 0.9em;
+		border-radius: 999px;
+		border: 1.5px solid var(--accent);
+		background: #eef1ff;
+		font-size: 0.78rem;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		visibility: hidden;
+	}
+	.obd:not(.s2):not(.s3) .w1,
+	.obd.s2 .w2,
+	.obd.s3 .w3 {
+		visibility: visible;
+	}
+	.obd-controls {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.obd-controls button {
+		font: inherit;
+		font-size: 0.9rem;
+		padding: 0.35em 1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		background: #fff;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+	}
+	.obd-controls button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.obd-controls button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.obd-count {
+		font-size: 0.85rem;
+		color: rgb(var(--gray));
+		min-width: 3.5em;
+		text-align: center;
+	}
+	.obd-caption {
+		min-height: 120px; /* measured: tallest caption at 1280 and 800; re-measure if captions change */
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+</style>
+
+<script>
+	type Step = { caption: string; cls: string[] };
+
+	const STEPS: Step[] = [
+		{
+			caption:
+				'Version one, the count encoder: one number per zone, forty-one numbers for the whole of Jaipur. It was enough to beat a random opponent every game. It also cannot see which cards are in the market, or which it holds itself: only how many. Part 2 postponed that question on purpose. This is where it comes due.',
+			cls: [],
+		},
+		{
+			caption:
+				'Version two, composition: for every zone this seat is entitled to see, one number per card kind. Seventy-eight numbers. The market and your own hand come into focus, so the agent can tell a market that completes its cloth set from one that does not. The opponent\'s hand is still a single count, because that is all the projection permits.',
+			cls: ['s2'],
+		},
+		{
+			caption:
+				'Version three, perfect recall: the opponent\'s hand splits into the kinds you watched arrive plus one number for the unknown remainder. Eighty-five numbers. The projection consults the record of public knowledge for owner zones that are not yours, and the encoder reads whatever the projection hands it. Nothing else changed.',
+			cls: ['s3'],
+		},
+	];
+
+	document.querySelectorAll<HTMLElement>('.obd').forEach((root) => {
+		const back = root.querySelector<HTMLButtonElement>('.obd-back')!;
+		const next = root.querySelector<HTMLButtonElement>('.obd-next')!;
+		const count = root.querySelector('.obd-count')!;
+		const caption = root.querySelector('.obd-caption')!;
+		const ALL = ['s2', 's3'];
+		let i = 0;
+
+		const render = () => {
+			const s = STEPS[i];
+			ALL.forEach((c) => root.classList.remove(c));
+			s.cls.forEach((c) => root.classList.add(c));
+			caption.textContent = s.caption;
+			count.textContent = `${i + 1} / ${STEPS.length}`;
+			back.disabled = i === 0;
+			next.disabled = i === STEPS.length - 1;
+		};
+
+		back.addEventListener('click', () => {
+			if (i > 0) i -= 1;
+			render();
+		});
+		next.addEventListener('click', () => {
+			if (i < STEPS.length - 1) i += 1;
+			render();
+		});
+		render();
+	});
+</script>

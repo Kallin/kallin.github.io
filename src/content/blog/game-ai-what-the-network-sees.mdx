@@ -11,6 +11,7 @@ seriesOrder: 4
 
 import Concept from '../../components/Concept.astro';
 import PerspectiveDemo from '../../components/PerspectiveDemo.astro';
+import ObsDemo from '../../components/ObsDemo.astro';
 import RecallDemo from '../../components/RecallDemo.astro';
 import ZoomImage from '../../components/ZoomImage.astro';
 
@@ -48,6 +49,13 @@ of the table.
 
 </Concept>
 
+The projection is not a metaphor. It is one function, and it is the only door.
+Everything that plays a seat, the encoder and the search alike, reads the game
+through it and never touches the raw state. That is what makes the boundary
+maintainable: there is exactly one place where "what does this seat know" gets
+decided, a suite of perspective tests asserts that nothing crosses it, and every
+improvement in this post is a change to what that one function hands out.
+
 ## Knowing less than a player
 
 The first agents in this series knew less than a player in a way that is easy to
@@ -58,19 +66,38 @@ opponent every time, and it is much less than a person knows, because a person
 knows *which* five cards.
 
 I had a growing suspicion that this kind of gap, not the network's size or its
-training, was where the missing strength lived. The suspicion is testable with the
-experiment design I trust most: isolate one lever at a time and pull. Lever one,
-capacity: the same agent with a network four times larger. Nothing. Lever two,
-optimization: the same agent trained considerably longer, against a league of its
-own past versions. Nothing. Lever three, information: the same network, the same
-training, and an encoder that reports the *composition* of every zone the seat is
-entitled to see. Not "the market holds five cards" but "the market holds two
-cloth, a diamond, a spice, and a camel."
+training, was where the missing strength lived. Closing it meant changing what the
+projection hands out and what the encoder makes of it, and it happened in steps.
+
+<Concept title="The observation, three versions">
+
+Part 2 turned the table into a row of numbers. Here is that row, built three ways
+from the same table by three versions of the encoder. Each version is strictly
+wider than the last, and every widening is information the seat was always
+entitled to; nothing here crosses the boundary from the first block.
+
+<ObsDemo />
+
+</Concept>
+
+The suspicion is testable with the experiment design I trust most: isolate one
+lever at a time and pull. Lever one, capacity: the same agent with a network four
+times larger. Nothing. Lever two, optimization: the same agent trained
+considerably longer, against a league of its own past versions. Nothing. Lever
+three, information: the same network, the same training, and the version-two
+observation in place of the count encoder.
 
 The new agent beat the old champion in 60.3% of 1,200 seat-balanced games,
 confidence interval 57.5 to 63.1. Two nulls and a hit.
 
 <ZoomImage src="/images/posts/ml4-levers.png" alt="Bar chart of three experiments: a bigger network and more training both land on the 50% line (null), while the richer v2 observation wins 60.3% with a confidence interval of 57.5 to 63.1." caption="Same network, same training recipe in every arm. Only the third arm changed what the agent could see." />
+
+What the extra thirty-seven numbers bought is concrete. Under the count encoder
+the agent knew it held five cards and the market held five, and nothing about
+which. Whether the cards in front of it made a set worth selling, whether the
+market offered the one it needed: invisible. With composition, set-building and
+selling stop being guesses. Ten points, for finally seeing the game it was
+playing.
 
 That closed most of the gap between the agent and a player. Not all of it. There
 is a kind of knowledge that is not visible *anywhere* on the table right now, and
