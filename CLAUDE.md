@@ -46,6 +46,13 @@ The series plan, post outlines, era mapping, and full conventions live in
   `src/assets/`, `draft: false`, build green, selective `git add` (see below), push
   only on explicit go-ahead, then Search Console → Request Indexing for the new URL.
 
+**No calendar dates in narration, and no Board Game Arena.** Posts do not say "in
+early July" or "back in June"; sequence is carried by "earlier", "by then", "the
+night the result came in". And the BGA advisor is never mentioned as the impetus
+for anything, even where the archive records it that way (it can irk people). When
+the story needs a human at the table, the human is the author playing the agent
+directly (user direction, 2026-09-21, post 4).
+
 ## Do not commit
 
 The stale drafts from the superseded plan now live OUTSIDE the content collection, in
