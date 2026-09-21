@@ -15,8 +15,18 @@ import ObsDemo from '../../components/ObsDemo.astro';
 import RecallDemo from '../../components/RecallDemo.astro';
 import ZoomImage from '../../components/ZoomImage.astro';
 
-There is a right amount for a game-playing AI to know, and it turns out to be
-exactly what a person sitting across the table knows. Not less, which is the
+By early July the agent had left the lab. I had wired it up as an advisor for
+real games against real people on Board Game Arena, and it was losing close games
+to good players. Watching those losses is what started this post. The agent kept
+recommending moves that no attentive person would make, and when I traced one
+back, the problem was not judgment. It was knowledge. My opponent had taken goods
+off the market in plain view, and the agent advising me had no idea those cards
+were in their hand.
+
+That sent me back to a question I had been circling since June: what does this
+agent actually know, compared to a person sitting in its chair? The answer has a
+shape I did not expect. There is a right amount for a game-playing AI to know,
+and it turns out to be exactly what that person knows. Not less, which is the
 mistake everyone expects. And not more, which is the mistake I did not.
 
 I found the boundary by overshooting it in both directions. An agent that knew
@@ -65,9 +75,11 @@ holds four. That is enough to play, in the sense that the agent beat a random
 opponent every time, and it is much less than a person knows, because a person
 knows *which* five cards.
 
-I had a growing suspicion that this kind of gap, not the network's size or its
-training, was where the missing strength lived. Closing it meant changing what the
-projection hands out and what the encoder makes of it, and it happened in steps.
+The first evidence had arrived back in June, when the first champion stopped
+improving no matter how long the league ran. I had a growing suspicion that this
+kind of gap, not the network's size or its training, was where the missing
+strength lived. Closing it meant changing what the projection hands out and what
+the encoder makes of it, and it happened in steps.
 
 <Concept title="The observation, three versions">
 
@@ -99,9 +111,10 @@ market offered the one it needed: invisible. With composition, set-building and
 selling stop being guesses. Ten points, for finally seeing the game it was
 playing.
 
-That closed most of the gap between the agent and a player. Not all of it. There
-is a kind of knowledge that is not visible *anywhere* on the table right now, and
-is still legitimately yours, because you watched it happen.
+That closed most of the gap between the agent and a player. Not all of it, and
+the Board Game Arena games are what exposed the rest. There is a kind of
+knowledge that is not visible *anywhere* on the table right now, and is still
+legitimately yours, because you watched it happen.
 
 Play Jaipur against a person and take the diamond from the market. Your hand is
 hidden, but your opponent knows the diamond is in it. They saw you take it. Nobody
@@ -125,6 +138,14 @@ cards you watched arrive, plus a count of the rest. Not "five unknown cards" but
 <RecallDemo />
 
 </Concept>
+
+I wrote the rule down before any code existed, as a player would state it. The
+opening deal comes from a face-down deck and stays hidden. Every card taken off
+the market was face up when it was grabbed and stays known for as long as it is
+in that hand. A reshuffle forgets everything. Then the engine got a primitive that
+enforces exactly that, the projection learned to consult it for hands that are
+not yours, and the encoder gained the slots in the demo above. The slots, as it
+happened, already existed in the schema. They had simply never been filled.
 
 Trained head to head against a control with the identical recipe and only the
 encoder changed, the perfect-recall agent won 55.0% of games, interval 51.9 to
