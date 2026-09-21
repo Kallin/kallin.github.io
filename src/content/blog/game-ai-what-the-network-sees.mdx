@@ -15,15 +15,13 @@ import ObsDemo from '../../components/ObsDemo.astro';
 import RecallDemo from '../../components/RecallDemo.astro';
 import ZoomImage from '../../components/ZoomImage.astro';
 
-By early July the agent had left the lab. I had wired it up as an advisor for
-real games against real people on Board Game Arena, and it was losing close games
-to good players. Watching those losses is what started this post. The agent kept
-recommending moves that no attentive person would make, and when I traced one
-back, the problem was not judgment. It was knowledge. My opponent had taken goods
-off the market in plain view, and the agent advising me had no idea those cards
-were in their hand.
+What started this post was sitting down to play against the agent myself, as
+the human across the table. It kept making moves that no attentive person would
+make, and when I traced one back, the problem was not judgment. It was knowledge.
+I had taken goods off the market in plain view, and the agent had no idea those
+cards were in my hand.
 
-That sent me back to a question I had been circling since June: what does this
+That sent me back to a question I had been circling for a while: what does this
 agent actually know, compared to a person sitting in its chair? The answer has a
 shape I did not expect. There is a right amount for a game-playing AI to know,
 and it turns out to be exactly what that person knows. Not less, which is the
@@ -75,7 +73,7 @@ holds four. That is enough to play, in the sense that the agent beat a random
 opponent every time, and it is much less than a person knows, because a person
 knows *which* five cards.
 
-The first evidence had arrived back in June, when the first champion stopped
+The first evidence had arrived earlier, when the first champion stopped
 improving no matter how long the league ran. I had a growing suspicion that this
 kind of gap, not the network's size or its training, was where the missing
 strength lived. Closing it meant changing what the projection hands out and what
@@ -112,7 +110,7 @@ selling stop being guesses. Ten points, for finally seeing the game it was
 playing.
 
 That closed most of the gap between the agent and a player. Not all of it, and
-the Board Game Arena games are what exposed the rest. There is a kind of
+my own games against it are what exposed the rest. There is a kind of
 knowledge that is not visible *anywhere* on the table right now, and is still
 legitimately yours, because you watched it happen.
 
