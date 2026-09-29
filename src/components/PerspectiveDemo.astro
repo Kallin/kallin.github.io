@@ -268,22 +268,22 @@ const YOU_STATS = [
 	const STEPS: Step[] = [
 		{
 			caption:
-				'A Jaipur table from your chair. You see your own cards, the market, and, across the table, a row of card backs. But not only backs: you also see how many cards your opponent holds, how many camels they have gathered, how many tokens they have banked. Those numbers are not secrets. They are sitting in plain view.',
+				'From your chair, your own cards are visible and your opponent\'s cards are face down. Both players can count the cards, camels and banked tokens.',
 			cls: [],
 		},
 		{
 			caption:
-				'The same table from the other chair. Everything flips: their cards are faces now and yours are backs. Notice what did not flip. The market, both sets of counts, both token piles: the middle of the table looks identical from either seat.',
+				'From the other chair, the private views reverse. The market and all the counts stay the same.',
 			cls: ['seat2'],
 		},
 		{
 			caption:
-				'That unchanging middle is the public layer, and it is what a spectator sees: every count, every token, every face-up card, and no hand identities at all. A hidden-information game is exactly two private views laid over one shared one. The whole question of "what should the agent know" is the question of where each seat\'s private view ends.',
+				'A spectator sees the shared table, but neither private hand. This opening position has no previously revealed hand cards to remember.',
 			cls: ['pub'],
 		},
 		{
 			caption:
-				'The engine draws that line with a contract. Every zone declares who may see its contents. A projection then builds each seat\'s observation by walking the zones: full contents where that seat is entitled, count only where it is not. Counts are public everywhere, in every card game ever printed. Identities are the game.',
+				'Each zone declares who may see its contents. The engine uses those declarations to build the player\'s view: visible cards where permitted, counts where identities are hidden.',
 			cls: ['pub', 'legend-on'],
 		},
 	];

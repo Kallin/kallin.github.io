@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f7fc"/>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <text x="72" y="66" font-size="24" fill="#6b7684">kallin.github.io · Game AI, Part 4</text>
+    <text x="72" y="158" font-size="58" font-weight="700" fill="#1f2d3d">Exactly What a Player Knows</text>
+    <text x="72" y="211" font-size="30" fill="#6b7684">Hidden does not have to mean forgotten.</text>
+    <g stroke="#9aa5b1" stroke-width="2">
+      <rect x="272" y="285" width="112" height="154" rx="12" fill="#eaf1f7" stroke="#2e5f8b"/>
+      <rect x="408" y="285" width="112" height="154" rx="12" fill="#e5e8f0"/>
+      <rect x="544" y="285" width="112" height="154" rx="12" fill="#e5e8f0"/>
+      <rect x="680" y="285" width="112" height="154" rx="12" fill="#e5e8f0"/>
+      <rect x="816" y="285" width="112" height="154" rx="12" fill="#e5e8f0"/>
+    </g>
+    <path d="M328 321 L355 361 L328 401 L301 361 Z" fill="#7aa7d4"/>
+    <g font-size="54" fill="#9aa5b1" text-anchor="middle">
+      <text x="464" y="380">?</text><text x="600" y="380">?</text>
+      <text x="736" y="380">?</text><text x="872" y="380">?</text>
+    </g>
+    <text x="600" y="492" text-anchor="middle" font-size="28" fill="#2e5f8b">One remembered diamond. Four unknown cards.</text>
+    <text x="600" y="566" text-anchor="middle" font-size="25" fill="#6b7684">What an agent can see, remember, and learn to use.</text>
+  </g>
+</svg>

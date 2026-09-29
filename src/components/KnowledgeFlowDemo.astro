@@ -1,0 +1,75 @@
+---
+// Step 4 shows the required knowledge boundary, not an implemented capability.
+---
+<figure class="kfd">
+  <div class="stage">Before the take</div>
+  <div class="zones">
+    <div class="zone"><span class="label">Public container</span><span class="example public-name">Market</span><span class="pieces public">diamond</span></div>
+    <div class="route" aria-hidden="true">&rarr;</div>
+    <div class="zone"><span class="label">Private container</span><span class="example">Opponent's hand</span><span class="pieces hand">4 unknown</span></div>
+    <div class="route" aria-hidden="true">&middot;</div>
+    <div class="zone"><span class="label">Hidden container</span><span class="example">Face-down pile</span><span class="pieces hidden-pile">empty</span></div>
+  </div>
+  <div class="knowledge"><span class="label">What the observer knows</span><span class="belief">The diamond is in the public container.</span></div>
+  <div class="boundary">Implemented for watched takes and public exits</div>
+  <div class="controls">
+    <button class="kfd-back" type="button">&larr; Back</button><span class="count">1 / 4</span><button class="kfd-next" type="button">Next &rarr;</button>
+  </div>
+  <figcaption class="caption" aria-live="polite">The diamond is face up. The opponent's four starting cards were dealt unseen, so their identities remain unknown.</figcaption>
+</figure>
+<style>
+  .kfd { margin: 1.5rem 0 .5rem; padding: 1.2rem; border: 1px solid rgb(var(--gray-light)); border-radius: 14px; }
+  .stage { font-weight: 700; margin-bottom: 1rem; min-height: 2.5em; font-size: .95rem; }
+  .zones { display: grid; grid-template-columns: minmax(0,1fr) 1rem minmax(0,1fr) 1rem minmax(0,1fr); gap: .3rem; align-items: center; }
+  .zone { border: 1px solid rgb(var(--gray-light)); border-radius: 8px; padding: .65rem .45rem; align-self: stretch; background: #fff; }
+  .label { display: block; font-size: .72rem; font-weight: 700; color: rgb(var(--gray)); }
+  .example { display: block; min-height: 3em; font-size: .78rem; margin: .25rem 0 .6rem; }
+  .pieces { display: flex; align-items: center; justify-content: center; min-height: 4.5em; padding: .3em; border-radius: 5px; background: #eef3f9; color: rgb(var(--gray-dark)); font-size: .83rem; font-weight: 600; text-align: center; white-space: pre-line; }
+  .route { text-align: center; color: rgb(var(--gray)); }
+  .knowledge { border-top: 1px solid rgb(var(--gray-light)); padding-top: .8rem; margin-top: 1rem; }
+  .belief { display: block; font-size: .95rem; min-height: 3.2em; margin-top: .3rem; }
+  .boundary { min-height: 3em; font-size: .78rem; color: rgb(var(--gray)); }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 1rem; padding-top: .6rem; border-top: 1px solid rgb(var(--gray-light)); }
+  .controls button { font: inherit; font-size: .9rem; padding: .35em 1em; border: 1px solid rgb(var(--gray-light)); border-radius: 999px; background: #fff; color: rgb(var(--gray-dark)); cursor: pointer; }
+  .controls button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .controls button:disabled { opacity: .35; cursor: default; }
+  .count { font-size: .85rem; color: rgb(var(--gray)); min-width: 3.5em; text-align: center; }
+  .caption { min-height: 100px; margin-top: .6rem; font-size: .95rem; line-height: 1.45; color: rgb(var(--gray-dark)); }
+  @media (max-width: 540px) {
+    .kfd { padding: .7rem; }
+    .stage { min-height: 5.1em; }
+    .zones { grid-template-columns: 1fr; }
+    .zone { display: grid; grid-template-columns: 1fr 1fr; column-gap: .5rem; min-height: 110px; box-sizing: border-box; }
+    .example { min-height: 0; margin: .2rem 0 0; }
+    .pieces { grid-column: 2; grid-row: 1 / 3; min-height: 3em; }
+    .route { transform: rotate(90deg); line-height: 1; }
+    .belief { min-height: 6.8em; }
+    .boundary { min-height: 5.1em; }
+    .controls { gap: .4rem; }
+    .controls button { padding: .35em .5em; white-space: nowrap; }
+    .caption { min-height: 200px; }
+  }
+</style>
+<script>
+  const knowledgeSteps = [
+    { stage: 'Before the take', publicName: 'Market', public: 'diamond', hand: '4 unknown', hidden: 'empty', arrows: ['\u2192','\u00b7'], belief: 'The diamond is in the public container.', boundary: 'Implemented for watched takes and public exits', caption: "The diamond is face up. The opponent's four starting cards were dealt unseen, so their identities remain unknown." },
+    { stage: 'A watched take: public to private', publicName: 'Market', public: 'empty', hand: '1 diamond\n4 unknown', hidden: 'empty', arrows: ['\u2192','\u00b7'], belief: 'The diamond is now in the hand. The other four cards are still unknown.', boundary: 'Implemented for watched takes and public exits', caption: 'You saw which card moved. The tracker preserves its identity in the private hand without revealing the cards dealt unseen.' },
+    { stage: 'A public exit: private to public', publicName: 'Face-up discard', public: 'diamond', hand: '4 unknown', hidden: 'empty', arrows: ['\u2190','\u00b7'], belief: 'The diamond has left the hand. You can see it in the public discard.', boundary: 'Implemented for watched takes and public exits', caption: 'A visible exit removes the card from the known contents of the hand. In Jaipur a sale reveals the goods sold; this diagram isolates one card from that move.' },
+    { stage: 'Alternative: a face-down exit', publicName: 'Market', public: 'empty', hand: '4 cards\ndiamond?', hidden: '1 card\ndiamond?', arrows: ['\u00b7','\u2192'], belief: 'The diamond is in the hand OR the hidden pile. You cannot tell which.', boundary: 'Required behavior, not supported by the original tracker', caption: 'Return to the five-card hand from step 2. In a game allowing face-down discards, one card leaves unseen. The observer must get the same information whether it was the diamond or another card.' },
+  ];
+  document.querySelectorAll<HTMLElement>('.kfd').forEach((root) => {
+    let i = 0;
+    const back = root.querySelector<HTMLButtonElement>('.kfd-back')!;
+    const next = root.querySelector<HTMLButtonElement>('.kfd-next')!;
+    const set = (name: string, value: string) => { root.querySelector(`.${name}`)!.textContent = value; };
+    const render = () => {
+      const s = knowledgeSteps[i];
+      set('stage', s.stage); set('public-name', s.publicName); set('public', s.public); set('hand', s.hand); set('hidden-pile', s.hidden); set('belief', s.belief); set('boundary', s.boundary); set('caption', s.caption); set('count', `${i + 1} / ${knowledgeSteps.length}`);
+      root.querySelectorAll('.route').forEach((el, j) => { el.textContent = s.arrows[j]; });
+      back.disabled = i === 0; next.disabled = i === knowledgeSteps.length - 1;
+    };
+    back.addEventListener('click', () => { if (i > 0) i--; render(); });
+    next.addEventListener('click', () => { if (i < knowledgeSteps.length - 1) i++; render(); });
+    render();
+  });
+</script>

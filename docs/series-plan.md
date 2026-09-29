@@ -23,6 +23,12 @@ best material in the era.
 These were established during Parts 1-2 review and are not up for renegotiation
 per-post.
 
+**No invented autobiography.** Follow `CLAUDE.md`'s author-experience rule:
+documented results do not establish the author's thoughts or a specific discovery
+scene. Keep observed behavior, inspection findings and experimental conclusions
+distinct unless the records or Kallin explicitly connect them. Omitting a platform
+must not turn an advisor session into a fictional game against the author.
+
 **Voice: field notes, written from inside the moment.** The narrator does not know
 what happens next. Two banned shapes, and the second one keeps slipping through:
 
@@ -212,6 +218,64 @@ on "here is a bug I found" — the transferable claim ("what a model can learn i
 by how you let it answer") is what earns a repost.
 
 ### 4. Exactly What a Player Knows — DRAFTED, awaiting the user's read
+**User-directed structure, latest pass 2026-09-29:** the central claim is the
+player's knowledge boundary, including memory, not a proven information optimum.
+Sequence: odd moves -> check available information -> retain watched cards ->
+explain knowledge through generic containers -> distinguish secrets from recall ->
+finish with behavior and the paired win result. Compressed the earlier composition
+encoder story to context; removed its demo and the oracle chart from this post,
+without deleting their assets. `KnowledgeFlowDemo` replaces `RecallDemo` here.
+The recorded behavior is 29% goods takes versus 25% (training-performance.md,
+Lever 2; action-mix denominator verified in tools/head2head_xv.py). Denial and
+racing are illustrative interpretations, not replay-established tactics.
+
+**Important boundary correction:** the face-down private-to-private example is
+NOT safely handled by the original revealed-set tracker. The engine visibility
+doc's Gap 2 and move_component maintenance show ground-truth-dependent removal
+can disclose which card moved. Diagram step 4 is explicitly a requirement, not
+a shipped feature; prose calls this a limit rather than narrating the later bug
+discovery as an earlier event. This supersedes any broad "forgetting is safe"
+claim below. The oracle experiment was at decision time, not privileged training.
+The memory description is scoped to these feed-forward Jaipur experiments,
+not all later Grimoire architectures.
+Verified all four new diagram steps at 1280, 800 and 390 pixels: fixed figure
+height and button position at each width, no internal horizontal overflow.
+The production build passes; the unpublished draft is verified in the dev preview.
+
+**Finishing pass 2026-09-29:** preserved the title, Jaipur scope and three stepped
+demos. Removed the unsupported addition of separate 60.3% and 55.0% comparisons
+into a fifteen-point gain. The player boundary is a fairness contract, not an
+experimentally established optimum; oracle-search explanations are hypotheses.
+Restored the earlier clone-search chronology, decisive-game denominator for recall,
+and uncertainty around the oracle comparison. Removed the lever chart from the
+post because its qualitative nulls were drawn as exact 50% measurements. The
+image asset is preserved. Draft remains unpublished; set the date only at release.
+These corrections supersede the stronger thesis in the historical planning below.
+
+**Opening provenance correction, same day:** Kallin remembers watching moves
+that did not make sense, not identifying forgotten cards from a particular move.
+Grimoire commit `c0cd0418` and `archive/training-performance.md`'s endgame-slip
+entry record a policy error with the relevant inputs present; the recall spec
+(`cdf4f881`, now `archive/jaipur-strength-levers-spec.md`, Lever 2) separately
+records inspecting the encoded hand and finding watched-card identities absent.
+Blog commit `8bc67dc` joined these into a specific discovery scene; `d8e99e0`
+changed the setting but retained that unsupported link. The revised opening
+separates observed behavior from the two findings, without naming the platform.
+
+**Clarity pass, same day:** at Kallin's request, cut the main prose from roughly
+1,700 to 900 words (excluding demo captions), removed the opening thesis/reversal
+preview, and shortened all twelve demo captions. Retained the three interactive
+examples and the distinct experiment comparisons, with a short uncertainty note.
+Replaced the misleading knowledge-optimum social card with a remembered-diamond
+illustration (`game-ai-4-recall-og.svg` and its PNG). All demo states retain stable
+height and button position at 1280 and 800 pixels. Production build passes;
+the draft itself was checked in dev and remains excluded from publication.
+
+**Demo sequencing correction:** the early observation demo now compares only
+v1 counts with v2 composition. V3 and its 85-number observation are introduced
+in the recall demo, after the missing-memory problem is explained. The previous
+three-version preview revealed that solution before its section motivated it.
+
 **Reframed 2026-09-03.** The first two drafts (as "What the Network Sees", then "The
 Answers Made It Worse") had no point of their own: half restated post 3's
 representation-over-capacity thesis, half previewed post 5's search mechanics, and the

@@ -16,6 +16,14 @@ The series plan, post outlines, era mapping, and full conventions live in
 [`docs/series-plan.md`](docs/series-plan.md) — read it before touching any
 `game-ai-*` post. The non-negotiables, distilled:
 
+- **Do not invent the author's experience.** Reconstruct findings from experiment
+  logs and git history, but do not turn them into unverified thoughts, feelings,
+  dialogue, particular games or "aha" moments. Separate what Kallin noticed from
+  what inspection or experiments established. Two documented findings do not
+  establish a causal discovery story connecting them. Existing drafts and their
+  commit messages are not independent evidence that a scene happened. If the
+  connection is unknown, omit it or ask; use Kallin's stated recollection where
+  available. Field-notes voice is a style, not permission to fictionalize.
 - **Field-notes voice.** Each post narrates from inside its moment, and the narrator
   does not know what happens next. This bans two shapes, not one:
   - *Backward leaks* — knowledge from later eras. "It turned out", "I would later
@@ -49,9 +57,11 @@ The series plan, post outlines, era mapping, and full conventions live in
 **No calendar dates in narration, and no Board Game Arena.** Posts do not say "in
 early July" or "back in June"; sequence is carried by "earlier", "by then", "the
 night the result came in". And the BGA advisor is never mentioned as the impetus
-for anything, even where the archive records it that way (it can irk people). When
-the story needs a human at the table, the human is the author playing the agent
-directly (user direction, 2026-09-21, post 4).
+for anything, even where the archive records it that way (it can irk people).
+Omit the platform or describe watching the agent's moves without naming it.
+Do not replace an omitted setting with an invented game against the author;
+use that framing only when Kallin confirms it actually happened (clarified
+2026-09-29 after the post 4 opening correction).
 
 ## Do not commit
 

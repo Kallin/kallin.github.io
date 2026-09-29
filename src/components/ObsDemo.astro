@@ -1,8 +1,8 @@
 ---
-// The observation, three versions: the same table encoded by the count
-// encoder (v1), the composition encoder (v2), and perfect recall (v3). Every
+// The same table encoded by counts (v1) and card composition (v2). Every
 // variant is rendered and overlaid so the rows never reflow; the width band
-// carries the real Jaipur observation widths (41 / 78 / 85).
+// carries the real Jaipur observation widths (41 / 78).
+// Recall is introduced separately in RecallDemo, after its motivating example.
 const CARD_COLORS: Record<string, string> = {
 	diamond: '#7aa7d4',
 	gold: '#d9a441',
@@ -45,10 +45,6 @@ const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3],
 		<span class="olbl">their hand</span>
 		<span class="cell">
 			<span class="variant v1 v2only"><span class="chip dim">cards: 5</span></span>
-			<span class="variant v3">
-				<span class="chip kind" style={`--cc:${CARD_COLORS.diamond}`}>diamond: 1</span>
-				<span class="chip dim">unknown: 4</span>
-			</span>
 		</span>
 	</div>
 
@@ -66,7 +62,6 @@ const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3],
 	<div class="wband">
 		<span class="wchip w1">41 numbers</span>
 		<span class="wchip w2">78 numbers</span>
-		<span class="wchip w3">85 numbers</span>
 	</div>
 
 	<div class="obd-controls">
@@ -138,13 +133,10 @@ const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3],
 		background: color-mix(in srgb, var(--cc) 14%, white);
 	}
 	/* step 1: counts everywhere */
-	.obd:not(.s2):not(.s3) .variant.v1 { visibility: visible; }
+	.obd:not(.s2) .variant.v1 { visibility: visible; }
 	/* step 2: composition for zones you may see; their hand still a count */
 	.obd.s2 .variant.v2 { visibility: visible; }
 	.obd.s2 .variant.v2only { visibility: visible; }
-	/* step 3: perfect recall on their hand */
-	.obd.s3 .variant.v2 { visibility: visible; }
-	.obd.s3 .variant.v3 { visibility: visible; }
 	.wband {
 		display: grid;
 		margin-top: 0.7rem;
@@ -161,9 +153,8 @@ const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3],
 		color: rgb(var(--gray-dark));
 		visibility: hidden;
 	}
-	.obd:not(.s2):not(.s3) .w1,
-	.obd.s2 .w2,
-	.obd.s3 .w3 {
+	.obd:not(.s2) .w1,
+	.obd.s2 .w2 {
 		visibility: visible;
 	}
 	.obd-controls {
@@ -214,18 +205,13 @@ const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3],
 	const STEPS: Step[] = [
 		{
 			caption:
-				'Version one, the count encoder: one number per zone, forty-one numbers for the whole of Jaipur. It was enough to beat a random opponent every game. It also cannot see which cards are in the market, or which it holds itself: only how many. Part 2 postponed that question on purpose. This is where it comes due.',
+				'Version one: 41 numbers. Card groups are reduced to counts. Five cards in your hand look the same regardless of which kinds you hold.',
 			cls: [],
 		},
 		{
 			caption:
-				'Version two, composition: for every zone this seat is entitled to see, one number per card kind. Seventy-eight numbers. The market and your own hand come into focus, so the agent can tell a market that completes its cloth set from one that does not. The opponent\'s hand is still a single count, because that is all the projection permits.',
+				'Version two: 78 numbers. The market and your hand now include counts of each card kind. The opponent\'s hand remains a single count.',
 			cls: ['s2'],
-		},
-		{
-			caption:
-				'Version three, perfect recall: the opponent\'s hand splits into the kinds you watched arrive plus one number for the unknown remainder. Eighty-five numbers. The projection consults the record of public knowledge for owner zones that are not yours, and the encoder reads whatever the projection hands it. Nothing else changed.',
-			cls: ['s3'],
 		},
 	];
 
@@ -234,7 +220,7 @@ const REST = [['deck', 40], ['discard', 2], ['your herd', 1], ['their herd', 3],
 		const next = root.querySelector<HTMLButtonElement>('.obd-next')!;
 		const count = root.querySelector('.obd-count')!;
 		const caption = root.querySelector('.obd-caption')!;
-		const ALL = ['s2', 's3'];
+		const ALL = ['s2'];
 		let i = 0;
 
 		const render = () => {

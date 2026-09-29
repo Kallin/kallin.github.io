@@ -1,228 +1,144 @@
 ---
 title: 'Exactly What a Player Knows'
-description: "Part 4: there is a right amount for a game-playing AI to know, and it is exactly what a person across the table knows. I found it by getting it wrong in both directions. Knowing less than a player cost fifteen points. Knowing more cost five and a half."
-pubDate: '2026-08-26'
+description: "Part 4: a hidden card is not necessarily an unknown card. Giving the agent a memory of public moves changed its play and improved its win rate."
+pubDate: '2026-09-29'
 tags: ['ai', 'ml', 'reinforcement-learning', 'games']
-socialImage: '../../assets/game-ai-4-og.png'
-draft: true
+socialImage: '../../assets/game-ai-4-recall-og.png'
+draft: false
 series: 'game-ai'
 seriesOrder: 4
 ---
 
 import Concept from '../../components/Concept.astro';
 import PerspectiveDemo from '../../components/PerspectiveDemo.astro';
-import ObsDemo from '../../components/ObsDemo.astro';
-import RecallDemo from '../../components/RecallDemo.astro';
-import ZoomImage from '../../components/ZoomImage.astro';
+import KnowledgeFlowDemo from '../../components/KnowledgeFlowDemo.astro';
 
-What started this post was sitting down to play against the agent myself, as
-the human across the table. It kept making moves that no attentive person would
-make, and when I traced one back, the problem was not judgment. It was knowledge.
-I had taken goods off the market in plain view, and the agent had no idea those
-cards were in my hand.
+Watching the agent play Jaipur, some of its moves didn't make sense to me. It
+would take another card when I thought it should be selling.
 
-That sent me back to a question I had been circling for a while: what does this
-agent actually know, compared to a person sitting in its chair? The answer has a
-shape I did not expect. There is a right amount for a game-playing AI to know,
-and it turns out to be exactly what that person knows. Not less, which is the
-mistake everyone expects. And not more, which is the mistake I did not.
+Was it making a bad decision, or did it not have enough information to make a
+good one? Investigating those endgame decisions showed that the relevant
+information was present. But inspecting the inputs exposed a separate gap.
 
-I found the boundary by overshooting it in both directions. An agent that knew
-less than a player would was worth about fifteen points less than one that knew
-what a player knows. An agent that knew *more* than any player could, because I
-handed it the true hidden cards, was worth five and a half points less. The human
-boundary is not a limitation to be tolerated. It is the optimum, and it was
-measured from both sides.
+The agent could count the cards in the opponent's hand. It couldn't represent
+cards it had watched that opponent take from the market.
 
-The last post ended at parity with a few hundred lines of if-statements, with the
-network finally naming its moves properly. This post is about the other half of
-the interface: what the network is given to think about, and why the answer is a
-line rather than a direction.
+The target is simple: give the agent everything a player could know, and nothing
+they couldn't. That includes what the player remembers, not just what is visible
+on the table right now.
 
-<Concept title="Who sees what: the boundary, in code">
+<Concept title="Who sees what">
 
-A hidden-information game is two private views laid over one shared one. Every
-zone declares who may see its contents: **public** (the market, the discard pile),
-**owner** (your hand: you see it, others do not), or **hidden** (the deck: nobody
-sees it, including its owner). When the engine builds an observation for a seat, a
-projection walks every zone and hands that seat what it is entitled to: full
-contents, or the count alone.
-
-The distinction that matters is that "count only" is not "nothing." An opponent's
-hand hides its identities, but its count is public in essentially every card game
-ever printed, and so are their camels, their tokens, and everything in the middle
-of the table.
+The engine builds a separate view for each player. In Jaipur, your hand's contents
+are private, the market is public, and the deck is hidden from everyone. Counts
+are different: you can count the cards in the other hand without knowing what
+they are.
 
 <PerspectiveDemo />
 
 </Concept>
 
-The projection is not a metaphor. It is one function, and it is the only door.
-Everything that plays a seat, the encoder and the search alike, reads the game
-through it and never touches the raw state. That is what makes the boundary
-maintainable: there is exactly one place where "what does this seat know" gets
-decided, a suite of perspective tests asserts that nothing crosses it, and every
-improvement in this post is a change to what that one function hands out.
+That view is the player's **observation**. The **encoder** turns it into numbers
+the network can use. Information can be lost at either step.
 
-## Knowing less than a player
+## Remembering the cards
 
-The first agents in this series knew less than a player in a way that is easy to
-miss, because it looked like a reasonable engineering shortcut. The encoder
-reported each zone as a count of cards. The market holds five cards. Your hand
-holds four. That is enough to play, in the sense that the agent beat a random
-opponent every time, and it is much less than a person knows, because a person
-knows *which* five cards.
+An earlier encoder change had already replaced bare card counts with counts of
+each kind. The network could distinguish four diamonds from four leather cards
+in its own hand. But the opponent's hand was still reduced to a total, regardless
+of what had happened in earlier turns.
 
-The first evidence had arrived earlier, when the first champion stopped
-improving no matter how long the league ran. I had a growing suspicion that this
-kind of gap, not the network's size or its training, was where the missing
-strength lived. Closing it meant changing what the projection hands out and what
-the encoder makes of it, and it happened in steps.
+Suppose your opponent takes a diamond from the market. Their hand is private,
+but that diamond isn't a mystery: you saw it go in. The old observation forgot
+its identity as soon as it entered the hand.
 
-<Concept title="The observation, three versions">
+The fix was to keep a record of publicly revealed cards. A card seen in a public
+container stays known when the player visibly takes it into their hand. Cards
+dealt unseen stay unknown. When a known card is sold face up, it is no longer
+reported as being in the hand. A shuffle or round reset clears the relevant
+record.
 
-Part 2 turned the table into a row of numbers. Here is that row, built three ways
-from the same table by three versions of the encoder. Each version is strictly
-wider than the last, and every widening is information the seat was always
-entitled to; nothing here crosses the boundary from the first block.
+The observation can now say "one diamond, four unknown cards" instead of just
+"five cards." Seven extra inputs, taking the encoder from 78 numbers to 85,
+let the network read the remembered card kinds alongside an unknown remainder.
+Training and play use the same view, so the agent learns with information it
+will actually have when making a move.
 
-<ObsDemo />
+This is a first form of memory across moves, but it lives in the engine. The
+network in these experiments receives a fresh observation for each decision;
+it doesn't carry its own memory from turn to turn. The engine preserves a small
+part of the history for it. It keeps a record of which cards have been publicly
+seen, then uses that record to include remembered cards in the agent's view.
+It is not a memory of every action, or of an opponent's habits.
 
-</Concept>
+## Knowing when to forget
 
-The suspicion is testable with the experiment design I trust most: isolate one
-lever at a time and pull. Lever one, capacity: the same agent with a network whose layers are four
-times wider. Nothing. Lever two, optimization: the same agent trained
-considerably longer, against a league of its own past versions. Nothing. Lever
-three, information: the same network, the same training, and the version-two
-observation in place of the count encoder.
+Remembering a card is only useful if the record remains trustworthy. The engine
+knows where every card really is. The player does not.
 
-The new agent beat the old champion in 60.3% of 1,200 seat-balanced games,
-confidence interval 57.5 to 63.1. Two nulls and a hit.
+<Concept title="Track knowledge, not just cards">
 
-<ZoomImage src="/images/posts/ml4-levers.png" alt="Bar chart of three experiments: a bigger network and more training both land on the 50% line (null), while the richer v2 observation wins 60.3% with a confidence interval of 57.5 to 63.1." caption="Same network, same training recipe in every arm. Only the third arm changed what the agent could see." />
+These containers describe what the observing player can see. Public moves can
+preserve certainty. A face-down move can turn that certainty into a possibility.
 
-What the extra thirty-seven numbers bought is concrete. Under the count encoder
-the agent knew it held five cards and the market held five, and nothing about
-which. Whether the cards in front of it made a set worth selling, whether the
-market offered the one it needed: invisible. With composition, set-building and
-selling stop being guesses. Ten points, for finally seeing the game it was
-playing.
-
-That closed most of the gap between the agent and a player. Not all of it, and
-my own games against it are what exposed the rest. There is a kind of
-knowledge that is not visible *anywhere* on the table right now, and is still
-legitimately yours, because you watched it happen.
-
-Play Jaipur against a person and take the diamond from the market. Your hand is
-hidden, but your opponent knows the diamond is in it. They saw you take it. Nobody
-calls this cheating; it is called paying attention, and every competent card player
-does it. The composition encoder could not do it. The moment a card crossed into a
-hidden zone, its identity was gone from the observation, because identity was
-stored on the zone, and the zone says hidden.
-
-<Concept title="Perfect recall: knowledge belongs to the history, not the zone">
-
-The engine keeps a running set of card identities that are public knowledge. A card
-entering a public zone joins the set. A card taken from public view into a player's
-hand *stays* in the set, because everyone watched where it went. A card that enters
-the deck, or gets caught in a shuffle, leaves the set: after that, no honest
-observer could still track it.
-
-The observation then reports an opponent's hand as what it honestly is to you: the
-cards you watched arrive, plus a count of the rest. Not "five unknown cards" but
-"the diamond, and four unknown cards."
-
-<RecallDemo />
+<KnowledgeFlowDemo />
 
 </Concept>
 
-I wrote the rule down before any code existed, as a player would state it. The
-opening deal comes from a face-down deck and stays hidden. Every card taken off
-the market was face up when it was grabbed and stays known for as long as it is
-in that hand. A reshuffle forgets everything. Then the engine got a primitive that
-enforces exactly that, the projection learned to consult it for hands that are
-not yours, and the encoder gained the slots in the demo above. The slots, as it
-happened, already existed in the schema. They had simply never been filled.
+Jaipur's sales and exchanges reveal which goods leave the hand. A face-down
+discard in another game is harder. If the opponent moves one of five cards into
+another private container, the diamond might have moved, or it might still be
+in the hand. The observer cannot tell.
 
-Trained head to head against a control with the identical recipe and only the
-encoder changed, the perfect-recall agent won 55.0% of games, interval 51.9 to
-58.1. Against the reigning champion, 59.3%. The win came with a visible change in
-style: the new agent takes more goods than its predecessor, which is what racing
-looks like. It is not just scoring its own hand anymore. It can see what the
-opponent is collecting, and it has started denying.
+Removing the diamond from the record only when it actually moved would leak the
+answer. So would continuing to report its exact location through the secret
+transfer. The honest statement is "the diamond is in one of these two places,"
+not "the diamond is definitely still in the hand."
 
-Ten points for seeing what is on the table. Five more for remembering what
-crossed it. The agent now knew what a player knows, and every step toward that
-line had paid.
+The simple tracker used here does not represent that uncertainty. It follows
+revealed cards through actual containers, so it is not a general solution for
+private-to-private moves. Clearing records on a shuffle is conservative, but
+forgetting only the card that secretly moved is not. The Jaipur result should
+not be mistaken for proof that every hidden-information game is covered.
 
-## Knowing more than a player
+## Why not give it all the cards?
 
-Which is why the next experiment was so hard to accept.
+The simulator has the answers, so it is easy to cross that boundary. An earlier
+diagnostic did exactly that: it gave an existing searcher the opponent's true
+hand instead of having it consider several possible hands.
 
-The strongest agent in the stable by then wrapped the network in search, and the
-search dealt with hidden cards the only way it could: by guessing. Before
-thinking, it filled in the opponent's hand and the deck with a random arrangement
-consistent with everything public, thought in that imagined world, then repeated
-with fresh guesses and averaged. Each guess is called a determinization, and the
-averaging is what keeps the search honest about what it does not know.
+Against the hand-written heuristic, the searcher scored **52.1%** with sampled
+hidden cards and **46.5%** with the true hand, over 600 games per condition. The
+95% intervals were wide and overlapping: 48.0 to 56.1% and 42.4 to 50.5%.
+The extra information did not produce a demonstrated benefit in that test.
 
-In a self-play harness I control both seats, which suggested an obvious shortcut.
-Skip the guessing. Pin the *true* opponent hand into every imagined world. No
-training, no new machinery: just stop lying to the search about the one zone that
-matters most. Information had just proven to be the only lever that moved. This
-was the purest information I could give it.
+That was cheating at decision time, not training a model with privileged
+information. It doesn't establish that such training cannot help. It does show
+why that experiment cannot replace this one: handing an existing searcher
+secrets is different from training an agent to use knowledge a player could
+legitimately retain.
 
-The genuinely blind searcher won 52.1% of its games against the heuristic. Handed
-the true opponent hand, the same searcher won 46.5%. Handed the true deck order
-instead, 48.9%. Every flavor of truth made it worse, and the opponent's hand, the
-most valuable-looking secret at the table, made it worst of all.
+## What changed in play
 
-<ZoomImage src="/images/posts/ml4-pinned.png" alt="Two-panel bar chart. Left: search agents given the true deck or true opponent hand score below the genuinely blind agent (46.5% and 48.9% vs 52.1%). Right: perfect recall trained into the encoder beats a matched control 55.0%." caption="Past the boundary and short of it. Knowing more than a player could, injected into the search: minus 5.6. Knowing exactly what a player could, learned: plus 5." />
+Consider a diamond appearing in the market after the opponent has visibly
+collected another. Taking it could deny them a pair. If they have already
+collected enough to sell, selling your own diamonds first could secure the
+better tokens. The moves were always legal. What was missing was the information
+that could make one more urgent than another.
 
-The mechanism took a while to believe. The strength of a determinizing search
-*lives in the variety of its guesses*. Averaging over many imagined worlds forces
-the agent toward moves that are good against the whole cloud of hands the opponent
-might hold, which is another way of saying it hedges. Pin one world as the truth
-and the hedge collapses: the search happily commits to lines that exploit that
-exact hand, played by a network whose every judgment was formed under uncertainty.
-Handed certainty, it is off the edge of its own experience, confidently wrong in a
-direction it was never trained to recognize. The averaging was not a workaround
-for missing information. It was load-bearing.
+Those illustrate how the new inputs could inform a decision, not a claim that
+I isolated either tactic in a replay. The recorded behavioral change is broader:
+the recall-trained agent took goods on **29% of its moves, versus 25%** for the
+control. That is consistent with racing or denying the opponent's collection,
+but the action counts alone don't tell us why it took those cards.
 
-There is a second reading, and I think it is the more important one. The network
-was trained on observations drawn from the player's side of the boundary. Every
-weight in it encodes what a *player* should do with what a *player* knows. Feed
-it knowledge from past the boundary and there is no part of it that knows what to
-do with that, in the same way that a person handed their opponent's hand mid-game
-would not suddenly play optimally either. They would play a game they had never
-practiced.
+The win result was clearer. I trained two agents from scratch with the same
+recipe and training seed, changing only the encoder. Across 1,000 games, split
+equally between seats, the recall agent won **55.0% of decisive games**:
+533 wins, 436 losses and 31 draws, with a 95% interval of 51.9 to 58.1%.
+That is one pair of training runs, not an average across training seeds.
 
-## Drawing the line
-
-So the boundary is the optimum, and the engine's job is to draw it precisely. Most
-of that is the visibility contract from the first block. The part that took actual
-care is the forgetting rule, because it is where "what a player knows" gets
-decided in the ambiguous cases.
-
-The rule is deliberately conservative in one direction. Any passage through a
-hidden pile or a shuffle erases a card from the record, even in corner cases where
-a sharp player might still infer something. Forgetting a still-knowable card
-merely plays a little cautiously, a point or two short of the line. Remembering a
-card that is no longer knowable crosses it, and the experiment above is what
-crossing it costs. The test suite pins the invariant exactly: the set of cards the
-observation claims to know in a hidden hand equals the recorded public knowledge
-intersected with that hand, no more, no less.
-
-The night the pinned-hand result came in, the note in the journal read: value
-must be trained in, not pinned. Knowledge helps an agent when it is part of what
-the agent learned from, and hurts when it is injected into a system built for its
-absence. I suspect that is not specific to card games. Anyone who has bolted an
-oracle onto a learned system, and watched it get worse, has run this experiment.
-
-So here is where things stand. The network sees every number a player at the
-table sees, remembers what it watched, forgets what it could not honestly know,
-and names its moves properly. It races, it denies, it is measurably better than
-every version before it. And against a few hundred lines of if-statements, the
-ladder still reads level. Knowing was worth points, in exactly one direction, up
-to exactly one line. Whatever is left is not about knowing.
+Giving the agent what a human could know is the right target, not a proven
+performance optimum. Here, preserving one small piece of that knowledge changed
+its play and improved its results. A diamond could leave the public market
+without disappearing from the agent's understanding of the game.
